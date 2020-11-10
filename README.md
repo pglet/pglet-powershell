@@ -18,7 +18,7 @@ Create a new `hello.ps1` with the following content:
 ```posh
 Import-Module pglet
 Connect-Pglet myapp -App -Handler {
-    Write-Pglet "add text value='Hello, world!'"
+    Send-Pglet "add text value='Hello, world!'"
     Disconnect-Pglet
 }
 ```

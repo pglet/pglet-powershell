@@ -3,7 +3,19 @@
 References:
 https://learn-powershell.net/2013/04/19/sharing-variables-and-live-objects-between-powershell-runspaces/
 
+Default session variables:
+
+  PGLET_CONNECTION_ID   - the last page connection ID.
+  PGLET_CONTROL_ID      - the last added control ID.
+  PGLET_EVENT_TARGET    - the last received event target (control ID).
+  PGLET_EVENT_NAME      - the last received event name.
+  PGLET_EVENT_DATA      - the last received event data.
+
 #>
+
+$global:PGLET_CONNECTIONS = [hashtable]::Synchronized(@{})
+$global:PGLET_CONNECTION_ID = ""
+
 function Connect-PgletApp {
     [CmdletBinding()]
     param
@@ -29,11 +41,12 @@ function Connect-PgletApp {
 
     $ErrorActionPreference = "Stop"
 
-    #$Sessions = New-Object System.Collections.ArrayList
     $Sessions = [hashtable]::Synchronized(@{})
 
     $sessionsMonitor = {
-        param($ui)
+        function Write-Trace($value) {
+            [System.Console]::WriteLine($value)
+        }
 
         try {
             while ($true) {
@@ -43,11 +56,11 @@ function Connect-PgletApp {
                     $session = $Sessions[$sid]
                     if ($session.AsyncHandler.IsCompleted) {
                         try {
-                            $ui.WriteLine("Session exited: " + $sid)
+                            Write-Trace "Session exited: $sid"
                             $dc = $session.PowerShell.EndInvoke($session.AsyncHandler)
                         }
                         catch {
-                            $ui.WriteLine($dc.Count)
+                            Write-Trace $dc.Count
                         }
                         $session.Runspace.Close()
                         $session.PowerShell.Dispose()
@@ -58,10 +71,10 @@ function Connect-PgletApp {
             }
         }
         catch {
-            $ui.WriteLine("An error occurred: " + $_.ToString())
+            Write-Trace "An error occurred: $_"
         }
         finally {
-            $ui.WriteLine("Monitor stopped")
+            Write-Trace "Monitor stopped"
         }
     }
 
@@ -71,7 +84,7 @@ function Connect-PgletApp {
     $psMonitor.Runspace = $rsMonitor
     $rsMonitor.Open() | Out-Null
     $rsMonitor.SessionStateProxy.SetVariable('Sessions', $Sessions)
-    $psMonitor.AddScript($sessionsMonitor).AddArgument($host.UI) | Out-Null
+    $psMonitor.AddScript($sessionsMonitor) | Out-Null
     $psMonitor.BeginInvoke() | Out-Null
 
     try {
@@ -82,10 +95,9 @@ function Connect-PgletApp {
             $PowerShell = [powershell]::Create()
             $PowerShell.Runspace = $Runspace
             $Runspace.Open() | Out-Null
-            $Runspace.SessionStateProxy.SetVariable('ui', $host.UI)
             $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))") | Out-Null
-            $PowerShell.AddScript('$SESSION_ID="' + $SessionID + '"') | Out-Null
-            $PowerShell.AddScript($ScriptBlock).AddArgument($host.UI) | Out-Null
+            $PowerShell.AddScript('$global:PGLET_CONNECTION_ID="' + $SessionID + '"') | Out-Null
+            $PowerShell.AddScript($ScriptBlock) | Out-Null
     
             # add session to monitor
             $Sessions[$SessionID] = @{
@@ -141,14 +153,17 @@ function Connect-PgletPage {
 
     $ErrorActionPreference = "Stop"
 
-    pglet page $Name
+    $global:PGLET_CONNECTION_ID = (pglet page $Name)
 }
 
 function Disconnect-Pglet {
     # TODO
+    if ($global:PGLET_CONNECTIONS) {
+        Write-Host "Disconnect connections"
+    }
 }
 
-function Write-Pglet {
+function Send-Pglet {
     [CmdletBinding()]
     param
     (
@@ -161,16 +176,16 @@ function Write-Pglet {
 
     $ErrorActionPreference = "Stop"
 
-    Write-Trace "Connection ID: $Page"
+    Write-Trace "Default Page ID: $PGLET_CONNECTION_ID"
+    Write-Trace "Page ID: $Page"
     Write-Trace "Command: $Command"
 }
 
-function Read-Pglet() {
+function Wait-PgletEvent() {
     # TODO
 }
 
 function Write-Trace {
-    #$ui.WriteLine("$($SESSION_ID): " + $str)
     param(
         [Parameter(Mandatory=$true, Position=0, ValueFromRemainingArguments=$true)]
         [string]$value
@@ -179,4 +194,4 @@ function Write-Trace {
 }
 
 # Exported functions
-Export-ModuleMember -Function Connect-PgletApp, Connect-PgletPage, Disconnect-Pglet, Write-Pglet, Read-Pglet, Write-Trace
+Export-ModuleMember -Function Connect-PgletApp, Connect-PgletPage, Disconnect-Pglet, Send-Pglet, Wait-PgletEvent, Write-Trace
