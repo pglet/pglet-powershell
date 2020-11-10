@@ -50,19 +50,22 @@ function Connect-PgletApp {
     $Sessions = [hashtable]::Synchronized(@{})
 
     $sessionsMonitor = {
-        param($h)
+        param($ui)
 
         try {
-            #$h.UI.WriteLine('aaa')
-            #$h.UI.WriteLine($Sessions)
-
             while ($true) {
                 $sids = @()
                 $sids += $Sessions.Keys
                 foreach($sid in $sids) {
                     $session = $Sessions[$sid]
                     if ($session.AsyncHandler.IsCompleted) {
-                        $h.UI.WriteLine("Session exited: " + $sid)
+                        try {
+                            $ui.WriteLine("Session exited: " + $sid)
+                            $dc = $session.PowerShell.EndInvoke($session.AsyncHandler)
+                        }
+                        catch {
+                            $ui.WriteLine($dc.Count)
+                        }
                         $session.Runspace.Close()
                         $session.PowerShell.Dispose()
                         $Sessions.Remove($sid)
@@ -72,10 +75,10 @@ function Connect-PgletApp {
             }
         }
         catch {
-            $h.UI.WriteLine("An error occurred: " + $_.ToString())
+            $ui.WriteLine("An error occurred: " + $_.ToString())
         }
         finally {
-            $h.UI.WriteLine("Monitor stopped")
+            $ui.WriteLine("Monitor stopped")
         }
     }
 
@@ -85,18 +88,23 @@ function Connect-PgletApp {
     $psMonitor.Runspace = $rsMonitor
     $rsMonitor.Open() | Out-Null
     $rsMonitor.SessionStateProxy.SetVariable('Sessions', $Sessions)
-    $psMonitor.AddScript($sessionsMonitor).AddArgument($host) | Out-Null
+    $psMonitor.AddScript($sessionsMonitor).AddArgument($host.UI) | Out-Null
     $psMonitor.BeginInvoke()
 
     try {
         pglet app $Name | ForEach-Object {
+
             $SessionID = $_
             $Runspace = [runspacefactory]::CreateRunspace()
             $PowerShell = [powershell]::Create()
             $PowerShell.Runspace = $Runspace
             $Runspace.Open() | Out-Null
-            $PowerShell.AddScript($Handler).AddArgument($host).AddArgument($SessionID) | Out-Null
+            $Runspace.SessionStateProxy.SetVariable('ui', $host.UI)
+            $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))")
+            $PowerShell.AddScript('$SESSION_ID="' + $SessionID + '"')
+            $PowerShell.AddScript($Handler).AddArgument($host.UI) | Out-Null
     
+            # add session to monitor
             $Sessions[$SessionID] = @{
                 SessionID = $SessionID
                 PowerShell = $PowerShell
@@ -110,4 +118,8 @@ function Connect-PgletApp {
         $rsMonitor.Close()
         $psMonitor.Dispose()
     }
+}
+
+function Write-Pglet($command) {
+    $ui.WriteLine("$($SESSION_ID): " + $command)
 }
