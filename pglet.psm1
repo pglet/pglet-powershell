@@ -89,7 +89,7 @@ function Connect-PgletApp {
     $rsMonitor.Open() | Out-Null
     $rsMonitor.SessionStateProxy.SetVariable('Sessions', $Sessions)
     $psMonitor.AddScript($sessionsMonitor).AddArgument($host.UI) | Out-Null
-    $psMonitor.BeginInvoke()
+    $psMonitor.BeginInvoke() | Out-Null
 
     try {
         pglet app $Name | ForEach-Object {
@@ -100,8 +100,8 @@ function Connect-PgletApp {
             $PowerShell.Runspace = $Runspace
             $Runspace.Open() | Out-Null
             $Runspace.SessionStateProxy.SetVariable('ui', $host.UI)
-            $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))")
-            $PowerShell.AddScript('$SESSION_ID="' + $SessionID + '"')
+            $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))") | Out-Null
+            $PowerShell.AddScript('$SESSION_ID="' + $SessionID + '"') | Out-Null
             $PowerShell.AddScript($Handler).AddArgument($host.UI) | Out-Null
     
             # add session to monitor
@@ -121,5 +121,9 @@ function Connect-PgletApp {
 }
 
 function Write-Pglet($command) {
-    $ui.WriteLine("$($SESSION_ID): " + $command)
+    $ui.WriteLine("PGLET: " + $command)
+}
+
+function Write-Log($str) {
+    $ui.WriteLine("$($SESSION_ID): " + $str)
 }
