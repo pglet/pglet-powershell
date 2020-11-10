@@ -5,43 +5,26 @@ https://learn-powershell.net/2013/04/19/sharing-variables-and-live-objects-betwe
 
 #>
 function Connect-PgletApp {
-    <#
-    .SYNOPSIS
-        Creates a new Pglet app and opens a connection.
-
-    .DESCRIPTION
-        Connect-PgletApp connects to Pglet app. The app is created if not exists.
-
-    .PARAMETER Name
-        The name of Pglet app.
-
-    .PARAMETER Handler
-        A handler script block for a new user session.
-
-    .PARAMETER Public
-        Makes the app available to the public at https://app.pglet.io.
-
-    .PARAMETER Server
-        Pushes the app to a self-hosted Pglet server.
-
-        .EXAMPLE
-        Connect-PgletApp
-    #>
-
     [CmdletBinding()]
     param
     (
-      [Parameter(Mandatory=$false,HelpMessage="The name of Pglet app.")]
+      [Parameter(Mandatory = $false, Position = 0, HelpMessage = "The name of Pglet app.")]
       [string]$Name,
 
-      [Parameter(Mandatory=$true,HelpMessage="A handler script block for a new user session.")]
-      [scriptblock]$Handler,
+      [Parameter(Mandatory = $true, HelpMessage = "A handler script block for a new user session.")]
+      [scriptblock]$ScriptBlock,
 
-      [Parameter(Mandatory=$false,HelpMessage="Makes the app available to the public at https://app.pglet.io.")]
+      [Parameter(Mandatory = $false,HelpMessage = "Makes the app available as public at pglet.io hosted service.")]
       [switch]$Public,
 
-      [Parameter(Mandatory=$false,HelpMessage="Pushes the app to a self-hosted Pglet server.")]
-      [string]$Server      
+      [Parameter(Mandatory = $false,HelpMessage = "Makes the app available as private at pglet.io hosted service.")]
+      [switch]$Private,      
+
+      [Parameter(Mandatory = $false,HelpMessage = "Connects to the app on a self-hosted Pglet server.")]
+      [string]$Server,
+
+      [Parameter(Mandatory = $false,HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
+      [string]$Token      
     )
 
     $ErrorActionPreference = "Stop"
@@ -102,7 +85,7 @@ function Connect-PgletApp {
             $Runspace.SessionStateProxy.SetVariable('ui', $host.UI)
             $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))") | Out-Null
             $PowerShell.AddScript('$SESSION_ID="' + $SessionID + '"') | Out-Null
-            $PowerShell.AddScript($Handler).AddArgument($host.UI) | Out-Null
+            $PowerShell.AddScript($ScriptBlock).AddArgument($host.UI) | Out-Null
     
             # add session to monitor
             $Sessions[$SessionID] = @{
@@ -115,15 +98,85 @@ function Connect-PgletApp {
     }
     finally {
         Write-Host "Script ended!"
+
+        # terminate all running runspaces
+        $sids = @()
+        $sids += $Sessions.Keys
+
+        foreach($sid in $sids) {
+            $session = $Sessions[$sid]
+            if (-not $session.AsyncHandler.IsCompleted) {
+                Write-Host "Terminate session:" $sid
+                $session.PowerShell.Stop()
+                $session.Runspace.Close()
+                $session.PowerShell.Dispose()
+                $Sessions.Remove($sid)
+            }
+        }
+
         $rsMonitor.Close()
         $psMonitor.Dispose()
     }
 }
 
-function Write-Pglet($command) {
-    $ui.WriteLine("PGLET: " + $command)
+function Connect-PgletPage {
+    [CmdletBinding()]
+    param
+    (
+      [Parameter(Mandatory = $false, Position = 0, HelpMessage = "The name of Pglet page.")]
+      [string]$Name,
+
+      [Parameter(Mandatory = $false,HelpMessage = "Makes the page available as public at pglet.io hosted service.")]
+      [switch]$Public,
+
+      [Parameter(Mandatory = $false,HelpMessage = "Makes the page available as private at pglet.io hosted service.")]
+      [switch]$Private,      
+
+      [Parameter(Mandatory = $false,HelpMessage = "Connects to the page on a self-hosted Pglet server.")]
+      [string]$Server,
+
+      [Parameter(Mandatory = $false,HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
+      [string]$Token      
+    )
+
+    $ErrorActionPreference = "Stop"
+
+    pglet page $Name
 }
 
-function Write-Log($str) {
-    $ui.WriteLine("$($SESSION_ID): " + $str)
+function Disconnect-Pglet {
+    # TODO
 }
+
+function Write-Pglet {
+    [CmdletBinding()]
+    param
+    (
+      [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Pglet command to send.")]
+      [string]$Command,
+
+      [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Page connection ID.")]
+      [string]$Page
+    )
+
+    $ErrorActionPreference = "Stop"
+
+    Write-Trace "Connection ID: $Page"
+    Write-Trace "Command: $Command"
+}
+
+function Read-Pglet() {
+    # TODO
+}
+
+function Write-Trace {
+    #$ui.WriteLine("$($SESSION_ID): " + $str)
+    param(
+        [Parameter(Mandatory=$true, Position=0, ValueFromRemainingArguments=$true)]
+        [string]$value
+    )
+    [System.Console]::WriteLine($value)
+}
+
+# Exported functions
+Export-ModuleMember -Function Connect-PgletApp, Connect-PgletPage, Disconnect-Pglet, Write-Pglet, Read-Pglet, Write-Trace
