@@ -7,7 +7,7 @@ Connect-PgletApp -Name account1/page1 -Public -ScriptBlock {
     function Method1() {
         Start-Sleep -s 5
         #Write-Trace("sid: " + $SESSION_ID)
-        Send-Pglet "set page title='aaaabbb'"
+        Invoke-Pglet "set page title='aaaabbb'"
     }    
 
     try {

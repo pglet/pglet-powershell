@@ -5,6 +5,6 @@ Connect-PgletPage -Name account1/page1
 
 Write-Host "Last connection: $PGLET_CONNECTION_ID"
 
-Send-Pglet "set page title='test'"
+ipg "set page title='test'"
 
 Disconnect-Pglet

@@ -26,16 +26,16 @@ function Connect-PgletApp {
       [Parameter(Mandatory = $true, HelpMessage = "A handler script block for a new user session.")]
       [scriptblock]$ScriptBlock,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Makes the app available as public at pglet.io hosted service.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as public at pglet.io hosted service.")]
       [switch]$Public,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Makes the app available as private at pglet.io hosted service.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as private at pglet.io hosted service.")]
       [switch]$Private,      
 
-      [Parameter(Mandatory = $false,HelpMessage = "Connects to the app on a self-hosted Pglet server.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Connects to the app on a self-hosted Pglet server.")]
       [string]$Server,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
       [string]$Token      
     )
 
@@ -138,16 +138,16 @@ function Connect-PgletPage {
       [Parameter(Mandatory = $false, Position = 0, HelpMessage = "The name of Pglet page.")]
       [string]$Name,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Makes the page available as public at pglet.io hosted service.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server.")]
       [switch]$Public,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Makes the page available as private at pglet.io hosted service.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as private at pglet.io service or a self-hosted Pglet server.")]
       [switch]$Private,      
 
-      [Parameter(Mandatory = $false,HelpMessage = "Connects to the page on a self-hosted Pglet server.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Connects to the page on a self-hosted Pglet server.")]
       [string]$Server,
 
-      [Parameter(Mandatory = $false,HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
+      [Parameter(Mandatory = $false, HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
       [string]$Token      
     )
 
@@ -159,11 +159,11 @@ function Connect-PgletPage {
 function Disconnect-Pglet {
     # TODO
     if ($global:PGLET_CONNECTIONS) {
-        Write-Host "Disconnect connections"
+        Write-Host "Close Pglet connections"
     }
 }
 
-function Send-Pglet {
+function Invoke-Pglet {
     [CmdletBinding()]
     param
     (
@@ -193,5 +193,7 @@ function Write-Trace {
     [System.Console]::WriteLine($value)
 }
 
+New-Alias -Name ipg -Value Invoke-Pglet
+
 # Exported functions
-Export-ModuleMember -Function Connect-PgletApp, Connect-PgletPage, Disconnect-Pglet, Send-Pglet, Wait-PgletEvent, Write-Trace
+Export-ModuleMember -Function Connect-PgletApp, Connect-PgletPage, Disconnect-Pglet, Invoke-Pglet, Wait-PgletEvent, Write-Trace -Alias ipg
