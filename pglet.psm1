@@ -41,6 +41,31 @@ function Connect-PgletApp {
 
     $ErrorActionPreference = "Stop"
 
+    $pargs = @()
+    $pargs += "app"
+    if ($Name) {
+        $pargs += $Name
+    } else {
+        $pargs += "*"
+    }
+
+    if ($Public.IsPresent) {
+        $pargs += "--public"
+    }
+    elseif ($Private.IsPresent) {
+        $pargs += "--private"
+    }
+
+    if ($Server) {
+        $pargs += "--server"
+        $pargs += $Server
+    }
+
+    if ($Token) {
+        $pargs += "--token"
+        $pargs += $Token
+    }    
+
     $Sessions = [hashtable]::Synchronized(@{})
 
     $sessionsMonitor = {
@@ -88,7 +113,7 @@ function Connect-PgletApp {
     $psMonitor.BeginInvoke() | Out-Null
 
     try {
-        pglet app $Name | ForEach-Object {
+        pglet.exe $pargs | ForEach-Object {
 
             $SessionID = $_
             $Runspace = [runspacefactory]::CreateRunspace()
@@ -153,11 +178,46 @@ function Connect-PgletPage {
 
     $ErrorActionPreference = "Stop"
 
-    $global:PGLET_CONNECTION_ID = (pglet page $Name)
+    $pargs = @()
+    $pargs += "page"
+    if ($Name) {
+        $pargs += $Name
+    } else {
+        $pargs += "*"
+    }
+
+    if ($Public.IsPresent) {
+        $pargs += "--public"
+    }
+    elseif ($Private.IsPresent) {
+        $pargs += "--private"
+    }
+
+    if ($Server) {
+        $pargs += "--server"
+        $pargs += $Server
+    }
+
+    if ($Token) {
+        $pargs += "--token"
+        $pargs += $Token
+    }
+
+    $global:PGLET_CONNECTION_ID = (pglet.exe $pargs)
+
+    
 }
 
 function Disconnect-Pglet {
-    # TODO
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Page connection ID.")]
+        [string]$Page
+    )
+
+    $ErrorActionPreference = "Stop"
+
     if ($global:PGLET_CONNECTIONS) {
         Write-Host "Close Pglet connections"
     }
@@ -182,7 +242,14 @@ function Invoke-Pglet {
 }
 
 function Wait-PgletEvent() {
-    # TODO
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Page connection ID.")]
+        [string]$Page
+    )
+
+    $ErrorActionPreference = "Stop"
 }
 
 function Write-Trace {
