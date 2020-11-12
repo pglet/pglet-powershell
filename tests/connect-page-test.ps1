@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psm1'))
 
-$pageID = Connect-PgletPage -Name account1/page1
+$pageID = Connect-PgletPage
 
 function main() {
     Invoke-Pglet "clean page"

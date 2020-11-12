@@ -119,12 +119,13 @@ function Connect-PgletApp {
     try {
         pglet $pargs | ForEach-Object {
 
-            if ($_ -match "(?<session_id>[^\s]+)\s(?<page_url>[^\s]+)") {
-                $sessionID = $Matches["session_id"]
-                #$PageURL = $Matches["page_url"]
-            } else {
-                throw "Invalid pglet results: $_"
+            if (-not $PageURL) {
+                $PageURL = $_
+                Write-Host "Page URL: $PageURL"
+                return
             }
+
+            $sessionID = $_
 
             $Runspace = [runspacefactory]::CreateRunspace()
             $PowerShell = [powershell]::Create()
@@ -222,7 +223,6 @@ function Connect-PgletPage {
 
     # run pglet client and get results
     $presults = (pglet $pargs)
-
 
     if ($presults -match "(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)") {
         $pipeId = $Matches["pipe_id"]
