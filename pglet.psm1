@@ -64,7 +64,11 @@ function Connect-PgletApp {
     if ($Token) {
         $pargs += "--token"
         $pargs += $Token
-    }    
+    }
+
+    if ($IsLinux -or $IsMacOS) {
+        $pargs += "--uds"
+    }
 
     $Sessions = [hashtable]::Synchronized(@{})
 
@@ -113,7 +117,7 @@ function Connect-PgletApp {
     $psMonitor.BeginInvoke() | Out-Null
 
     try {
-        pglet.exe $pargs | ForEach-Object {
+        pglet $pargs | ForEach-Object {
 
             $SessionID = $_
             $Runspace = [runspacefactory]::CreateRunspace()
@@ -203,9 +207,48 @@ function Connect-PgletPage {
         $pargs += $Token
     }
 
-    $global:PGLET_CONNECTION_ID = (pglet.exe $pargs)
+    if ($IsLinux -or $IsMacOS) {
+        $pargs += "--uds"
+    }
 
-    
+    # run pglet client and get results
+    $presults = (pglet $pargs)
+
+
+    if ($presults -match "(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)") {
+        $pipeId = $Matches["pipe_id"]
+        $PageURL = $Matches["page_url"]
+    } else {
+        throw "Invalid pglet results: $presults"
+    }
+
+    $global:PGLET_CONNECTION_ID = $pipeId
+
+    Write-Host "Page URL: $PageURL"
+
+    $conn = openConnection $pipeId
+    $global:PGLET_CONNECTIONS.Add($pipeId, $conn)
+
+    return $pipeId
+}
+
+function openConnection($pipeId) {
+    # establish connection
+    $conn = @{
+        pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeId)
+        eventPipe = new-object System.IO.Pipes.NamedPipeClientStream("$pipeId.events")
+    }
+
+    # connect pipes
+    $conn.pipe.Connect(5000)
+    $conn.eventPipe.Connect(5000)
+
+    # create readers and writers
+    $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
+    $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
+    $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
+
+    return $conn
 }
 
 function Disconnect-Pglet {
@@ -218,8 +261,20 @@ function Disconnect-Pglet {
 
     $ErrorActionPreference = "Stop"
 
-    if ($global:PGLET_CONNECTIONS) {
-        Write-Host "Close Pglet connections"
+    $pipeId = $Page
+
+    if (-not $pipeId) {
+        $pipeId = $PGLET_CONNECTION_ID
+    }
+
+    if (-not $pipeId) {
+        throw "No active connections."
+    }
+
+    $conn = $PGLET_CONNECTIONS[$pipeId]
+    if ($conn) {
+        $conn.pipe.Close()
+        $conn.eventPipe.Close()
     }
 }
 
@@ -236,9 +291,43 @@ function Invoke-Pglet {
 
     $ErrorActionPreference = "Stop"
 
-    Write-Trace "Default Page ID: $PGLET_CONNECTION_ID"
-    Write-Trace "Page ID: $Page"
-    Write-Trace "Command: $Command"
+    $pipeId = $Page
+
+    if (-not $pipeId) {
+        $pipeId = $PGLET_CONNECTION_ID
+    }
+
+    if (-not $pipeId) {
+        throw "No active connections."
+    }
+
+    $conn = $PGLET_CONNECTIONS[$pipeId]
+    if (-not $conn) {
+        throw "Connection $pipeId not found."
+    }
+
+    # send command
+    $conn.pipeWriter.WriteLine($Command)
+    $conn.pipeWriter.Flush()
+
+    # get results
+    $result = $conn.pipeReader.ReadLine()
+
+    # parse results
+    $OK_RESULT = "ok"
+    $ERROR_RESULT = "error"
+    
+    #Write-Host "Result: $result"
+
+    if ($result -eq $OK_RESULT) {
+        return ""
+    } elseif ($result.StartsWith("$OK_RESULT ")) {
+        return $result.Substring($OK_RESULT.Length + 1)
+    } elseif ($result.StartsWith("$ERROR_RESULT ")) {
+        throw $result.Substring($ERROR_RESULT.Length + 1)
+    } else {
+        throw "Unexpected result: $result"
+    }
 }
 
 function Wait-PgletEvent() {
@@ -250,6 +339,33 @@ function Wait-PgletEvent() {
     )
 
     $ErrorActionPreference = "Stop"
+
+    $pipeId = $Page
+
+    if (-not $pipeId) {
+        $pipeId = $PGLET_CONNECTION_ID
+    }
+
+    if (-not $pipeId) {
+        throw "No active connections."
+    }
+
+    $conn = $PGLET_CONNECTIONS[$pipeId]
+    if (-not $conn) {
+        throw "Connection $pipeId not found."
+    }    
+
+    $line = $conn.eventPipeReader.ReadLine()
+    #Write-Host "Event: $line"
+    if ($line -match "(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*") {
+        return @{
+            Target = $Matches["target"]
+            Name = $Matches["name"]
+            Data = $Matches["data"]
+        }
+    } else {
+        throw "Invalid event data: $line"
+    }
 }
 
 function Write-Trace {
