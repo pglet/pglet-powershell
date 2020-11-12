@@ -119,22 +119,31 @@ function Connect-PgletApp {
     try {
         pglet $pargs | ForEach-Object {
 
-            $SessionID = $_
+            if ($_ -match "(?<session_id>[^\s]+)\s(?<page_url>[^\s]+)") {
+                $sessionID = $Matches["session_id"]
+                #$PageURL = $Matches["page_url"]
+            } else {
+                throw "Invalid pglet results: $_"
+            }
+
             $Runspace = [runspacefactory]::CreateRunspace()
             $PowerShell = [powershell]::Create()
             $PowerShell.Runspace = $Runspace
             $Runspace.Open() | Out-Null
             $PowerShell.AddScript("Import-Module ([IO.Path]::Combine('$PSScriptRoot', 'pglet.psm1'))") | Out-Null
-            $PowerShell.AddScript('$global:PGLET_CONNECTION_ID="' + $SessionID + '"') | Out-Null
+            $PowerShell.AddScript('$global:PGLET_CONNECTION_ID="' + $sessionID + '"') | Out-Null
+            $PowerShell.AddScript('$global:PGLET_CONNECTIONS=[hashtable]::Synchronized(@{})') | Out-Null
             $PowerShell.AddScript($ScriptBlock) | Out-Null
     
             # add session to monitor
-            $Sessions[$SessionID] = @{
-                SessionID = $SessionID
+            $Sessions[$sessionID] = @{
+                SessionID = $sessionID
                 PowerShell = $PowerShell
                 Runspace = $Runspace
                 AsyncHandler = $PowerShell.BeginInvoke()
             }
+
+            Write-Trace "Session started: $sessionID"
         }
     }
     finally {
@@ -226,13 +235,16 @@ function Connect-PgletPage {
 
     Write-Host "Page URL: $PageURL"
 
-    $conn = openConnection $pipeId
-    $global:PGLET_CONNECTIONS.Add($pipeId, $conn)
-
     return $pipeId
 }
 
 function openConnection($pipeId) {
+
+    $conn = $PGLET_CONNECTIONS[$pipeId]
+    if ($conn) {
+        return $conn
+    }
+
     # establish connection
     $conn = @{
         pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeId)
@@ -247,6 +259,8 @@ function openConnection($pipeId) {
     $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
     $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
     $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
+
+    $global:PGLET_CONNECTIONS.Add($pipeId, $conn)
 
     return $conn
 }
@@ -301,10 +315,7 @@ function Invoke-Pglet {
         throw "No active connections."
     }
 
-    $conn = $PGLET_CONNECTIONS[$pipeId]
-    if (-not $conn) {
-        throw "Connection $pipeId not found."
-    }
+    $conn = openConnection $pipeId
 
     # send command
     $conn.pipeWriter.WriteLine($Command)
@@ -350,10 +361,7 @@ function Wait-PgletEvent() {
         throw "No active connections."
     }
 
-    $conn = $PGLET_CONNECTIONS[$pipeId]
-    if (-not $conn) {
-        throw "Connection $pipeId not found."
-    }    
+    $conn = openConnection $pipeId  
 
     $line = $conn.eventPipeReader.ReadLine()
     #Write-Host "Event: $line"
