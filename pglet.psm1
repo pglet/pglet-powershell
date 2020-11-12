@@ -86,24 +86,24 @@ function Connect-PgletApp {
                     if ($session.AsyncHandler.IsCompleted) {
                         try {
                             Write-Trace "Session exited: $sid"
-                            $dc = $session.PowerShell.EndInvoke($session.AsyncHandler)
+                            $session.PowerShell.EndInvoke($session.AsyncHandler)
                         }
                         catch {
-                            Write-Trace $dc.Count
+                            Write-Trace "Error terminating session: $_"
                         }
                         $session.Runspace.Close()
                         $session.PowerShell.Dispose()
                         $Sessions.Remove($sid)
                     }
                 }
-                Start-Sleep -s 2
+                Start-Sleep -s 1
             }
         }
         catch {
-            Write-Trace "An error occurred: $_"
+            Write-Trace "An error occurred in session monitor: $_"
         }
         finally {
-            Write-Trace "Monitor stopped"
+            Write-Trace "Sessions monitor stopped"
         }
     }
 
@@ -147,7 +147,7 @@ function Connect-PgletApp {
         }
     }
     finally {
-        Write-Host "Script ended!"
+        Write-Host "Terminating app..."
 
         # terminate all running runspaces
         $sids = @()
