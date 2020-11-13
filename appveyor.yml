@@ -21,8 +21,8 @@ build_script:
       # prerelease moniker
       $idx = $ver.indexOf('-')
       if ($idx -ne -1) {
-        $ver = $ver.Substring(0, $idx)
         $prerelease = $ver.Substring($idx + 1)
+        $ver = $ver.Substring(0, $idx)
       }
       (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
       if ($prerelease) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$prerelease'") | Set-Content pglet\pglet.psd1}
