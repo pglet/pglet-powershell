@@ -67,7 +67,7 @@ function installPglet {
     }
 
     Write-Host "Installing Pglet v$ver..." -NoNewline
-    $pgletUri = "https://github.com/pglet/pglet/releases/download/$ver/$fileName"
+    $pgletUri = "https://github.com/pglet/pglet/releases/download/v$ver/$fileName"
     $packagePath = [IO.Path]::Combine($pgletHome, $fileName)
     (New-Object Net.WebClient).DownloadFile($pgletUri, $packagePath)
 
