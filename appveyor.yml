@@ -13,10 +13,19 @@ build_script:
 # publish module
 - ps: |
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+
+      # version
       $ver = $env:APPVEYOR_REPO_TAG_NAME
       if ($ver.StartsWith('v')) { $ver = $ver.Substring(1) }
+
+      # prerelease moniker
+      $idx = $ver.indexOf('-')
+      if ($idx -ne -1) {
+        $ver = $ver.Substring(0, $idx)
+        $prerelease = $ver.Substring($idx + 1)
+      }
       (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
-      if ($env:APPVEYOR_REPO_BRANCH -ne 'main') {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = 'beta'") | Set-Content pglet\pglet.psd1}
+      if ($prerelease) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$prerelease'") | Set-Content pglet\pglet.psd1}
       Publish-Module -Path $env:APPVEYOR_BUILD_FOLDER\pglet -NuGetApiKey $env:psg_api_key
     }
 
