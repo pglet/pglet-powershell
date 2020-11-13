@@ -114,8 +114,6 @@ function Connect-PgletApp {
     $pargs += "app"
     if ($Name) {
         $pargs += $Name
-    } else {
-        $pargs += "*"
     }
 
     if ($Public.IsPresent) {
@@ -265,8 +263,6 @@ function Connect-PgletPage {
     $pargs += "page"
     if ($Name) {
         $pargs += $Name
-    } else {
-        $pargs += "*"
     }
 
     if ($Public.IsPresent) {
