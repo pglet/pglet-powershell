@@ -1,5 +1,5 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
-Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psm1'))
+Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
 $pageID = Connect-PgletPage
 

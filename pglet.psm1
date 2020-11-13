@@ -13,8 +13,77 @@ Default session variables:
 
 #>
 
+$global:PGLET_EXE = ""
 $global:PGLET_CONNECTIONS = [hashtable]::Synchronized(@{})
 $global:PGLET_CONNECTION_ID = ""
+
+function installPglet {
+    [CmdletBinding()]
+    Param()
+
+    if ($env:PGLET_EXE) {
+        $global:PGLET_EXE = $env:PGLET_EXE
+        Write-Host "Pglet executable in env var: $PGLET_EXE"
+        return
+    }
+
+    $pgletHome = [IO.Path]::Combine($HOME, ".pglet")
+    $pgletBin = [IO.Path]::Combine($pgletHome, "bin")
+    $global:PGLET_EXE = [IO.Path]::Combine($pgletBin, "pglet.exe")
+    if ($IsLinux -or $IsMacOS) {
+        $global:PGLET_EXE = [IO.Path]::Combine($pgletBin, "pglet")
+    }
+
+    # create bin dir
+    if (-not (Test-Path $pgletBin)) {
+        Write-Verbose "Creating $pgletBin directory"
+        New-Item -ItemType Directory -Path $pgletBin -Force | Out-Null
+    }
+
+    # target
+    $fileName = "pglet-windows-amd64.zip"
+    if ($IsLinux) {
+        $fileName = "pglet-linux-amd64.tar.gz"
+    } elseif ($IsMacOS) {
+        $fileName = "pglet-darwin-amd64.tar.gz"
+    }
+
+    # GitHub requires TLS 1.2
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    # Min version required by PS module
+    $ver = [System.Version]$MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
+
+    # Installed version
+    if (Test-Path $PGLET_EXE) {
+        try {
+            $installedVer = [System.Version](& $PGLET_EXE --version)
+        } catch {}        
+    }
+
+    if ($installedVer -and ($installedVer -ge $ver)) {
+        Write-Verbose "Newer version is already installed"
+        return
+    }
+
+    Write-Host "Installing Pglet v$ver..." -NoNewline
+    $pgletUri = "https://github.com/pglet/pglet/releases/download/$ver/$fileName"
+    $packagePath = [IO.Path]::Combine($pgletHome, $fileName)
+    (New-Object Net.WebClient).DownloadFile($pgletUri, $packagePath)
+
+    Write-Verbose "Unzipping..."
+    if ($IsLinux -or $IsMacOS) {
+        # untar
+        tar zxf $packagePath -C $pgletBin
+    } else {
+        # unzip
+        Expand-Archive -Path $packagePath -DestinationPath $pgletBin -Force
+    }
+    Remove-Item $packagePath -Force
+
+    $installedVer = (& $PGLET_EXE --version)
+    Write-Host "OK"
+}
 
 function Connect-PgletApp {
     [CmdletBinding()]
@@ -117,7 +186,7 @@ function Connect-PgletApp {
     $psMonitor.BeginInvoke() | Out-Null
 
     try {
-        pglet $pargs | ForEach-Object {
+        & $PGLET_EXE $pargs | ForEach-Object {
 
             if (-not $PageURL) {
                 $PageURL = $_
@@ -222,7 +291,7 @@ function Connect-PgletPage {
     }
 
     # run pglet client and get results
-    $presults = (pglet $pargs)
+    $presults = (& $PGLET_EXE $pargs)
 
     if ($presults -match "(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)") {
         $pipeId = $Matches["pipe_id"]
@@ -383,6 +452,8 @@ function Write-Trace {
     )
     [System.Console]::WriteLine($value)
 }
+
+installPglet -verbose
 
 New-Alias -Name ipg -Value Invoke-Pglet
 
