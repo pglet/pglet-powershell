@@ -1,0 +1,18 @@
+
+environment:
+  psg_api_key: 
+    secure: e3uoVHqaTTa+BqEphKfjGYLXG4OXTmAktNhbWXAD+ZT6BD94F0dqabjfwbcKk14t
+
+build_script:
+
+# copy module contents
+- ps: New-Item Pglet -Type Directory | Out-Null
+- ps: Copy-Item -Path *.psd1 -Destination Pglet
+- ps: Copy-Item -Path *.psm1 -Destination Pglet
+
+# publish module
+- ps: (Get-Content pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$env:APPVEYOR_BUILD_VERSION'") | Set-Content pglet.psd1
+- ps: if ($env:APPVEYOR_REPO_BRANCH -ne 'master') {(Get-Content pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = 'beta'") | Set-Content pglet.psd1}
+- ps: Publish-Module -Path $env:APPVEYOR_BUILD_FOLDER\Pglet -NuGetApiKey $env:psg_api_key
+
+test: off
