@@ -21,6 +21,8 @@ function installPglet {
     [CmdletBinding()]
     Param()
 
+    $ErrorActionPreference = "Stop"
+
     if ($env:PGLET_EXE) {
         $global:PGLET_EXE = $env:PGLET_EXE
         Write-Host "Pglet executable in env var: $PGLET_EXE"
