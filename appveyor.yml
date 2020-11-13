@@ -12,7 +12,7 @@ build_script:
 
 # publish module
 - ps: |
-    if ($env:$APPVEYOR_REPO_TAG -eq 'true') {
+    if ($env:APPVEYOR_REPO_TAG -eq 'true') {
       $ver = $env:APPVEYOR_REPO_TAG_NAME
       if ($ver.StartsWith('v')) { $ver = $ver.Substring(1) }
       (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
