@@ -16,6 +16,8 @@ build_script:
 
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
 
+      Write-Host "Publishing module to PowerShell Gallery..."
+
       # version
       $ver = $env:APPVEYOR_REPO_TAG_NAME
       if ($ver.StartsWith('v')) { $ver = $ver.Substring(1) }
@@ -26,9 +28,15 @@ build_script:
         $prerelease = $ver.Substring($idx + 1)
         $ver = $ver.Substring(0, $idx)
       }
+
+      Write-Host "Module version: $ver"
+      Write-Host "Pre-release moniker: $prerelease"
+
       (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
       if ($prerelease) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$prerelease'") | Set-Content pglet\pglet.psd1}
       Publish-Module -Path $env:APPVEYOR_BUILD_FOLDER\pglet -NuGetApiKey $env:psg_api_key
+
+      Write-Host "Module has been successfully published" -ForegroundColor Green
     }
 
 test: off
