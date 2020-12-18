@@ -264,6 +264,7 @@ function openConnection($pipeId) {
         # create readers and writers
         $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
         $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
+        $conn.pipeWriter.AutoFlush = $true
         $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
     } else {
         $conn = @{
