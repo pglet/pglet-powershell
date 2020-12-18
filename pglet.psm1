@@ -54,16 +54,16 @@ function installPglet {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     # Min version required by PS module
-    $ver = [System.Version]$MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
+    $ver = $MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
 
     # Installed version
     if (Test-Path $PGLET_EXE) {
         try {
-            $installedVer = [System.Version](& $PGLET_EXE --version)
+            $installedVer = (& $PGLET_EXE --version)
         } catch {}        
     }
 
-    if ($installedVer -and ($installedVer -ge $ver)) {
+    if ($installedVer -and ($installedVer -eq $ver)) {
         Write-Verbose "Newer version is already installed"
         return
     }
@@ -97,17 +97,20 @@ function Connect-PgletApp {
       [Parameter(Mandatory = $true, HelpMessage = "A handler script block for a new user session.")]
       [scriptblock]$ScriptBlock,
 
-      [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as public at pglet.io hosted service.")]
-      [switch]$Public,
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as public at pglet.io service or a self-hosted Pglet server")]
+      [switch]$Web,
 
       [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as private at pglet.io hosted service.")]
-      [switch]$Private,      
+      [switch]$Private,
 
       [Parameter(Mandatory = $false, HelpMessage = "Connects to the app on a self-hosted Pglet server.")]
       [string]$Server,
 
       [Parameter(Mandatory = $false, HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
-      [string]$Token      
+      [string]$Token,
+
+      [Parameter(Mandatory = $false, HelpMessage = "Do not open browser window")]
+      [switch]$NoWindow
     )
 
     $ErrorActionPreference = "Stop"
@@ -118,11 +121,16 @@ function Connect-PgletApp {
         $pargs += $Name
     }
 
-    if ($Public.IsPresent) {
-        $pargs += "--public"
+    if ($Web.IsPresent) {
+        $pargs += "--web"
     }
-    elseif ($Private.IsPresent) {
+    
+    if ($Private.IsPresent) {
         $pargs += "--private"
+    }
+
+    if ($NoWindow.IsPresent) {
+        $pargs += "--no-window"
     }
 
     if ($Server) {
@@ -133,10 +141,6 @@ function Connect-PgletApp {
     if ($Token) {
         $pargs += "--token"
         $pargs += $Token
-    }
-
-    if ($IsLinux -or $IsMacOS) {
-        $pargs += "--uds"
     }
 
     $Sessions = [hashtable]::Synchronized(@{})
@@ -246,8 +250,8 @@ function Connect-PgletPage {
       [Parameter(Mandatory = $false, Position = 0, HelpMessage = "The name of Pglet page.")]
       [string]$Name,
 
-      [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server.")]
-      [switch]$Public,
+      [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server")]
+      [switch]$Web,
 
       [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as private at pglet.io service or a self-hosted Pglet server.")]
       [switch]$Private,      
@@ -256,7 +260,10 @@ function Connect-PgletPage {
       [string]$Server,
 
       [Parameter(Mandatory = $false, HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
-      [string]$Token      
+      [string]$Token,
+
+      [Parameter(Mandatory = $false, HelpMessage = "Do not open browser window")]
+      [switch]$NoWindow   
     )
 
     $ErrorActionPreference = "Stop"
@@ -267,11 +274,16 @@ function Connect-PgletPage {
         $pargs += $Name
     }
 
-    if ($Public.IsPresent) {
-        $pargs += "--public"
+    if ($Web.IsPresent) {
+        $pargs += "--web"
     }
-    elseif ($Private.IsPresent) {
+    
+    if ($Private.IsPresent) {
         $pargs += "--private"
+    }
+
+    if ($NoWindow.IsPresent) {
+        $pargs += "--no-window"
     }
 
     if ($Server) {
@@ -282,10 +294,6 @@ function Connect-PgletPage {
     if ($Token) {
         $pargs += "--token"
         $pargs += $Token
-    }
-
-    if ($IsLinux -or $IsMacOS) {
-        $pargs += "--uds"
     }
 
     # run pglet client and get results
@@ -312,20 +320,26 @@ function openConnection($pipeId) {
         return $conn
     }
 
-    # establish connection
-    $conn = @{
-        pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeId)
-        eventPipe = new-object System.IO.Pipes.NamedPipeClientStream("$pipeId.events")
+    if (-not $IsLinux -and -not $IsMacOS) {
+        # use named pipes on Windows
+        $conn = @{
+            pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeId)
+            eventPipe = new-object System.IO.Pipes.NamedPipeClientStream("$pipeId.events")
+        }
+
+        # connect pipes
+        $conn.pipe.Connect(5000)
+        $conn.eventPipe.Connect(5000)
+
+        # create readers and writers
+        $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
+        $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
+        $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
+    } else {
+        $conn = @{
+            pipeName = $pipeId
+        }
     }
-
-    # connect pipes
-    $conn.pipe.Connect(5000)
-    $conn.eventPipe.Connect(5000)
-
-    # create readers and writers
-    $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
-    $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
-    $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
 
     $global:PGLET_CONNECTIONS.Add($pipeId, $conn)
 
@@ -353,7 +367,7 @@ function Disconnect-Pglet {
     }
 
     $conn = $PGLET_CONNECTIONS[$pipeId]
-    if ($conn) {
+    if ($conn -and (-not $IsLinux -and -not $IsMacOS)) {
         $conn.pipe.Close()
         $conn.eventPipe.Close()
     }
@@ -384,27 +398,57 @@ function Invoke-Pglet {
 
     $conn = openConnection $pipeId
 
+    $waitResult = $true
+    if ($Command -match "(?<commandName>[^\s]+)\s(.*)") {
+        $commandName = $Matches["commandName"]
+        #Write-Host "COMMAND: $commandName"
+        if ($commandName.toLower().endsWith("f")) {
+            $waitResult = $false
+        }
+    }
+
+    if ($IsLinux -or $IsMacOS) {
+        $conn.pipeWriter = New-Object System.IO.StreamWriter($conn.pipeName)
+    }
+
     # send command
-    $conn.pipeWriter.WriteLine($Command)
-    $conn.pipeWriter.Flush()
+    $conn.pipeWriter.WriteLine($command)
 
-    # get results
-    $result = $conn.pipeReader.ReadLine()
+    if ($IsLinux -or $IsMacOS) {
+        $conn.pipeWriter.Close()
+    }
 
-    # parse results
-    $OK_RESULT = "ok"
-    $ERROR_RESULT = "error"
-    
-    #Write-Host "Result: $result"
+    if ($waitResult) {
+        # parse results
+        $ERROR_RESULT = "error"
 
-    if ($result -eq $OK_RESULT) {
-        return ""
-    } elseif ($result.StartsWith("$OK_RESULT ")) {
-        return $result.Substring($OK_RESULT.Length + 1)
-    } elseif ($result.StartsWith("$ERROR_RESULT ")) {
-        throw $result.Substring($ERROR_RESULT.Length + 1)
-    } else {
-        throw "Unexpected result: $result"
+        try {
+            if ($IsLinux -or $IsMacOS) {
+                $conn.pipeReader = New-Object System.IO.StreamReader($conn.pipeName)
+            }
+            
+            $result = $conn.pipeReader.ReadLine()
+        
+            if ($result.StartsWith("$ERROR_RESULT ")) {
+                throw $result.Substring($ERROR_RESULT.Length + 1)
+            } elseif ($result -match "(?<lines_count>[\d]+)\s(?<result>.*)") {
+                $lines_count = [int]$Matches["lines_count"]
+                $result = $Matches["result"]
+        
+                # read the rest of multi-line result
+                for($i = 0; $i -lt $lines_count; $i++) {
+                    $line = $conn.pipeReader.ReadLine()
+                    $result = "$result`n$line"
+                }
+            } else {
+                throw "Invalid result: $result"
+            }
+            return $result
+        } finally {
+            if ($IsLinux -or $IsMacOS) {
+                $conn.pipeReader.Close()
+            }
+        }
     }
 }
 
@@ -428,9 +472,16 @@ function Wait-PgletEvent() {
         throw "No active connections."
     }
 
-    $conn = openConnection $pipeId  
+    $conn = openConnection $pipeId
 
+    if ($IsLinux -or $IsMacOS) {
+        $conn.eventPipeReader = New-Object System.IO.StreamReader("$($conn.pipeName).events")
+    }
     $line = $conn.eventPipeReader.ReadLine()
+    if ($IsLinux -or $IsMacOS) {
+        $conn.eventPipeReader.Close()
+    }
+
     #Write-Host "Event: $line"
     if ($line -match "(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*") {
         return @{

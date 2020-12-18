@@ -94,7 +94,7 @@
     PrivateData       = @{
 
         Pglet  = @{
-            MinimumVersion = "0.1.5"
+            MinimumVersion = "0.1.10"
         }
     
         PSData = @{
