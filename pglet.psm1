@@ -17,76 +17,6 @@ $global:PGLET_EXE = ""
 $global:PGLET_CONNECTIONS = [hashtable]::Synchronized(@{})
 $global:PGLET_CONNECTION_ID = ""
 
-function installPglet {
-    [CmdletBinding()]
-    Param()
-
-    $ErrorActionPreference = "Stop"
-
-    if ($env:PGLET_EXE) {
-        $global:PGLET_EXE = $env:PGLET_EXE
-        Write-Host "Pglet executable in env var: $PGLET_EXE"
-        return
-    }
-
-    $pgletHome = [IO.Path]::Combine($HOME, ".pglet")
-    $pgletBin = [IO.Path]::Combine($pgletHome, "bin")
-    $global:PGLET_EXE = [IO.Path]::Combine($pgletBin, "pglet.exe")
-    if ($IsLinux -or $IsMacOS) {
-        $global:PGLET_EXE = [IO.Path]::Combine($pgletBin, "pglet")
-    }
-
-    # create bin dir
-    if (-not (Test-Path $pgletBin)) {
-        Write-Verbose "Creating $pgletBin directory"
-        New-Item -ItemType Directory -Path $pgletBin -Force | Out-Null
-    }
-
-    # target
-    $fileName = "pglet-windows-amd64.zip"
-    if ($IsLinux) {
-        $fileName = "pglet-linux-amd64.tar.gz"
-    } elseif ($IsMacOS) {
-        $fileName = "pglet-darwin-amd64.tar.gz"
-    }
-
-    # GitHub requires TLS 1.2
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    # Min version required by PS module
-    $ver = $MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
-
-    # Installed version
-    if (Test-Path $PGLET_EXE) {
-        try {
-            $installedVer = (& $PGLET_EXE --version)
-        } catch {}        
-    }
-
-    if ($installedVer -and ($installedVer -eq $ver)) {
-        Write-Verbose "Newer version is already installed"
-        return
-    }
-
-    Write-Host "Installing Pglet v$ver..." -NoNewline
-    $pgletUri = "https://github.com/pglet/pglet/releases/download/v$ver/$fileName"
-    $packagePath = [IO.Path]::Combine($pgletHome, $fileName)
-    (New-Object Net.WebClient).DownloadFile($pgletUri, $packagePath)
-
-    Write-Verbose "Unzipping..."
-    if ($IsLinux -or $IsMacOS) {
-        # untar
-        tar zxf $packagePath -C $pgletBin
-    } else {
-        # unzip
-        Expand-Archive -Path $packagePath -DestinationPath $pgletBin -Force
-    }
-    Remove-Item $packagePath -Force
-
-    $installedVer = (& $PGLET_EXE --version)
-    Write-Host "OK"
-}
-
 function Connect-PgletApp {
     [CmdletBinding()]
     param
@@ -500,6 +430,80 @@ function Write-Trace {
         [string]$value
     )
     [System.Console]::WriteLine($value)
+}
+
+function installPglet {
+    [CmdletBinding()]
+    Param()
+
+    $ErrorActionPreference = "Stop"
+
+    $global:PGLET_EXE = "pglet.exe"
+    if ($IsLinux -or $IsMacOS) {
+        $global:PGLET_EXE = "pglet"
+    }
+
+    # check if pglet.exe is in PATH (dev mode)
+    $pgletInPath = Get-Command $global:PGLET_EXE -ErrorAction SilentlyContinue
+    if ($pgletInPath) {
+        Write-Verbose "Pglet in PATH found: $($pgletInPath.Path)"
+        $global:PGLET_EXE = $pgletInPath.Path
+        return
+    }
+
+    $pgletHome = [IO.Path]::Combine($HOME, ".pglet")
+    $pgletBin = [IO.Path]::Combine($pgletHome, "bin")
+    $global:PGLET_EXE = [IO.Path]::Combine($pgletBin, $global:PGLET_EXE)
+
+    # create bin dir
+    if (-not (Test-Path $pgletBin)) {
+        Write-Verbose "Creating $pgletBin directory"
+        New-Item -ItemType Directory -Path $pgletBin -Force | Out-Null
+    }
+
+    # target
+    $fileName = "pglet-windows-amd64.zip"
+    if ($IsLinux) {
+        $fileName = "pglet-linux-amd64.tar.gz"
+    } elseif ($IsMacOS) {
+        $fileName = "pglet-darwin-amd64.tar.gz"
+    }
+
+    # GitHub requires TLS 1.2
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    # Min version required by PS module
+    $ver = $MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
+
+    # Installed version
+    if (Test-Path $PGLET_EXE) {
+        try {
+            $installedVer = (& $PGLET_EXE --version)
+        } catch {}        
+    }
+
+    if ($installedVer -and ($installedVer -eq $ver)) {
+        Write-Verbose "Newer version is already installed"
+        return
+    }
+
+    Write-Host "Installing Pglet v$ver..." -NoNewline
+    $pgletUri = "https://github.com/pglet/pglet/releases/download/v$ver/$fileName"
+    $packagePath = [IO.Path]::Combine($pgletHome, $fileName)
+    (New-Object Net.WebClient).DownloadFile($pgletUri, $packagePath)
+
+    Write-Verbose "Unzipping..."
+    if ($IsLinux -or $IsMacOS) {
+        # untar
+        tar zxf $packagePath -C $pgletBin
+    } else {
+        # unzip
+        Expand-Archive -Path $packagePath -DestinationPath $pgletBin -Force
+    }
+    Remove-Item $packagePath -Force
+
+    $installedVer = (& $PGLET_EXE --version)
+    Write-Host "OK"
 }
 
 installPglet -verbose
