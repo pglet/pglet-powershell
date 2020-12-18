@@ -7,7 +7,7 @@ Connect-PgletApp -Name account1/app1 -ScriptBlock {
         Invoke-Pglet "clean page"
         Invoke-Pglet "add text value='Enter your name:'"
         Invoke-Pglet "add textbox id=fullName value='someone'"
-        Invoke-Pglet "add button id=submit text=Submit data=btn_event"
+        Invoke-Pglet "add button primary id=submit text=Submit data=btn_event"
         
         Invoke-Pglet "set fullName value='John Smith'"
         
