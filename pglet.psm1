@@ -30,9 +30,6 @@ function Connect-PgletApp {
       [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as public at pglet.io service or a self-hosted Pglet server")]
       [switch]$Web,
 
-      [Parameter(Mandatory = $false, HelpMessage = "Makes the app available as private at pglet.io hosted service.")]
-      [switch]$Private,
-
       [Parameter(Mandatory = $false, HelpMessage = "Connects to the app on a self-hosted Pglet server.")]
       [string]$Server,
 
@@ -53,10 +50,6 @@ function Connect-PgletApp {
 
     if ($Web.IsPresent) {
         $pargs += "--web"
-    }
-    
-    if ($Private.IsPresent) {
-        $pargs += "--private"
     }
 
     if ($NoWindow.IsPresent) {
@@ -181,10 +174,7 @@ function Connect-PgletPage {
       [string]$Name,
 
       [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server")]
-      [switch]$Web,
-
-      [Parameter(Mandatory = $false, HelpMessage = "Makes the page available as private at pglet.io service or a self-hosted Pglet server.")]
-      [switch]$Private,      
+      [switch]$Web,  
 
       [Parameter(Mandatory = $false, HelpMessage = "Connects to the page on a self-hosted Pglet server.")]
       [string]$Server,
@@ -206,10 +196,6 @@ function Connect-PgletPage {
 
     if ($Web.IsPresent) {
         $pargs += "--web"
-    }
-    
-    if ($Private.IsPresent) {
-        $pargs += "--private"
     }
 
     if ($NoWindow.IsPresent) {
