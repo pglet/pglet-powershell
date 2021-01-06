@@ -19,10 +19,10 @@
     CompanyName       = 'AppVeyor Systems Inc.'
     
     # Copyright statement for this module
-    Copyright         = 'Copyright (c) 2020 Appveyor Systems Inc. All rights reserved.'
+    Copyright         = 'Copyright (c) 2021 Appveyor Systems Inc. All rights reserved.'
     
     # Description of the functionality provided by this module
-    Description       = 'PowerShell bindings for Pglet - easily create rich and responsive web apps in PowerShell.'
+    Description       = 'Pglet client for PowerShell - easily create rich and responsive web apps in PowerShell.'
     
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion = '5.0'
@@ -94,7 +94,7 @@
     PrivateData       = @{
 
         Pglet  = @{
-            MinimumVersion = "0.1.10"
+            MinimumVersion = "0.1.12"
         }
     
         PSData = @{
