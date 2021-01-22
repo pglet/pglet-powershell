@@ -249,7 +249,8 @@ function openConnection($pipeId) {
 
         # create readers and writers
         $conn.pipeReader = new-object System.IO.StreamReader($conn.pipe)
-        $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe)
+        $utf8 = new-object System.Text.UTF8Encoding($false, $true)
+        $conn.pipeWriter = new-object System.IO.StreamWriter($conn.pipe, $utf8, 65535)
         $conn.pipeWriter.AutoFlush = $true
         $conn.eventPipeReader = new-object System.IO.StreamReader($conn.eventPipe)
     } else {
