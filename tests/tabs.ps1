@@ -18,7 +18,11 @@ add tabs solid id=t1
   tab key=30 text='Tab 3' icon=Ringer
     stack gap=10
       text value='This is tab3'
-      text value='This is tab3 - line2'"
+      text value='This is tab3 - line2'
+  tab
+    button
+  tab key='tab33'
+"
 
 Start-Sleep -s 3
 
