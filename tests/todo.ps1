@@ -19,11 +19,10 @@ stack width='50%'
       button icon='Edit' title='Edit todo'
       button icon='Delete' title='Delete todo'
   stack gap=40
-    stack horizontal
-      tabs
-        tab key=all
-        tab key=active
-        tab key=completed
+    tabs
+      tab key=all
+      tab key=active
+      tab key=completed
     stack horizontal horizontalAlign='space-between'
       text value='0 items left'
       button text='Clear completed'

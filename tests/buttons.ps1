@@ -25,8 +25,8 @@ Invoke-Pglet "add
     button icon='Emoji2' title=Emoji!
     button icon='Calendar' title=Calendar!
   stack horizontal
-    button action icon='AddFriend' text='Create account'
-    button action icon='Add' text='New item'
+    button ghost icon='AddFriend' text='Create account'
+    button ghost icon='Add' text='New item'
   stack horizontal
     button action icon='Globe' text='Pglet website' url='https://pglet.io' newWindow
     button icon='MyMoviesTV' text='Go to Disney' url='https://disney.com' newWindow
@@ -55,6 +55,6 @@ Invoke-Pglet "add
       item text='To to Google' icon='Globe' url='https://google.com' newWindow secondaryText='New window'
 "
 
-while($true) {
-    Wait-PgletEvent $pageID
-}
+# while($true) {
+#     Wait-PgletEvent $pageID
+# }
