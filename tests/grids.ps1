@@ -33,14 +33,14 @@ stack horizontal horizontalAlign='stretch'
       text value=111
 "
 
-Start-Sleep -s 5
+#Start-Sleep -s 5
 
-Invoke-Pglet "clean gridItems"
-$cmd = "addf to=gridItems`n"
-for ($i = 0; $i -lt 500; $i++) {
+#Invoke-Pglet "clean gridItems"
+#$cmd = "addf to=gridItems`n"
+for ($i = 0; $i -lt 10; $i++) {
   #Invoke-Pglet "clear gridItems at=0"
-  $cmd = "$($cmd)item to=gridItems key=$i name='Item $i' iconName='ItemIcon$i'`n"
-  #Start-Sleep -ms 20
+  Invoke-Pglet "add item to=gridItems key=item$i name='Item $i' iconName='ItemIcon$i'`n"
+  Start-Sleep -s 3
 }
 #Write-Host $lines
 Invoke-Pglet $cmd
