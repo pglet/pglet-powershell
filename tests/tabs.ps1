@@ -35,7 +35,7 @@ tab key=40 text='Tab 4'
     text value='This is tab4'
     text value='This is tab4 - line2'
     tabs margin=10px
-      tab text=JavaScript count=10
+      tab text=JavaScript icon=ChevronDown count=10
         textbox label='First name'
       tab text='C#' count=30
         button text='Hello!'

@@ -4,7 +4,7 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 Connect-PgletPage -Name "index" -NoWindow
 
 Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='' themeTextColor='' themeBackgroundColor=''"
+Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='#3ee66d' themeTextColor='#edd2b7' themeBackgroundColor='#262626'"
 
 Invoke-Pglet "add
 toolbar

@@ -17,7 +17,7 @@ stack width='50%'
     textbox onChange width='100%'
     stack horizontal gap=0
       button icon='Edit' title='Edit todo'
-      button icon='Delete' title='Delete todo'
+      button icon='Delete' iconColor=red title='Delete todo'
   stack gap=40
     tabs
       tab key=all

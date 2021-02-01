@@ -5,7 +5,25 @@ Connect-PgletPage -Name "index" -NoWindow
 
 Invoke-Pglet "clean page"
 
-Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f'"
+Invoke-Pglet "add
+link url='http://google.com' value='Visit Google' newWindow
+link value='Link without URL' size=large
+link url='http://google.com' value='Cannot visit this link' disabled
+"
+
+Invoke-Pglet "add
+stack horizontal
+  icon name=ChangeEntitlements color=SlateGray
+  icon name=Shop color=Khaki
+  icon name=TrainSolid"
+
+Invoke-Pglet "add
+  stack horizontal verticalAlign=center
+    icon name=BlockedSite color=Maroon size=25px
+    icon name=Settings color=SlateBlue size=50px
+    icon name=Save size=100px"
+
+Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl \nf;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj\n dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj \ndfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f'"
 
 # Standard button
 Invoke-Pglet "add text value='Standard button' size='xLarge'"

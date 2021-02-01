@@ -4,9 +4,13 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 Connect-PgletPage -Name "index" -NoWindow
 
 Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign=''"
+
+Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='#3ee66d' themeTextColor='#edd2b7' themeBackgroundColor='#262626'"
 
 Invoke-Pglet "add
+  stack horizontal horizontalAlign=space-between
+    text value='Theme selector example' size=large
+    toggle id=theme label=Theme inline onText=Light offText=Dark
   stack horizontal
     button text='Standard'
     button disabled text='Standard disabled'
@@ -58,6 +62,15 @@ Invoke-Pglet "add
       item text='To to Google' icon='Globe' iconColor=green url='https://google.com' newWindow secondaryText='New window'
 "
 
-# while($true) {
-#     Wait-PgletEvent $pageID
-# }
+while($true) {
+    $e = Wait-PgletEvent $pageID
+    if ($e.target -eq 'theme') {
+      if ($e.data -eq 'true') {
+        # Light theme
+        Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='' themeTextColor='' themeBackgroundColor=''"
+      } else {
+        # Dark theme
+        Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='#3ee66d' themeTextColor='#edd2b7' themeBackgroundColor='#262626'"
+      }
+    }
+}

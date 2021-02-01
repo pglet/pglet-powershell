@@ -19,11 +19,11 @@ $tabId = "computers:$compName"
 Invoke-Pglet "clean $tabId"
 
 Invoke-Pglet "add to=$tabId
-grid compact=false selection=single preserveSelection=true headerVisible=true
+grid compact=false shimmerLines=5 selection=single preserveSelection=true headerVisible=true
   columns
     column resizable sortable fieldName='name' name='Process name' maxWidth=100
-    column resizable sortable fieldName='pid' name='PID' maxWidth=100
-    column resizable sortable sorted=desc fieldName='cpu_display' name='CPU %' maxWidth=100
+    column resizable sortable=number fieldName='pid' name='PID' maxWidth=100
+    column resizable sortable sorted=desc fieldName='cpu_display' sortField=cpu name='CPU %' maxWidth=100
     column resizable sortable fieldName='path' name='Path'
   items id=gridItems
 "
@@ -47,11 +47,11 @@ function getTopProcesses($maxCount) {
 }
 
 while($true) {
-  $cmd = "add to=$($tabId):gridItems`n"
+  $cmd = "replace to=$($tabId):gridItems`n"
   $cmd += (getTopProcesses 10 |
     ForEach-Object { "item id=$($_.PID) pid=$($_.PID) name='$($_.InstanceName)' cpu=$($_.CPU) cpu_display='$($_.CPU)%' path='$($_.Path -replace '\\', '\\')'" }) -join "`n"
 
-  Invoke-Pglet "clean $($tabId):gridItems" | Out-Null
+  #Invoke-Pglet "clean $($tabId):gridItems" | Out-Null
   Invoke-Pglet $cmd | Out-Null
   Start-Sleep -s 2
   #Invoke-Pglet "clean $($tabId):gridItems" | Out-Null

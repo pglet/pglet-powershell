@@ -8,7 +8,7 @@ Invoke-Pglet "set page padding=0 horizontalAlign=''"
 
 Invoke-Pglet "add
 stack horizontal horizontalAlign='stretch'
-  stack minwidth='300px'
+  stack minwidth='250px'
     nav
       item text='Group 1'
         item text='New'
@@ -37,10 +37,10 @@ stack horizontal horizontalAlign='stretch'
 
 #Invoke-Pglet "clean gridItems"
 #$cmd = "addf to=gridItems`n"
-for ($i = 0; $i -lt 10; $i++) {
+for ($i = 0; $i -lt 100; $i++) {
   #Invoke-Pglet "clear gridItems at=0"
   Invoke-Pglet "add item to=gridItems key=item$i name='Item $i' iconName='ItemIcon$i'`n"
-  Start-Sleep -s 3
+  Start-Sleep -ms 10
 }
 #Write-Host $lines
 Invoke-Pglet $cmd
