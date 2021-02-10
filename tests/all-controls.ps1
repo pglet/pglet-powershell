@@ -36,3 +36,13 @@ Invoke-Pglet "add text value='Primary button' size='xLarge'"
 $c = 'add button primary text="Primary"'
 Invoke-Pglet "add text value='$c'"
 Invoke-Pglet $c
+
+# Dropdown
+Invoke-Pglet "add dropdown value=A
+option key=A text='Item A'
+option key=B text='Item B'
+"
+
+# Unknown control
+Invoke-Pglet "add some-control value='Line 1 Line 2 Line 3 ;lvj dfljs d' primary text='Primary'
+"

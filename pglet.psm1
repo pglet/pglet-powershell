@@ -37,7 +37,10 @@ function Connect-PgletApp {
       [string]$Token,
 
       [Parameter(Mandatory = $false, HelpMessage = "Do not open browser window")]
-      [switch]$NoWindow
+      [switch]$NoWindow,
+
+      [Parameter(Mandatory = $false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
+      [int]$Ticker = $null
     )
 
     $ErrorActionPreference = "Stop"
@@ -54,6 +57,11 @@ function Connect-PgletApp {
 
     if ($NoWindow.IsPresent) {
         $pargs += "--no-window"
+    }
+
+    if ($Ticker) {
+        $pargs += "--ticker"
+        $pargs += $Ticker
     }
 
     if ($Server) {
@@ -183,7 +191,10 @@ function Connect-PgletPage {
       [string]$Token,
 
       [Parameter(Mandatory = $false, HelpMessage = "Do not open browser window")]
-      [switch]$NoWindow   
+      [switch]$NoWindow,
+
+      [Parameter(Mandatory = $false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
+      [int]$Ticker = $null
     )
 
     $ErrorActionPreference = "Stop"
@@ -201,6 +212,11 @@ function Connect-PgletPage {
     if ($NoWindow.IsPresent) {
         $pargs += "--no-window"
     }
+
+    if ($Ticker) {
+        $pargs += "--ticker"
+        $pargs += $Ticker
+    }    
 
     if ($Server) {
         $pargs += "--server"
