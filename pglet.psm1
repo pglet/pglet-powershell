@@ -465,19 +465,19 @@ function installPglet {
         New-Item -ItemType Directory -Path $pgletBin -Force | Out-Null
     }
 
+    # Min version required by PS module
+    $ver = $MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
+
     # target
-    $fileName = "pglet-windows-amd64.zip"
+    $fileName = "pglet-$ver-windows-amd64.zip"
     if ($IsLinux) {
-        $fileName = "pglet-linux-amd64.tar.gz"
+        $fileName = "pglet-$ver-linux-amd64.tar.gz"
     } elseif ($IsMacOS) {
-        $fileName = "pglet-darwin-amd64.tar.gz"
+        $fileName = "pglet-$ver-darwin-amd64.tar.gz"
     }
 
     # GitHub requires TLS 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    # Min version required by PS module
-    $ver = $MyInvocation.MyCommand.Module.PrivateData.Pglet.MinimumVersion
 
     # Installed version
     if (Test-Path $PGLET_EXE) {
