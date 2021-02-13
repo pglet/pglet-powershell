@@ -6,18 +6,18 @@ Connect-PgletPage -Name "index" -NoWindow
 Invoke-Pglet "clean page"
 
 Invoke-Pglet "add
-text value=Squares size=large
+text value=Squares size=LARGE
 stack horizontal
   text value='left top' align=left verticalAlign=top width=100 height=100 bgColor=Salmon color=white padding=5
-  text value='center top' size=large align=center verticalAlign=top width=100 height=100 bgColor=Salmon color=white padding=5 border='1px solid #555'
+  text value='center top' size=xlarge align=center verticalAlign=top width=100 height=100 bgColor=Salmon color=white padding=5 border='1px solid #555'
   text value='right top' align=right verticalAlign=top width=100 height=100 bgColor=Salmon color=white padding=5 border='2px solid #555'
 stack horizontal
   text value='left center' align=left verticalAlign=center width=100 height=100 bgColor=PaleGoldenrod padding=5
-  text value='center center' size=large align=center verticalAlign=center width=100 height=100 bgColor=PaleGoldenrod padding=5 padding=5  border='1px solid #555'
+  text value='center center' size=xlarge align=center verticalAlign=center width=100 height=100 bgColor=PaleGoldenrod padding=5 padding=5  border='1px solid #555'
   text value='right center' align=right verticalAlign=center width=100 height=100 bgColor=PaleGoldenrod padding=5  border='2px solid #555'
 stack horizontal
   text value='left bottom' align=left verticalAlign=center width=6rem height=6rem bgColor=PaleGreen padding=5
-  text value='center bottom' size=large align=center verticalAlign=center width=6rem height=6rem bgColor=PaleGreen padding=5 padding=5 border='1px solid #555'
+  text value='center bottom' size=xlarge align=center verticalAlign=center width=6rem height=6rem bgColor=PaleGreen padding=5 padding=5 border='1px solid #555'
   text value='right bottom' align=right verticalAlign=center width=6rem height=6rem bgColor=PaleGreen padding=5 border='2px solid #555'
 text value=Circles size=large
 stack horizontal

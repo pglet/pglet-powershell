@@ -17,11 +17,11 @@ nav
     item key=twitter text='Share to Twitter'
 
 text value='Nav without groups' size=large
-nav
+nav value=email
   item
     item expanded text='New'
       item key='email' text='Email message' icon='Mail'
-      item key='calendar' text='Calendar event' icon='Calendar'
+      item text='Calendar event' icon='Calendar'
     item text=Share
       item key=facebook text='Share on Facebook' icon='Share'
       item key=twitter text='Share to Twitter' icon='Share'

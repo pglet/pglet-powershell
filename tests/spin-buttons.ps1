@@ -9,6 +9,7 @@ Invoke-Pglet "set page horizontalAlign='start'"
 Invoke-Pglet "add
   stack width='50%'
     spinButton label='Spin button with ranges' min='-5' max=15 step=1 value=-2
+    spinButton label='Decimal step' min='-5' max=10 step=0.1 value=2
 "
 
 #

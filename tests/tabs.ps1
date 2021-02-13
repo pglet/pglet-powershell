@@ -7,7 +7,7 @@ Invoke-Pglet "clean page"
 
 Invoke-Pglet "
 add tabs solid id=t1
-  tab key=10 text='Tab 1' icon=Globe
+  tab key='' text='Tab 1' icon=Globe
     stack horizontal
       text value='This is tab1'
       text value='This is tab1 - line2'
@@ -15,7 +15,7 @@ add tabs solid id=t1
     stack gap=10
       text value='This is tab2'
       text value='This is tab2 - line2'
-  tab key=30 text='Tab 3' icon=Ringer
+  tab text='Tab 3' icon=Ringer
     stack gap=10
       text value='This is tab3'
       text value='This is tab3 - line2'
