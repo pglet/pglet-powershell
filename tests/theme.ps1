@@ -11,6 +11,11 @@ Invoke-Pglet "add
   stack horizontal horizontalAlign=space-between
     text value='Theme selector example' size=large
     toggle id=theme label=Theme inline onText=Light offText=Dark
+  stack
+    text value='Code sample' size=xlarge
+    text markdown value='# Hello!\n\n``````powershell\nInvoke-Pglet `"clean page`"\n``````\n\nJust another [link](https://pglet.io)'
+    text pre size=large value='`$i = 0\nWrite-Host `"Test!`"'
+    link url='https://pglet.io' value='Go to Pglet'
   stack horizontal
     button text='Standard'
     button disabled text='Standard disabled'
