@@ -7,8 +7,10 @@ Invoke-Pglet "clean page"
 
 Invoke-Pglet "add
 link url='http://google.com' value='Visit Google' newWindow
-link value='Link without URL' size=large
+link pre value='Link without URL' size=large
 link url='http://google.com' value='Cannot visit this link' disabled
+link url='http://shopify.com' title='Visit Shopify' newWindow
+  icon name=Shop color=blue size=50
 "
 
 Invoke-Pglet "add
@@ -23,7 +25,11 @@ Invoke-Pglet "add
     icon name=Settings color=SlateBlue size=50px
     icon name=Save size=100px"
 
-Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl \nf;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj\n dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj \ndfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f'"
+Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl \nf;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvjdfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f'"
+
+Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl \nf;lvj'"
+
+Invoke-Pglet "add text pre height=100 value='Line 1\nLine 2\nLine 3\nLine 1\nLine 2\nLine 3\nLine 1\nLine 2\nLine 3\nLine 1\nLine 2\nLine 3'"
 
 # Standard button
 Invoke-Pglet "add text value='Standard button' size='xLarge'"

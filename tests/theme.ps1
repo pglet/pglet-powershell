@@ -13,8 +13,10 @@ Invoke-Pglet "add
     toggle id=theme label=Theme inline onText=Light offText=Dark
   stack
     text value='Code sample' size=xlarge
-    text markdown value='# Hello!\n\n``````powershell\nInvoke-Pglet `"clean page`"\n``````\n\nJust another [link](https://pglet.io)'
-    text pre size=large value='`$i = 0\nWrite-Host `"Test!`"'
+    text markdown value='# Heading 1\n## Heading 2\n### Heading 3\n#### Heading 4\n##### Heading 5\n\n``````powershell\nInvoke-Pglet `"clean page`"\n``````\n\nJust another [link](https://pglet.io)\n\nParagraph 1\n\nParagraph 2'
+    text pre size=small value='`$i = 1\nWrite-Host `"Test 1`"'
+    text pre size=medium value='`$i = 2\nWrite-Host `"Test 2`"'
+    text pre size=large value='`$i = 3\nWrite-Host `"Test 3`"'
     link url='https://pglet.io' value='Go to Pglet'
   stack horizontal
     button text='Standard'
@@ -32,7 +34,7 @@ Invoke-Pglet "add
     button toolbar icon='Add' text='New item'
     button toolbar icon='Mail' text='Send'
     button toolbar icon='ChevronDown' text='Show example'
-    button toolbar icon='Delete' iconColor=red text='Delete'
+    button toolbar icon='Delete' iconColor=orange20 text='Delete'
   stack horizontal
     button icon='Emoji2' title=Emoji!
     button icon='Calendar' title=Calendar!

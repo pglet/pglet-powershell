@@ -14,7 +14,7 @@ Invoke-Pglet "add
     option key=green
     option key=blue
   choicegroup label='Pick one icon'
-    option key=day text=Day icon=CalendarDay
+    option key=day text=Day icon=CalendarDay iconColor=red
     option key=week text=Week icon=CalendarWeek
     option key=month text=Month icon=Calendar
 "
