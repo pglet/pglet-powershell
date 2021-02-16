@@ -10,7 +10,7 @@ link url='http://google.com' value='Visit Google' newWindow
 link pre value='Link without URL' size=large
 link url='http://google.com' value='Cannot visit this link' disabled
 link url='http://shopify.com' title='Visit Shopify' newWindow
-  icon name=Shop color=blue size=50
+  icon name=Shop color=themePrimary size=50
 "
 
 Invoke-Pglet "add
@@ -23,7 +23,7 @@ Invoke-Pglet "add
   stack horizontal verticalAlign=center
     icon name=BlockedSite color=Maroon size=25px
     icon name=Settings color=SlateBlue size=50px
-    icon name=Save size=100px"
+    icon name=Save size=100px color=magentaDark"
 
 Invoke-Pglet "add text pre value='Line 1\nLine 2\nLine 3 ;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl \nf;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvjdfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f;lvj dfljs dklfjs lkfj lfkjsd flkjsd lfkjsd lkfjsdlkfjsl f'"
 
