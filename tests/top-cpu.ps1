@@ -3,16 +3,18 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 
 $userName = $env:UserName
 $compName = $env:ComputerName
+$totalRam = (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum / 1024 / 1024
 
-Connect-PgletPage -Name "$userName/$compName" -web
+#Connect-PgletPage -Name "$userName/$compName" -web
+Connect-PgletPage -Name "index" -NoWindow
 
-Invoke-Pglet "clean page"
-Invoke-Pglet "set page title='Top 10 CPU processes' padding=10px"
+Invoke-Pglet "set page title='Task Manager' padding=10px"
 
 Invoke-Pglet "add
-text id=title value='Top 10 CPU processes' size=xLarge
+text id=title value='Task Manager' size=xLarge
 tabs id=computers width='100%'
-  tab id=$compName text=$compName
+  tab text=$compName
+    stack id=$compName gap=20
 "
 
 $tabId = "computers:$compName"
@@ -20,6 +22,7 @@ $tabId = "computers:$compName"
 Invoke-Pglet "clean $tabId"
 
 Invoke-Pglet "add to=$tabId
+
 grid compact=false shimmerLines=5 selection=single preserveSelection=true headerVisible=true
   columns
     column resizable sortable fieldName='name' name='Process name' maxWidth=100
@@ -27,6 +30,18 @@ grid compact=false shimmerLines=5 selection=single preserveSelection=true header
     column resizable sortable sorted=desc fieldName='cpu_display' sortField=cpu name='CPU %' maxWidth=100
     column resizable sortable fieldName='path' name='Path'
   items id=gridItems
+
+stack horizontal gap=20
+
+  stack width='50%'
+    text value='CPU, %' size=large
+    lineChart tooltips xtype=date yticks=5 ymax=100 yformat='{y}%' height=300
+      data id=cpu_chart legend='CPU'
+
+  stack width='50%'
+    text value='RAM, MB' size=large
+    lineChart tooltips xtype=date yticks=5 ymax=$totalRam height=300
+      data id=ram_chart legend='RAM'
 "
 
 function getTopProcesses($maxCount) {
@@ -45,11 +60,41 @@ function getTopProcesses($maxCount) {
         @{Name="CPU";Expression={[Decimal]::Round(($_.CookedValue / $CpuCores), 2)}}
 }
 
-while($true) {
-  $cmd = "replace to=$($tabId):gridItems`n"
-  $cmd += (getTopProcesses 10 |
-    ForEach-Object { "item id=$($_.PID) pid=$($_.PID) name='$($_.InstanceName)' cpu=$($_.CPU) cpu_display='$($_.CPU)%' path='$($_.Path -replace '\\', '\\')'" }) -join "`n"
+# Generate 30 empty values for the last minute to initially fill charts
+$points=@()
+for($i = -30; $i -lt 0; $i++) {
+  $d=(Get-Date).AddSeconds($i*2)
+  $points += "p x='$d' y=0"
+}
 
+# Init CPU chart with "past" data
+$cpuChartId="$($tabId):cpu_chart"
+Invoke-Pglet "addf to=$cpuChartId `n$($points -join "`n")"
+
+# Init RAM chart with "past" data
+$ramChartId="$($tabId):ram_chart"
+Invoke-Pglet "addf to=$ramChartId `n$($points -join "`n")"
+
+# Main update loop
+while($true) {
+
+  # update top processes
+  $cmd = "replace to=$($tabId):gridItems`n"
+  $cmd += (getTopProcesses 5 |
+    ForEach-Object { "item id=$($_.PID) pid=$($_.PID) name='$($_.InstanceName)' cpu=$($_.CPU) cpu_display='$($_.CPU)%' path='$($_.Path -replace '\\', '\\')'" }) -join "`n"
   Invoke-Pglet $cmd | Out-Null
+
+  $d=(Get-Date)
+
+  # Update CPU load
+  $cpuLoad = (Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples.CookedValue.ToString("#,0.00")
+  Invoke-Pglet "addf to=$cpuChartId trim=30 p x='$d' y=$cpuLoad"
+
+  # Update RAM load
+  $availRam = (Get-Counter '\Memory\Available MBytes').CounterSamples.CookedValue
+  $usedRam = $totalRam - $availRam
+  $usedRamGB = ($usedRam/1024).ToString("#,0.00")
+  Invoke-Pglet "addf to=$ramChartId trim=30 p x='$d' y=$usedRam ytooltip='$usedRamGB GB'"
+
   Start-Sleep -s 2
 }
