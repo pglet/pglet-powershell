@@ -24,4 +24,22 @@ stack horizontal
   text value='regular' align=center verticalAlign=center width=100px height=100px bgColor=Salmon color=white borderRadius=50
   text bold italic value='bold italic' align=center verticalAlign=center width=100 height=100 bgColor=PaleGoldenrod borderRadius=50 border='1px solid #555'
   text bold value='bold' align=center verticalAlign=center width=100 height=100 bgColor=PaleGreen color='#555' borderRadius=50 border='2px solid #555'
+text value='Some internal links' size=large
+stack
+  link url='#section1' value='Section 1'
+  link url='#aaa' value='Section AAA'
+  link url='#' value='Home'
 "
+
+Start-Sleep -s 2
+Invoke-Pglet "set page hash=a10"
+
+Start-Sleep -s 2
+Invoke-Pglet "set page hash=b20"
+
+Start-Sleep -s 2
+Invoke-Pglet "set page hash=c30"
+
+# while($true) {
+#     Wait-PgletEvent $pageID
+# }

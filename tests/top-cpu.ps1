@@ -1,12 +1,13 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+$userName = $env:UserName
+$compName = $env:ComputerName
+
+Connect-PgletPage -Name "$userName/$compName" -web
 
 Invoke-Pglet "clean page"
 Invoke-Pglet "set page title='Top 10 CPU processes' padding=10px"
-
-$compName = $env:computername
 
 Invoke-Pglet "add
 text id=title value='Top 10 CPU processes' size=xLarge
@@ -27,8 +28,6 @@ grid compact=false shimmerLines=5 selection=single preserveSelection=true header
     column resizable sortable fieldName='path' name='Path'
   items id=gridItems
 "
-
-#Start-Sleep -s 5
 
 function getTopProcesses($maxCount) {
   $procIDs = @{}
@@ -51,9 +50,6 @@ while($true) {
   $cmd += (getTopProcesses 10 |
     ForEach-Object { "item id=$($_.PID) pid=$($_.PID) name='$($_.InstanceName)' cpu=$($_.CPU) cpu_display='$($_.CPU)%' path='$($_.Path -replace '\\', '\\')'" }) -join "`n"
 
-  #Invoke-Pglet "clean $($tabId):gridItems" | Out-Null
   Invoke-Pglet $cmd | Out-Null
   Start-Sleep -s 2
-  #Invoke-Pglet "clean $($tabId):gridItems" | Out-Null
-  #return
 }
