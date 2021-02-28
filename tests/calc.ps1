@@ -1,26 +1,21 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+Connect-PgletPage -Name "index" -Token 1234 -NoWindow
 
-Invoke-Pglet "clean page"
+function Stack() {
+  "stack"
+}
 
-Invoke-Pglet "add
-  textbox
-  stack horizontal
-    textbox
-  stack horizontal
-    button text='7'    
-    button text='8'
-    button text='9'
-    button text='/'
-  stack horizontal
-    button text='4'    
-    button text='5'
-    button text='6'
-    button text='*'
-"
+function Button() {
+  "button"
+}
 
-# while($true) {
-#     Wait-PgletEvent $pageID
-# }
+$stack = Stack -Horizontal -Controls @(
+  Button -Text "7"
+  Button -Text "8"
+  Button -Text "9"
+  Button -Text "10"
+)
+
+$stack.Controls.Add($b)
