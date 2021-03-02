@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+Connect-PgletPage -Name "index" -Web
 
 Invoke-Pglet "clean page"
 

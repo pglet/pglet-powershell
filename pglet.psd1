@@ -22,7 +22,7 @@
         )
     PrivateData       = @{
         Pglet  = @{
-            MinimumVersion = "0.2.2"
+            MinimumVersion = "0.2.4"
         }
         PSData = @{
             #Tags = @()
