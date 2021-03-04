@@ -8,12 +8,15 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
-            await TestApp();
+            //await TestApp();
+            await TestPage();
         }
 
         private static async Task TestPage()
         {
             var page = await Pglet.Page("index", noWindow: true);
+            string id = await page.Connection.Send("add text value='Hello, C#!'");
+            Debug.WriteLine(id);
         }
 
         private static async Task TestApp()

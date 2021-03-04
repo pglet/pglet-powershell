@@ -40,14 +40,21 @@ namespace Pglet
             }
 
             var match = Regex.Match(line, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
-            var pipeId = match.Groups["pipe_id"].Value;
-            var pageUrl = match.Groups["page_url"].Value;
+            if (match.Success)
+            {
+                var pipeId = match.Groups["pipe_id"].Value;
+                var pageUrl = match.Groups["page_url"].Value;
 
-            // create and open connection
-            var conn = new Connection(pipeId);
-            await conn.Open();
+                // create and open connection
+                var conn = new Connection(pipeId);
+                await conn.Open();
 
-            return new Page(conn, pageUrl);
+                return new Page(conn, pageUrl);
+            }
+            else
+            {
+                throw new Exception($"Invalid pglet results: {line}");
+            }
         }
 
         public static async Task App(Func<Page, Task> sessionHandler, string name = null, bool web = false,

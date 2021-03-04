@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -9,6 +11,7 @@ namespace Pglet
     {
         private const int CONNECTION_TIMEOUT = 5000;
         private const int MAX_WRITE_BUFFER = 65535;
+        private const string ERROR_RESULT = "error";
 
         string _pipeId;
         NamedPipeClientStream _commandPipe;
@@ -42,6 +45,79 @@ namespace Pglet
                 _commandPipeWriter.AutoFlush = true;
                 _eventPipeReader = new StreamReader(_eventPipe);
             }
+        }
+
+        public async Task<string> Send(string commandText)
+        {
+            bool waitResult = true;
+            var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
+            if (match.Success)
+            {
+                var commandName = match.Groups["commandName"].Value;
+                if (commandName.ToLowerInvariant().EndsWith("f"))
+                {
+                    waitResult = false;
+                }
+            }
+
+            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            {
+                _commandPipeWriter = new StreamWriter(_pipeId);
+            }
+
+            await _commandPipeWriter.WriteLineAsync(commandText);
+
+            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            {
+                _commandPipeWriter.Close();
+            }
+
+            if (waitResult)
+            {
+                try
+                {
+                    if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                    {
+                        _commandPipeReader = new StreamReader(_pipeId);
+                    }
+
+                    var result = _commandPipeReader.ReadLine();
+
+                    if (result.StartsWith($"{ERROR_RESULT} "))
+                    {
+                        throw new Exception(result.Substring(ERROR_RESULT.Length + 1));
+                    }
+                    else
+                    {
+                        var resultMatch = Regex.Match(result, @"(?<lines_count>[\d]+)\s(?<result>.*)");
+                        if (resultMatch.Success)
+                        {
+                            var linesCount = Int32.Parse(resultMatch.Groups["lines_count"].Value);
+                            result = resultMatch.Groups["result"].Value;
+                            for (int i = 0; i < linesCount; i++)
+                            {
+                                var line = _commandPipeReader.ReadLine();
+                                result += $"\n{line}";
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"Invalid result: {result}");
+                        }
+                    }
+
+                    return result;
+                }
+                finally
+                {
+                    if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                    {
+                        _commandPipeReader.Close();
+                    }
+                }
+            }
+
+            return null;
         }
 
         public void Close()
