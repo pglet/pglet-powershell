@@ -30,7 +30,7 @@ namespace Pglet
             _pipeId = pipeId;
         }
 
-        public async Task Open()
+        public async Task OpenAsync()
         {
             if (!RuntimeInfo.IsLinux && !RuntimeInfo.IsMac)
             {
@@ -47,7 +47,12 @@ namespace Pglet
             }
         }
 
-        public async Task<string> Send(string commandText)
+        public string Send(string commandText)
+        {
+            return SendAsync(commandText).GetAwaiter().GetResult();
+        }
+
+        public async Task<string> SendAsync(string commandText)
         {
             bool waitResult = true;
             var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");

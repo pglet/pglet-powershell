@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet.Tests
@@ -15,10 +16,10 @@ namespace Pglet.Tests
         private static async Task TestPage()
         {
             var page = await Pglet.Page("index", noWindow: true);
-            await page.Connection.Send("clean page");
+            await page.Connection.SendAsync("clean page");
 
             int i = 0;
-            var result = await page.Connection.Send(@"add
+            var result = await page.Connection.SendAsync(@"add
 stack horizontal
   button text='-'
   text value='0'
@@ -39,12 +40,12 @@ stack horizontal
                 if (e.Target == plusBtn)
                 {
                     i++;
-                    await page.Connection.Send($"set {id} value={i}");
+                    await page.Connection.SendAsync($"set {id} value={i}");
                 }
                 else if (e.Target == minBtn)
                 {
                     i--;
-                    await page.Connection.Send($"set {id} value={i}");
+                    await page.Connection.SendAsync($"set {id} value={i}");
                 }
             }
         }
@@ -57,7 +58,7 @@ stack horizontal
                 await Task.Delay(30000);
                 Debug.WriteLine("Session end");
 
-            }, "index", noWindow: true);
+            }, CancellationToken.None, "index", noWindow: true);
         }
     }
 }

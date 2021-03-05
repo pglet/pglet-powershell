@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -47,7 +47,7 @@ namespace Pglet
 
                 // create and open connection
                 var conn = new Connection(pipeId);
-                await conn.Open();
+                await conn.OpenAsync();
 
                 return new Page(conn, pageUrl);
             }
@@ -57,7 +57,7 @@ namespace Pglet
             }
         }
 
-        public static async Task App(Func<Page, Task> sessionHandler, string name = null, bool web = false,
+        public static async Task App(Func<Page, Task> sessionHandler, CancellationToken cancellationToken, string name = null, bool web = false,
             string server = null, string token = null, bool noWindow = false, int ticker = 0)
         {
             var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
@@ -73,26 +73,45 @@ namespace Pglet
                     CreateNoWindow = true
                 }
             };
+
+            var evt = new ManualResetEventSlim(false);
+
             proc.Start();
 
             string line = null;
             string pageUrl = null;
-            while (!proc.StandardOutput.EndOfStream)
+            var t = Task.Run(() =>
             {
-                line = proc.StandardOutput.ReadLine();
-                if (pageUrl == null)
+                while (!proc.StandardOutput.EndOfStream)
                 {
-                    pageUrl = line;
+                    line = proc.StandardOutput.ReadLine();
+                    if (pageUrl == null)
+                    {
+                        pageUrl = line;
+                        continue;
+                    }
+                    evt.Set();
                 }
-                else
-                {
-                    // create and open connection
-                    var conn = new Connection(line);
-                    await conn.Open();
+                line = null;
+                evt.Set();
+            });
 
-                    var page = new Page(conn, pageUrl);
-                    var h = sessionHandler(page);
+            while (true)
+            {
+                evt.Reset();
+                evt.Wait(cancellationToken);
+
+                if (line == null)
+                {
+                    return;
                 }
+
+                // create and open connection
+                var conn = new Connection(line);
+                await conn.OpenAsync();
+
+                var page = new Page(conn, pageUrl);
+                var h = sessionHandler(page);
             }
         }
 
