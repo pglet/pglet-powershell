@@ -62,7 +62,7 @@ namespace Pglet
         {
             var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
 
-            var proc = new Process
+            using (var proc = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -72,46 +72,56 @@ namespace Pglet
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
                 }
-            };
-
-            var evt = new ManualResetEventSlim(false);
-
-            proc.Start();
-
-            string line = null;
-            string pageUrl = null;
-            var t = Task.Run(() =>
+            })
             {
-                while (!proc.StandardOutput.EndOfStream)
+                var evt = new ManualResetEventSlim(false);
+
+                proc.Start();
+
+                string line = null;
+                string pageUrl = null;
+                var t = Task.Run(() =>
                 {
-                    line = proc.StandardOutput.ReadLine();
-                    if (pageUrl == null)
+                    while (!proc.StandardOutput.EndOfStream)
                     {
-                        pageUrl = line;
-                        continue;
+                        line = proc.StandardOutput.ReadLine();
+                        if (pageUrl == null)
+                        {
+                            pageUrl = line;
+                            continue;
+                        }
+                        evt.Set();
                     }
+                    line = null;
                     evt.Set();
-                }
-                line = null;
-                evt.Set();
-            });
+                });
 
-            while (true)
-            {
-                evt.Reset();
-                evt.Wait(cancellationToken);
-
-                if (line == null)
+                while (true)
                 {
-                    return;
+                    evt.Reset();
+
+                    try
+                    {
+                        evt.Wait(cancellationToken);
+
+                        if (line == null)
+                        {
+                            return;
+                        }
+
+                        // create and open connection
+                        var conn = new Connection(line);
+                        await conn.OpenAsync();
+
+                        var page = new Page(conn, pageUrl);
+                        var h = sessionHandler(page);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        proc.Kill();
+                        return;
+                    }
                 }
-
-                // create and open connection
-                var conn = new Connection(line);
-                await conn.OpenAsync();
-
-                var page = new Page(conn, pageUrl);
-                var h = sessionHandler(page);
             }
         }
 

@@ -9,8 +9,8 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
-            //await TestApp();
-            await TestPage();
+            await TestApp();
+            //await TestPage();
         }
 
         private static async Task TestPage()

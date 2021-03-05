@@ -1,14 +1,17 @@
 ﻿using System;
+using System.IO;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommunications.Connect, "PgletAppSync")]
+    [Cmdlet(VerbsCommunications.Connect, "PgletApp")]
     [OutputType(typeof(Page))]
     public class ConnectPgletAppCommandSync : PSCmdlet
     {
+        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }
 
@@ -41,13 +44,20 @@ namespace Pglet.PowerShell
 
             Pglet.App((page) =>
             {
-                WriteObject($"connection ID: {page.Connection.PipeId}");
-                var result = this.SessionState.InvokeCommand.InvokeScript(ScriptBlock.ToString());
-                this.WriteObject(result, false);
+                File.AppendAllText(@"C:\projects\2\sessions.txt", page.Connection.PipeId);
+                //WriteObject($"connection ID: {page.Connection.PipeId}");
+                //var result = this.SessionState.InvokeCommand.InvokeScript(ScriptBlock.ToString());
+                //this.WriteObject(result, false);
                 return Task.CompletedTask;
             },
-            cancellationToken: CancellationToken.None, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0);
+            cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).Wait();
+        }
+
+        protected override void StopProcessing()
+        {
+            _cancellationSource.Cancel();
+            base.StopProcessing();
         }
     }
 }

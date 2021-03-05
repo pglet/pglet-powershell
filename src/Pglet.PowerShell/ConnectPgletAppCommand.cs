@@ -1,11 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommunications.Connect, "PgletApp")]
+    [Cmdlet(VerbsCommunications.Connect, "PgletAppAsync")]
     [OutputType(typeof(Page))]
     public class ConnectPgletAppCommand : AsyncCmdlet
     {
@@ -36,9 +37,11 @@ namespace Pglet.PowerShell
 
             await Pglet.App((page) =>
             {
-                WriteObject($"connection started: {page.Connection.PipeId}");
-                Task.Delay(10000).Wait();
-                WriteObject($"connection end: {page.Connection.PipeId}");
+                File.AppendAllText(@"C:\projects\2\sessions.txt", page.Connection.PipeId + "\n");
+
+                //WriteObject($"connection started: {page.Connection.PipeId}");
+                Task.Delay(60000).Wait();
+                //WriteObject($"connection end: {page.Connection.PipeId}");
                 //var result = this.SessionState.InvokeCommand.InvokeScript(ScriptBlock.ToString());
                 //this.WriteObject(result, false);
                 return Task.CompletedTask;
