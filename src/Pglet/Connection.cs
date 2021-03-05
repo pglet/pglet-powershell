@@ -120,6 +120,41 @@ namespace Pglet
             return null;
         }
 
+        public Task<Event> WaitEvent()
+        {
+            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            {
+                _eventPipeReader = new StreamReader($"{_pipeId}.events");
+            }
+
+            try
+            {
+                var line = _eventPipeReader.ReadLine();
+
+                var match = Regex.Match(line, @"(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*");
+                if (match.Success)
+                {
+                    return Task.FromResult(new Event
+                    {
+                        Target = match.Groups["target"].Value,
+                        Name = match.Groups["name"].Value,
+                        Data = match.Groups["data"].Value
+                    });
+                }
+                else
+                {
+                    throw new Exception($"Invalid event data: {line}");
+                }
+            }
+            finally
+            {
+                if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                {
+                    _eventPipeReader.Close();
+                }
+            }
+        }
+
         public void Close()
         {
             if (!RuntimeInfo.IsLinux && !RuntimeInfo.IsMac)
