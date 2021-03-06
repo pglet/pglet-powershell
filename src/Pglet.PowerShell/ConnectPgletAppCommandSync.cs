@@ -45,6 +45,7 @@ namespace Pglet.PowerShell
             Pglet.App((page) =>
             {
                 File.AppendAllText(@"C:\projects\2\sessions.txt", page.Connection.PipeId);
+                Task.Delay(30000).Wait();
                 //WriteObject($"connection ID: {page.Connection.PipeId}");
                 //var result = this.SessionState.InvokeCommand.InvokeScript(ScriptBlock.ToString());
                 //this.WriteObject(result, false);

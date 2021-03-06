@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -74,52 +75,52 @@ namespace Pglet
                 }
             })
             {
-                var evt = new ManualResetEventSlim(false);
-
                 proc.Start();
 
-                string line = null;
-                string pageUrl = null;
-                var t = Task.Run(() =>
+                using (BlockingCollection<string> bc = new BlockingCollection<string>())
                 {
-                    while (!proc.StandardOutput.EndOfStream)
+                    string line = null;
+                    string pageUrl = null;
+                    var t = Task.Run(() =>
                     {
-                        line = proc.StandardOutput.ReadLine();
-                        if (pageUrl == null)
+                        while (!proc.StandardOutput.EndOfStream)
                         {
-                            pageUrl = line;
-                            continue;
+                            line = proc.StandardOutput.ReadLine();
+                            if (pageUrl == null)
+                            {
+                                pageUrl = line;
+                            }
+                            else
+                            {
+                                bc.Add(line);
+                            }
                         }
-                        evt.Set();
-                    }
-                    line = null;
-                    evt.Set();
-                });
+                        bc.Add(null);
+                    });
 
-                while (true)
-                {
-                    evt.Reset();
-
-                    try
+                    while (true)
                     {
-                        evt.Wait(cancellationToken);
-
-                        if (line == null)
+                        try
                         {
+                            line = bc.Take(cancellationToken);
+
+                            if (line == null)
+                            {
+                                return;
+                            }
+
+                            // create and open connection
+                            var conn = new Connection(line);
+                            await conn.OpenAsync();
+
+                            var page = new Page(conn, pageUrl);
+                            var h = sessionHandler(page);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            proc.Kill();
                             return;
                         }
-
-                        // create and open connection
-                        var conn = new Connection(line);
-                        await conn.OpenAsync();
-
-                        var page = new Page(conn, pageUrl);
-                        var h = sessionHandler(page);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        proc.Kill();
-                        return;
                     }
                 }
             }
