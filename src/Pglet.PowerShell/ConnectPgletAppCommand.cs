@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsCommunications.Connect, "PgletApp")]
-    [OutputType(typeof(Page))]
     public class ConnectPgletAppCommand : PSCmdlet
     {
         readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();

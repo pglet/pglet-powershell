@@ -35,7 +35,7 @@ stack horizontal
 
             while (true)
             {
-                var e = await page.Connection.WaitEvent();
+                var e = page.Connection.WaitEvent();
                 Debug.WriteLine(e);
                 if (e.Target == plusBtn)
                 {

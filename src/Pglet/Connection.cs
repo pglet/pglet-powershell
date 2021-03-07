@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -19,6 +20,9 @@ namespace Pglet
         StreamReader _commandPipeReader;
         StreamWriter _commandPipeWriter;
         StreamReader _eventPipeReader;
+
+        Event _lastEvent;
+        AutoResetEvent _resetEvent = new AutoResetEvent(false);
 
         public string PipeId
         {
@@ -45,6 +49,14 @@ namespace Pglet
                 _commandPipeWriter.AutoFlush = true;
                 _eventPipeReader = new StreamReader(_eventPipe);
             }
+
+            //var t = Task.Run(() => EventLoop());
+            var t = Task.Factory.StartNew(
+                action: () => EventLoop(),
+                cancellationToken: CancellationToken.None,
+                creationOptions: TaskCreationOptions.LongRunning,
+                scheduler: TaskScheduler.Default
+            );
         }
 
         public string Send(string commandText)
@@ -125,7 +137,34 @@ namespace Pglet
             return null;
         }
 
-        public Task<Event> WaitEvent()
+        public void EventLoop()
+        {
+            while(true)
+            {
+                _lastEvent = WaitEventInternal();
+                _resetEvent.Set();
+            }
+        }
+
+        public Event WaitEvent()
+        {
+            return WaitEvent(CancellationToken.None);
+        }
+
+        public Event WaitEvent(CancellationToken cancellationToken)
+        {
+            _resetEvent.Reset();
+
+            int n = WaitHandle.WaitAny(new[] { _resetEvent, cancellationToken.WaitHandle });
+            if (n == 1)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            return _lastEvent;
+        }
+
+        private Event WaitEventInternal()
         {
             if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
             {
@@ -139,12 +178,12 @@ namespace Pglet
                 var match = Regex.Match(line, @"(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*");
                 if (match.Success)
                 {
-                    return Task.FromResult(new Event
+                    return new Event
                     {
                         Target = match.Groups["target"].Value,
                         Name = match.Groups["name"].Value,
                         Data = match.Groups["data"].Value
-                    });
+                    };
                 }
                 else
                 {
