@@ -1,8 +1,14 @@
-﻿using System;
+﻿using SharpCompress.Archives;
+using SharpCompress.Archives.Tar;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +17,8 @@ namespace Pglet
 {
     public static class Pglet
     {
+        public const string PGLET_VERSION = "0.2.4";
+
         private static string _pgletExe;
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
@@ -19,47 +27,23 @@ namespace Pglet
         {
             var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
 
-            using (var proc = new Process
+            string result = ExecuteProcess(await GetPgletPath(), args);
+
+            var match = Regex.Match(result, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
+            if (match.Success)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = await GetPgletPath(),
-                    Arguments = args,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            })
+                var pipeId = match.Groups["pipe_id"].Value;
+                var pageUrl = match.Groups["page_url"].Value;
+
+                // create and open connection
+                var conn = new Connection(pipeId);
+                await conn.OpenAsync();
+
+                return new Page(conn, pageUrl);
+            }
+            else
             {
-                proc.Start();
-
-                string line = null;
-                while (!proc.StandardOutput.EndOfStream)
-                {
-                    line = proc.StandardOutput.ReadLine();
-                }
-
-                if (proc.ExitCode != 0)
-                {
-                    throw new Exception($"Pglet process exited with code {proc.ExitCode}");
-                }
-
-                var match = Regex.Match(line, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
-                if (match.Success)
-                {
-                    var pipeId = match.Groups["pipe_id"].Value;
-                    var pageUrl = match.Groups["page_url"].Value;
-
-                    // create and open connection
-                    var conn = new Connection(pipeId);
-                    await conn.OpenAsync();
-
-                    return new Page(conn, pageUrl);
-                }
-                else
-                {
-                    throw new Exception($"Invalid pglet results: {line}");
-                }
+                throw new Exception($"Invalid pglet results: {result}");
             }
         }
 
@@ -76,7 +60,7 @@ namespace Pglet
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
-                    CreateNoWindow = true
+                    CreateNoWindow = false
                 }
             })
             {
@@ -195,13 +179,120 @@ namespace Pglet
 
         private static async Task<string> Install()
         {
-            if (RuntimeInfo.IsWindows)
+            var pgletExe = "pglet.exe";
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
             {
-                return Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".pglet", "bin", "pglet.exe");
+                pgletExe = "pglet";
             }
-            else
+
+            // check if pglet.exe is already in PATH
+            var paths = Environment.GetEnvironmentVariable("PATH");
+            foreach (var path in paths.Split(Path.PathSeparator))
             {
-                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".pglet", "bin", "pglet");
+                var fullPath = Path.Combine(path, pgletExe);
+                if (File.Exists(fullPath))
+                {
+                    pgletExe = fullPath;
+                    return pgletExe;
+                }
+            }
+
+            var homeDir = RuntimeInfo.IsWindows ? Environment.GetEnvironmentVariable("USERPROFILE") : Environment.GetEnvironmentVariable("HOME");
+            var pgletHomeDir = Path.Combine(homeDir, ".pglet");
+            var pgletBinDir = Path.Combine(pgletHomeDir, "bin");
+            pgletExe = Path.Combine(pgletBinDir, pgletExe);
+
+            if (!Directory.Exists(pgletBinDir))
+            {
+                Directory.CreateDirectory(pgletBinDir);
+            }
+
+            var ver = PGLET_VERSION;
+            var fileName = $"pglet-{ver}-windows-amd64.zip";
+            if (RuntimeInfo.IsLinux)
+            {
+                fileName = $"pglet-{ver}-linux-amd64.tar.gz";
+            }
+            else if (RuntimeInfo.IsMac)
+            {
+                fileName = $"pglet-{ver}-darwin-amd64.tar.gz";
+            }
+
+            string installedVer = null;
+            try
+            {
+                installedVer = ExecuteProcess(pgletExe, "--version");
+            }
+            catch { }
+
+            if (installedVer != null && installedVer == ver)
+            {
+                // required version is already installed
+                return pgletExe;
+            }
+
+            Debug.Write($"Installing Pglet v{ver}...");
+            var pgletUri = $"https://github.com/pglet/pglet/releases/download/v{ver}/{fileName}";
+
+            var tempDir = RuntimeInfo.IsWindows ? Environment.GetEnvironmentVariable("TEMP") : "/tmp";
+            var packagePath = Path.Combine(tempDir, fileName);
+            await (new WebClient()).DownloadFileTaskAsync(new Uri(pgletUri), packagePath);
+
+            Unpack(packagePath, pgletBinDir);
+            File.Delete(packagePath);
+
+            Debug.WriteLine("OK");
+
+            return pgletExe;
+        }
+
+        private static void Unpack(string archivePath, string destDirectory)
+        {
+            using (Stream stream = File.OpenRead(archivePath))
+            using (var reader = ReaderFactory.Open(stream))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        reader.WriteEntryToDirectory(destDirectory, new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
+                    }
+                }
+            }
+        }
+
+        private static string ExecuteProcess(string fileName, string arguments)
+        {
+            using (var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = false
+                }
+            })
+            {
+                proc.Start();
+
+                string line = null;
+                while (!proc.StandardOutput.EndOfStream)
+                {
+                    line = proc.StandardOutput.ReadLine();
+                }
+
+                if (proc.ExitCode != 0)
+                {
+                    throw new Exception($"Pglet process exited with code {proc.ExitCode}");
+                }
+
+                return line;
             }
         }
     }
