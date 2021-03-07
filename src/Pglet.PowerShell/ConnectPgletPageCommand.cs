@@ -6,7 +6,7 @@ namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsCommunications.Connect, "PgletPage")]
     [OutputType(typeof(Page))]
-    public class ConnectPgletPageCommand : AsyncCmdlet
+    public class ConnectPgletPageCommand : PSCmdlet
     {
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }
@@ -26,10 +26,10 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
         public int? Ticker { get; set; }
 
-        protected override async Task ProcessRecordAsync(CancellationToken cancellationToken)
+        protected override void ProcessRecord()
         {
-            var page = await Pglet.Page(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0);
+            var page = Pglet.Page(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).GetAwaiter().GetResult();
             WriteObject(page);
         }
     }

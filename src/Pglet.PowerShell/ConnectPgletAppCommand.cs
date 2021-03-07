@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommunications.Connect, "PgletAppAsync")]
+    [Cmdlet(VerbsCommunications.Connect, "PgletApp")]
     [OutputType(typeof(Page))]
-    public class ConnectPgletAppCommand : AsyncCmdlet
+    public class ConnectPgletAppCommand : PSCmdlet
     {
+        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }
 
@@ -31,23 +33,24 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
         public int? Ticker { get; set; }
 
-        protected override async Task ProcessRecordAsync(CancellationToken cancellationToken)
+        protected override void ProcessRecord()
         {
-            WriteObject("ProcessRecordAsync!");
+            WriteObject("ProcessRecord!");
 
-            await Pglet.App((page) =>
+            Pglet.App(async (page) =>
             {
-                File.AppendAllText(@"C:\projects\2\sessions.txt", page.Connection.PipeId + "\n");
-
-                //WriteObject($"connection started: {page.Connection.PipeId}");
-                Task.Delay(60000).Wait();
-                //WriteObject($"connection end: {page.Connection.PipeId}");
-                //var result = this.SessionState.InvokeCommand.InvokeScript(ScriptBlock.ToString());
-                //this.WriteObject(result, false);
-                return Task.CompletedTask;
+                //File.AppendAllText(@"C:\projects\2\sessions.txt", $"start of: {page.Connection.PipeId}\n");
+                await Task.Delay(30000);
+                //File.AppendAllText(@"C:\projects\2\sessions.txt", $"end of: {page.Connection.PipeId}\n");
             },
-            cancellationToken: cancellationToken, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0);
+            cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).Wait();
+        }
+
+        protected override void StopProcessing()
+        {
+            _cancellationSource.Cancel();
+            base.StopProcessing();
         }
     }
 }

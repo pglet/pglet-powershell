@@ -11,50 +11,55 @@ namespace Pglet
 {
     public static class Pglet
     {
+        private static string _pgletExe;
+        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
         public static async Task<Page> Page(string name = null, bool web = false,
             string server = null, string token = null, bool noWindow = false, int ticker = 0)
         {
             var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
 
-            var proc = new Process
+            using (var proc = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = GetPgletPath(),
+                    FileName = await GetPgletPath(),
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
                 }
-            };
-            proc.Start();
-
-            string line = null;
-            while (!proc.StandardOutput.EndOfStream)
+            })
             {
-                line = proc.StandardOutput.ReadLine();
-            }
+                proc.Start();
 
-            if (proc.ExitCode != 0)
-            {
-                throw new Exception($"Pglet process exited with code {proc.ExitCode}");
-            }
+                string line = null;
+                while (!proc.StandardOutput.EndOfStream)
+                {
+                    line = proc.StandardOutput.ReadLine();
+                }
 
-            var match = Regex.Match(line, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
-            if (match.Success)
-            {
-                var pipeId = match.Groups["pipe_id"].Value;
-                var pageUrl = match.Groups["page_url"].Value;
+                if (proc.ExitCode != 0)
+                {
+                    throw new Exception($"Pglet process exited with code {proc.ExitCode}");
+                }
 
-                // create and open connection
-                var conn = new Connection(pipeId);
-                await conn.OpenAsync();
+                var match = Regex.Match(line, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
+                if (match.Success)
+                {
+                    var pipeId = match.Groups["pipe_id"].Value;
+                    var pageUrl = match.Groups["page_url"].Value;
 
-                return new Page(conn, pageUrl);
-            }
-            else
-            {
-                throw new Exception($"Invalid pglet results: {line}");
+                    // create and open connection
+                    var conn = new Connection(pipeId);
+                    await conn.OpenAsync();
+
+                    return new Page(conn, pageUrl);
+                }
+                else
+                {
+                    throw new Exception($"Invalid pglet results: {line}");
+                }
             }
         }
 
@@ -67,7 +72,7 @@ namespace Pglet
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = GetPgletPath(),
+                    FileName = await GetPgletPath(),
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -170,7 +175,25 @@ namespace Pglet
             return string.Join(" ", args);
         }
 
-        private static string GetPgletPath()
+        private static async Task<string> GetPgletPath()
+        {
+            await _semaphore.WaitAsync();
+
+            try
+            {
+                if (_pgletExe == null)
+                {
+                    _pgletExe = await Install();
+                }
+                return _pgletExe;
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private static async Task<string> Install()
         {
             if (RuntimeInfo.IsWindows)
             {
