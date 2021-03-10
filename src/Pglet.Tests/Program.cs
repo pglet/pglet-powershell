@@ -54,9 +54,9 @@ stack horizontal
         {
             await Pglet.App(async (page) =>
             {
-                Debug.WriteLine($"Session started: {page.Connection.PipeId}");
+                Console.WriteLine($"Session started: {page.Connection.PipeId}");
                 await Task.Delay(30000);
-                Debug.WriteLine("Session end");
+                Console.WriteLine("Session end");
 
             }, CancellationToken.None, "index", noWindow: true);
         }

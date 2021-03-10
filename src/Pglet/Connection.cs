@@ -77,14 +77,14 @@ namespace Pglet
                 }
             }
 
-            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
             {
                 _commandPipeWriter = new StreamWriter(_pipeId);
             }
 
             await _commandPipeWriter.WriteLineAsync(commandText);
 
-            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
             {
                 _commandPipeWriter.Close();
             }
@@ -93,7 +93,7 @@ namespace Pglet
             {
                 try
                 {
-                    if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                    if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
                     {
                         _commandPipeReader = new StreamReader(_pipeId);
                     }
@@ -127,7 +127,7 @@ namespace Pglet
                 }
                 finally
                 {
-                    if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                    if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
                     {
                         _commandPipeReader.Close();
                     }
@@ -166,7 +166,7 @@ namespace Pglet
 
         private Event WaitEventInternal()
         {
-            if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
             {
                 _eventPipeReader = new StreamReader($"{_pipeId}.events");
             }
@@ -192,7 +192,7 @@ namespace Pglet
             }
             finally
             {
-                if (RuntimeInfo.IsLinux && RuntimeInfo.IsMac)
+                if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
                 {
                     _eventPipeReader.Close();
                 }

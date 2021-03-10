@@ -287,6 +287,8 @@ namespace Pglet
                     line = proc.StandardOutput.ReadLine();
                 }
 
+                proc.WaitForExit();
+
                 if (proc.ExitCode != 0)
                 {
                     throw new Exception($"Pglet process exited with code {proc.ExitCode}");
