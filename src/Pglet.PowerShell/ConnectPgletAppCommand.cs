@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,8 +39,16 @@ namespace Pglet.PowerShell
 
             Pglet.App(async (page) =>
             {
+                var runspace = RunspaceFactory.CreateRunspace();
+                var ps = System.Management.Automation.PowerShell.Create();
+                ps.Runspace = runspace;
+                runspace.Open();
+                runspace.InitialSessionState.Variables.Add(new SessionStateVariableEntry("PGLET_TEST", "aaa", ""));
+                ps.AddScript(ScriptBlock.ToString());
+                var handle = ps.BeginInvoke();
+
                 //File.AppendAllText(@"C:\projects\2\sessions.txt", $"start of: {page.Connection.PipeId}\n");
-                await Task.Delay(30000);
+                //await Task.Delay(30000);
                 //File.AppendAllText(@"C:\projects\2\sessions.txt", $"end of: {page.Connection.PipeId}\n");
             },
             cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),

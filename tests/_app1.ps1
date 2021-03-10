@@ -5,7 +5,7 @@ New-PgletButton -Id "button1" -OnClick {
 }
 
 Connect-PgletApp "index1" -NoWindow -ScriptBlock {
-    Write-Host "Hello!"
+    [System.Console]::WriteLine("Hello!")
     Start-Sleep -s 10
     Write-Host "Bye!"
 }
