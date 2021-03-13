@@ -1,6 +1,7 @@
-Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'src', 'Pglet.PowerShell', 'bin', 'Debug', 'netstandard2.0', 'Pglet.PowerShell.dll'))
+Remove-Module pglet -ErrorAction SilentlyContinue
+Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-$page2 = Connect-PgletPage "index2" -NoWindow
+$page2 = Connect-PgletPage "index" -NoWindow
 
 Invoke-Pglet "add
 text value='aaabbb123sss'
@@ -12,3 +13,5 @@ while($true) {
     $e = Wait-PgletEvent
     Write-Host "$($e.target) $($e.name)"
 }
+
+Disconnect-Pglet
