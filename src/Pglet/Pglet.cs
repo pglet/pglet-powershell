@@ -1,13 +1,10 @@
-﻿using SharpCompress.Archives;
-using SharpCompress.Archives.Tar;
-using SharpCompress.Common;
+﻿using SharpCompress.Common;
 using SharpCompress.Readers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;

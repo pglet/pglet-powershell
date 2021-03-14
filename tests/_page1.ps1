@@ -11,9 +11,11 @@ button id=submit text='Submit form'
 " -Page $page2
 #$page.Connection.Send("add text value='aaa'")
 
-while($true) {
-    $e = Wait-PgletEvent
-    Write-Host "$($e.target) $($e.name)"
-}
+Get-Module pglet | fl *
+
+# while($true) {
+#     $e = Wait-PgletEvent
+#     Write-Host "$($e.target) $($e.name)"
+# }
 
 #Disconnect-Pglet
