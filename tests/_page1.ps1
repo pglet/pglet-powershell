@@ -3,6 +3,8 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 
 $page2 = Connect-PgletPage "index" -NoWindow
 
+ipg "clean page"
+
 Invoke-Pglet "add
 text value='aaabbb123sss'
 button id=submit text='Submit form'
@@ -14,4 +16,4 @@ while($true) {
     Write-Host "$($e.target) $($e.name)"
 }
 
-Disconnect-Pglet
+#Disconnect-Pglet

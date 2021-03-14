@@ -13,34 +13,6 @@ Default session variables:
 
 #>
 
-function Disconnect-Pglet {
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Page connection ID.")]
-        [string]$Page
-    )
-
-    $ErrorActionPreference = "Stop"
-
-    $pipeId = $Page
-
-    if (-not $pipeId) {
-        $pipeId = $PGLET_CONNECTION_ID
-    }
-
-    if (-not $pipeId) {
-        throw "No active connections."
-    }
-
-    $conn = $PGLET_CONNECTIONS[$pipeId]
-    if ($conn -and (-not $IsLinux -and -not $IsMacOS)) {
-        $conn.pipe.Close()
-        $conn.eventPipe.Close()
-    }
-}
-
-
 function Write-Trace {
     param(
         [Parameter(Mandatory=$true, Position=0, ValueFromRemainingArguments=$true)]
