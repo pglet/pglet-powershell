@@ -5,10 +5,14 @@ environment:
 
 build_script:
 
+- dotnet build src\Pglet.PowerShell
+
 # copy module contents
 - ps: New-Item pglet -Type Directory | Out-Null
 - ps: Copy-Item -Path *.psd1 -Destination pglet
 - ps: Copy-Item -Path *.psm1 -Destination pglet
+- ps: Copy-Item -Path 'bin' -Destination pglet -Recursive
+- ps: Get-ChildItem pglet -Recurse
 
 # publish module
 - ps: |
