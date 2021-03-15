@@ -19,12 +19,10 @@
     CmdletsToExport   = '*'
     VariablesToExport = '*'
     AliasesToExport   = @(
-        'ipg'
+        'ipg',
+        'Button'
         )
     PrivateData       = @{
-        Pglet  = @{
-            MinimumVersion = "0.2.4"
-        }
         PSData = @{
             #Tags = @()
             LicenseUri = 'https://github.com/pglet/pglet-powershell/blob/main/LICENSE'
