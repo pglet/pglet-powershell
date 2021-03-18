@@ -7,7 +7,7 @@ namespace Pglet.PowerShell
     public class InvokePgletCommand : PSCmdlet
     {
         [Parameter(Mandatory = true, Position = 0, HelpMessage = "Page command to invoke.")]
-        public string Command { get; set; }
+        public string[] Command { get; set; }
 
         [Parameter(Mandatory = false, Position = 1, HelpMessage = "Page object to invoke command against.")]
         public Page Page { get; set; }
@@ -25,7 +25,16 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            var result = page.Connection.Send(Command);
+            string result = null;
+            if (Command.Length == 1)
+            {
+                result = page.Connection.Send(Command[0]);
+            }
+            else
+            {
+                result = page.Connection.SendBatch(Command);
+            }
+
             if (!String.IsNullOrEmpty(result))
             {
                 WriteObject(result);

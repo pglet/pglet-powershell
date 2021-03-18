@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -20,6 +21,7 @@ namespace Pglet
         StreamReader _commandPipeReader;
         StreamWriter _commandPipeWriter;
         StreamReader _eventPipeReader;
+        bool _inBatch;
 
         Event _lastEvent;
         AutoResetEvent _resetEvent = new AutoResetEvent(false);
@@ -59,21 +61,47 @@ namespace Pglet
             );
         }
 
+        public string SendBatch(IEnumerable<string> commands)
+        {
+            return SendBatchAsync(commands).GetAwaiter().GetResult();
+        }
+
         public string Send(string commandText)
         {
             return SendAsync(commandText).GetAwaiter().GetResult();
         }
 
+        public async Task<string> SendBatchAsync(IEnumerable<string> commands)
+        {
+            _inBatch = true;
+            await SendAsync("begin");
+
+            foreach(var command in commands)
+            {
+                await SendAsync(command);
+            }
+
+            _inBatch = false;
+            return await SendAsync("end");
+        }
+
         public async Task<string> SendAsync(string commandText)
         {
             bool waitResult = true;
-            var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
-            if (match.Success)
+            if (_inBatch)
             {
-                var commandName = match.Groups["commandName"].Value;
-                if (commandName.ToLowerInvariant().EndsWith("f"))
+                waitResult = false;
+            }
+            else
+            {
+                var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
+                if (match.Success)
                 {
-                    waitResult = false;
+                    var commandName = match.Groups["commandName"].Value;
+                    if (commandName.ToLowerInvariant().EndsWith("f"))
+                    {
+                        waitResult = false;
+                    }
                 }
             }
 
