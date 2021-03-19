@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pglet.Controls;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +10,17 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
-            await TestApp();
+            //await TestApp();
+            await TestControls();
             //await TestPage();
+        }
+
+        private static async Task TestControls()
+        {
+            var page = await Pglet.Page("index", noWindow: true);
+            await page.Connection.SendAsync("clean page");
+
+            var result = await page.Connection.AddAsync(new Control[] { new Icon(name: "Shop", color: "green") });
         }
 
         private static async Task TestPage()
