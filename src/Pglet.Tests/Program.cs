@@ -10,17 +10,30 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
+            TestDiffs();
             //await TestApp();
             await TestControls();
             //await TestPage();
         }
+
 
         private static async Task TestControls()
         {
             var page = await Pglet.Page("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
 
-            var result = await page.Connection.AddAsync(new Control[] { new Icon(name: "Shop", color: "green") });
+            var stack = new Stack
+            {
+                Controls =
+                {
+                    new Icon("Shop", color: "orange"),
+                    new Icon("DependencyAdd", color: "green")
+                }
+            };
+
+            await page.Add(stack);
+
+            var result = await page.Connection.AddAsync(new Control[] { stack });
         }
 
         private static async Task TestPage()
@@ -69,6 +82,116 @@ stack horizontal
                 Console.WriteLine("Session end");
 
             }, CancellationToken.None, "index", noWindow: true);
+        }
+
+        private static void TestDiffs()
+        {
+            //var a = "a,b,c,d";
+            //var b = "b,d,c,e";
+            //TestDiff(a, b);
+
+            //a = "a,b,c,d,e,f,g";
+            //b = "e,f,g,x,y,z";
+            //TestDiff(a, b);
+
+            //a = "a,b,c,d,e,f,g";
+            //b = "a,1,c,2,e,3,g,4";
+            //TestTextDiff(a, b);
+
+            var i1 = new int[] { 1, 2, 3 };
+            var i2 = new int[] { 2, 1, 3, 4, 5 };
+            TestIntDiff(i1, i2);
+        }
+
+        private static void TestTextDiff(string a, string b)
+        {
+            var a1 = a.Replace(',', '\n');
+            var b1 = b.Replace(',', '\n');
+            var f = Diff.DiffText(a1, b1, false, false, false);
+
+            string[] aLines = a1.Split('\n');
+            string[] bLines = b1.Split('\n');
+
+            void WriteLine(int nr, string typ, string aText)
+            {
+                Console.WriteLine($"{typ}({nr}) - {aText}");
+            }
+
+            int n = 0;
+            for (int fdx = 0; fdx < f.Length; fdx++)
+            {
+                Diff.Item aItem = f[fdx];
+
+                // write unchanged lines
+                while ((n < aItem.StartB) && (n < bLines.Length))
+                {
+                    //WriteLine(n, "", bLines[n]);
+                    n++;
+                } // while
+
+                // write deleted lines
+                for (int m = 0; m < aItem.deletedA; m++)
+                {
+                    WriteLine(n, "delete", aLines[aItem.StartA + m]);
+                } // for
+
+                // write inserted lines
+                while (n < aItem.StartB + aItem.insertedB)
+                {
+                    WriteLine(n, "add", bLines[n]);
+                    n++;
+                } // while
+            } // while
+
+            // write rest of unchanged lines
+            while (n < bLines.Length)
+            {
+                WriteLine(n, null, bLines[n]);
+                n++;
+            } // while
+        }
+
+        private static void TestIntDiff(int[] a, int[] b)
+        {
+            var f = Diff.DiffInt(a, b);
+
+            void WriteLine(int nr, string typ, int num)
+            {
+                Console.WriteLine($"{typ}({nr}) - {num}");
+            }
+
+            int n = 0;
+            for (int fdx = 0; fdx < f.Length; fdx++)
+            {
+                Diff.Item aItem = f[fdx];
+
+                // write unchanged lines
+                while ((n < aItem.StartB) && (n < b.Length))
+                {
+                    //WriteLine(n, "", bLines[n]);
+                    n++;
+                } // while
+
+                // write deleted lines
+                for (int m = 0; m < aItem.deletedA; m++)
+                {
+                    WriteLine(n, "delete", a[aItem.StartA + m]);
+                } // for
+
+                // write inserted lines
+                while (n < aItem.StartB + aItem.insertedB)
+                {
+                    WriteLine(n, "add", b[n]);
+                    n++;
+                } // while
+            } // while
+
+            // write rest of unchanged lines
+            while (n < b.Length)
+            {
+                WriteLine(n, null, b[n]);
+                n++;
+            } // while
         }
     }
 }

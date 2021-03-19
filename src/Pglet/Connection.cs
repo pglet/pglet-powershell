@@ -229,19 +229,19 @@ namespace Pglet
             }
         }
 
-        public Task<IList<Control>> AddAsync(Control[] controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
+        public Task<IList<Control>> AddAsync(IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
         {
             var cmdName = fireAndForget ? "addf" : "add";
             return AddOrReplaceAsync(cmdName, controls, to: to, at: at, trim: trim, fireAndForget: fireAndForget);
         }
 
-        public Task<IList<Control>> Replace(Control[] controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
+        public Task<IList<Control>> Replace(IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
         {
             var cmdName = fireAndForget ? "replacef" : "replace";
             return AddOrReplaceAsync(cmdName, controls, to: to, at: at, trim: trim, fireAndForget: fireAndForget);
         }
 
-        private async Task<IList<Control>> AddOrReplaceAsync(string cmdName, Control[] controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
+        private async Task<IList<Control>> AddOrReplaceAsync(string cmdName, IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
         {
             var cmd = new StringBuilder();
             cmd.Append(cmdName);
