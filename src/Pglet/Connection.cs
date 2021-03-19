@@ -26,6 +26,8 @@ namespace Pglet
         Event _lastEvent;
         AutoResetEvent _resetEvent = new AutoResetEvent(false);
 
+        Dictionary<string, Dictionary<string, EventHandler>> _controlEventHandlers = new Dictionary<string, Dictionary<string, EventHandler>>(StringComparer.OrdinalIgnoreCase);
+
         public string PipeId
         {
             get { return _pipeId; }
@@ -225,6 +227,26 @@ namespace Pglet
                     _eventPipeReader.Close();
                 }
             }
+        }
+
+        internal void AddEventHandler(string controlId, string eventName, EventHandler handler)
+        {
+            Dictionary<string, EventHandler> controlEvents = null;
+            if (_controlEventHandlers.ContainsKey(controlId))
+            {
+                controlEvents = _controlEventHandlers[controlId];
+            }
+            else
+            {
+                controlEvents = new Dictionary<string, EventHandler>();
+                _controlEventHandlers[controlId] = controlEvents;
+            }
+            controlEvents[eventName] = handler;
+        }
+
+        internal void RemoveEventHandlers(string controlId)
+        {
+            _controlEventHandlers.Remove(controlId);
         }
 
         public void Close()
