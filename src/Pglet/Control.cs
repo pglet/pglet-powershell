@@ -14,7 +14,7 @@ namespace Pglet
 
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
-        private List<int> _previousChildren = new List<int>(); // hash codes of previous children
+        private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
         private string _id;
         private Connection _conn;
 
@@ -68,10 +68,10 @@ namespace Pglet
         protected abstract string ControlName { get; }
         protected virtual IEnumerable<Control> GetChildren()
         {
-            return null;
+            return new Control[] {};
         }
 
-        internal List<int> PreviousChildren
+        internal List<Control> PreviousChildren
         {
             get { return _previousChildren; }
         }
@@ -127,6 +127,77 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? _attrs[name].Value : defValue;
         }
 
+        internal void BuildUpdateCommands(List<Control> index, List<string> commands)
+        {
+            // update control settings
+            var updateAttrs = this.GetCommandAttrs(update: true);
+
+            if (updateAttrs.Count > 0)
+            {
+                commands.Add($"set {string.Join(" ", updateAttrs)}");
+            }
+
+            // go through children
+            var previousChildren = this.PreviousChildren;
+            var currentChildren = this.GetChildren();
+
+            var previousHashes = new Dictionary<int, Control>();
+            var currentHashes = new Dictionary<int, Control>();
+
+            foreach (var ctrl in previousChildren)
+            {
+                previousHashes[ctrl.GetHashCode()] = ctrl;
+            }
+            foreach (var ctrl in currentChildren)
+            {
+                currentHashes[ctrl.GetHashCode()] = ctrl;
+            }
+
+            var previousInts = previousHashes.Keys.ToArray();
+            var currentInts = currentHashes.Keys.ToArray();
+
+            // diff sequences
+            var diffs = Diff.DiffInt(previousInts, currentInts);
+
+            int n = 0;
+            for (int fdx = 0; fdx < diffs.Length; fdx++)
+            {
+                Diff.Item item = diffs[fdx];
+
+                // unchanged controls
+                while ((n < item.StartB) && (n < currentInts.Length))
+                {
+                    currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
+                    n++;
+                }
+
+                // deleted controls
+                for (int m = 0; m < item.deletedA; m++)
+                {
+                    var deletedControl = previousHashes[previousInts[item.StartA + m]];
+                    commands.Add($"remove {deletedControl.Id}");
+                }
+
+                // added controls
+                while (n < item.StartB + item.insertedB)
+                {
+                    var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, conn: _conn);
+                    commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
+                    n++;
+                }
+            } // for
+
+            // the rest of unchanged controls
+            while (n < currentInts.Length)
+            {
+                currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
+                n++;
+            }
+
+            PreviousChildren.Clear();
+            PreviousChildren.AddRange(currentChildren);
+        }
+
         internal string GetCommandString(bool update = false, string indent = "", IList<Control> index = null, Connection conn = null)
         {
             _conn = conn;
@@ -157,7 +228,7 @@ namespace Pglet
             // base props
             var attrParts = GetCommandAttrs(update);
 
-            if (attrParts.Count > 0 && !update)
+            if (attrParts.Count > 0 || !update)
             {
                 parts.AddRange(attrParts);
                 lines.Add(string.Join(" ", parts));
@@ -181,10 +252,13 @@ namespace Pglet
                 }
             }
 
+            PreviousChildren.Clear();
+            PreviousChildren.AddRange(children);
+
             return string.Join("\n", lines);
         }
 
-        private IList<string> GetCommandAttrs(bool update = false)
+        protected IList<string> GetCommandAttrs(bool update = false)
         {
             var parts = new List<string>();
 

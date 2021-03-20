@@ -10,7 +10,7 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
-            TestDiffs();
+            //TestDiffs();
             //await TestApp();
             await TestControls();
             //await TestPage();
@@ -31,9 +31,18 @@ namespace Pglet.Tests
                 }
             };
 
+            // 1st render
             await page.Add(stack);
 
-            var result = await page.Connection.AddAsync(new Control[] { stack });
+            stack.Margin = "10";
+
+            stack.Controls.Add(new Icon("Edit", color: "red"));
+            stack.Controls.RemoveAt(0);
+
+            page.Controls.Add(new Stack { });
+
+            // 2nd update
+            await page.Update();
         }
 
         private static async Task TestPage()

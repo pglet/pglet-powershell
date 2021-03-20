@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+using System;
 
 namespace Pglet
 {
@@ -7,7 +9,7 @@ namespace Pglet
     {
         string _url;
         Connection _conn;
-        IList<Control> _controls = new List<Control>();
+        List<Control> _controls = new List<Control>();
 
         public string Url
         {
@@ -19,12 +21,17 @@ namespace Pglet
             get { return _conn;  }
         }
 
-        public IList<Control> Controls
+        public List<Control> Controls
         {
             get { return _controls; }
         }
 
         protected override string ControlName => "page";
+
+        protected override IEnumerable<Control> GetChildren()
+        {
+            return _controls;
+        }
 
         public Page(Connection conn, string url) : base(id: "page")
         {
@@ -34,7 +41,8 @@ namespace Pglet
 
         public Task Add(params Control[] controls)
         {
-            return Task.CompletedTask;
+            _controls.AddRange(controls);
+            return Update();
         }
 
         public Task Add(int at, params Control[] controls)
@@ -44,12 +52,27 @@ namespace Pglet
 
         public Task Update()
         {
-            return Task.CompletedTask;
+            return Update(this);
         }
 
-        public Task Update(params Control[] controls)
+        public async Task Update(params Control[] controls)
         {
-            return Task.CompletedTask;
+            var index = new List<Control>();
+            var commands = new List<string>();
+
+            foreach(var control in controls)
+            {
+                control.BuildUpdateCommands(index, commands);
+            }
+
+            // execute commands
+            var ids = await _conn.SendBatchAsync(commands);
+            int n = 0;
+            foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')))
+            {
+                index[n].Id = id;
+                n++;
+            }
         }
 
         public Task Remove(params Control[] controls)
@@ -70,14 +93,6 @@ namespace Pglet
         public Task Clean(int at)
         {
             return Task.CompletedTask;
-        }
-
-        private void BuildUpdateCommands(List<string> commands, Control control)
-        {
-            var index = new List<Control>();
-
-            // update control settings
-            control.GetCommandString(update: true, index: index, conn: _conn);
         }
     }
 }
