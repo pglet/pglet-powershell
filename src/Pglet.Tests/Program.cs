@@ -16,18 +16,23 @@ namespace Pglet.Tests
             //await TestPage();
         }
 
-
         private static async Task TestControls()
         {
             var page = await Pglet.Page("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
+
+            var testBtn = new Button("Test!", onClick: (e) =>
+            {
+                Console.WriteLine("clicked!");
+            });
 
             var stack = new Stack
             {
                 Controls =
                 {
                     new Icon("Shop", color: "orange"),
-                    new Icon("DependencyAdd", color: "green")
+                    new Icon("DependencyAdd", color: "green"),
+                    testBtn
                 }
             };
 
@@ -43,6 +48,15 @@ namespace Pglet.Tests
 
             // 2nd update
             await page.Update();
+
+            await Task.Delay(5000);
+            testBtn.OnClick = null;
+
+            // 3rd update
+            //await page.Clean();
+
+            Console.WriteLine("Press ENTER to exit...");
+            Console.ReadLine();
         }
 
         private static async Task TestPage()

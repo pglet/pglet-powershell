@@ -172,6 +172,17 @@ namespace Pglet
             while(true)
             {
                 _lastEvent = WaitEventInternal();
+
+                // call event handlers
+                if (_controlEventHandlers.ContainsKey(_lastEvent.Target))
+                {
+                    var controlHandlers = _controlEventHandlers[_lastEvent.Target];
+                    if (controlHandlers.ContainsKey(_lastEvent.Name))
+                    {
+                        var t = Task.Run(() => controlHandlers[_lastEvent.Name](_lastEvent));
+                    }
+                }
+
                 _resetEvent.Set();
             }
         }
@@ -229,77 +240,6 @@ namespace Pglet
             }
         }
 
-        public Task<IList<Control>> AddAsync(IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
-        {
-            var cmdName = fireAndForget ? "addf" : "add";
-            return AddOrReplaceAsync(cmdName, controls, to: to, at: at, trim: trim, fireAndForget: fireAndForget);
-        }
-
-        public Task<IList<Control>> Replace(IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
-        {
-            var cmdName = fireAndForget ? "replacef" : "replace";
-            return AddOrReplaceAsync(cmdName, controls, to: to, at: at, trim: trim, fireAndForget: fireAndForget);
-        }
-
-        private async Task<IList<Control>> AddOrReplaceAsync(string cmdName, IEnumerable<Control> controls, object to = null, int? at = null, int? trim = null, bool fireAndForget = false)
-        {
-            var cmd = new StringBuilder();
-            cmd.Append(cmdName);
-
-            if (to != null)
-            {
-                cmd.AppendFormat(" to={0}", GetControlId(to));
-            }
-
-            if (at.HasValue)
-            {
-                cmd.AppendFormat(" at={0}", at);
-            }
-
-            if (trim.HasValue)
-            {
-                cmd.AppendFormat(" trim={0}", trim);
-            }
-
-            var index = new List<Control>();
-            foreach(var control in controls)
-            {
-                if (control.Id != null)
-                {
-                    RemoveEventHandlers(control.Id);
-                }
-                cmd.Append("\n").Append(control.GetCommandString(index: index, conn: this));
-            }
-
-            var result = await SendAsync(cmd.ToString());
-
-            if (fireAndForget)
-            {
-                return null;
-            }
-
-            var ids = result.Split(' ');
-
-            for(int i = 0; i < ids.Length; i++)
-            {
-                index[i].Id = ids[i];
-
-                // resubscribe event handlers
-                foreach(var item in index[i].EventHandlers)
-                {
-                    AddEventHandler(ids[i], item.Key, item.Value);
-                }
-            }
-
-            return index;
-        }
-
-        private string GetControlId(object controlOrId)
-        {
-            var ctrl = controlOrId as Control;
-            return ctrl != null ? ctrl.Id : controlOrId.ToString();
-        }
-
         internal void AddEventHandler(string controlId, string eventName, EventHandler handler)
         {
             Dictionary<string, EventHandler> controlEvents = null;
@@ -313,6 +253,16 @@ namespace Pglet
                 _controlEventHandlers[controlId] = controlEvents;
             }
             controlEvents[eventName] = handler;
+        }
+
+        internal void RemoveEventHandler(string controlId, string eventName)
+        {
+            Dictionary<string, EventHandler> controlEvents = null;
+            if (_controlEventHandlers.ContainsKey(controlId))
+            {
+                controlEvents = _controlEventHandlers[controlId];
+                controlEvents.Remove(eventName);
+            }
         }
 
         internal void RemoveEventHandlers(string controlId)

@@ -8,17 +8,11 @@ namespace Pglet
     public class Page : Control
     {
         string _url;
-        Connection _conn;
         List<Control> _controls = new List<Control>();
 
         public string Url
         {
             get { return _url; }
-        }
-
-        public Connection Connection
-        {
-            get { return _conn;  }
         }
 
         public List<Control> Controls
@@ -35,7 +29,7 @@ namespace Pglet
 
         public Page(Connection conn, string url) : base(id: "page")
         {
-            _conn = conn;
+            Connection = conn;
             _url = url;
         }
 
@@ -45,9 +39,10 @@ namespace Pglet
             return Update();
         }
 
-        public Task Add(int at, params Control[] controls)
+        public Task Insert(int at, params Control[] controls)
         {
-            return Task.CompletedTask;
+            _controls.InsertRange(at, controls);
+            return Update();
         }
 
         public Task Update()
@@ -66,33 +61,44 @@ namespace Pglet
             }
 
             // execute commands
-            var ids = await _conn.SendBatchAsync(commands);
+            var ids = await Connection.SendBatchAsync(commands);
+
+            // update new controls
             int n = 0;
-            foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')))
+            foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
             {
                 index[n].Id = id;
+                index[n].Connection = Connection;
+
+                // re-subscribe event handlers
+                foreach(var evt in index[n].EventHandlers)
+                {
+                    Connection.AddEventHandler(id, evt.Key, evt.Value);
+                }
+
                 n++;
             }
         }
 
         public Task Remove(params Control[] controls)
         {
-            return Task.CompletedTask;
+            foreach(var control in controls)
+            {
+                _controls.Remove(control);
+            }
+            return Update();
         }
 
-        public Task Remove(int at)
+        public Task RemoveAt(int index)
         {
-            return Task.CompletedTask;
+            _controls.RemoveAt(index);
+            return Update();
         }
 
         public Task Clean()
         {
-            return Task.CompletedTask;
-        }
-
-        public Task Clean(int at)
-        {
-            return Task.CompletedTask;
+            _controls.Clear();
+            return Update();
         }
     }
 }

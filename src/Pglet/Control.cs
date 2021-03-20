@@ -18,6 +18,12 @@ namespace Pglet
         private string _id;
         private Connection _conn;
 
+        public Connection Connection
+        {
+            get { return _conn; }
+            internal set { _conn = value; }
+        }
+
         public string Id
         {
             get { return _id; }
@@ -94,14 +100,26 @@ namespace Pglet
             }
         }
 
-        protected void AddEventHandler(string eventName, EventHandler handler)
+        protected void SetEventHandler(string eventName, EventHandler handler)
         {
             _eventHandlers[eventName] = handler;
 
             if (_conn != null)
             {
-                _conn.AddEventHandler(this._id, eventName, handler);
+                if (handler != null)
+                {
+                    _conn.AddEventHandler(this._id, eventName, handler);
+                }
+                else
+                {
+                    _conn.RemoveEventHandler(this._id, eventName);
+                }
             }
+        }
+
+        protected EventHandler GetEventHandler(string eventName)
+        {
+            return _eventHandlers.ContainsKey(eventName) ? _eventHandlers[eventName] : null;
         }
 
         protected void SetBoolAttr(string name, bool value)
@@ -159,39 +177,48 @@ namespace Pglet
             // diff sequences
             var diffs = Diff.DiffInt(previousInts, currentInts);
 
-            int n = 0;
-            for (int fdx = 0; fdx < diffs.Length; fdx++)
+            if (diffs.Length == 1 && diffs[0].deletedA == previousInts.Length && diffs[0].insertedB == 0)
             {
-                Diff.Item item = diffs[fdx];
+                // all items deleted
+                commands.Add($"clean {this.Id}");
+            }
+            else
+            {
+                int n = 0;
+                for (int fdx = 0; fdx < diffs.Length; fdx++)
+                {
+                    Diff.Item item = diffs[fdx];
 
-                // unchanged controls
-                while ((n < item.StartB) && (n < currentInts.Length))
+                    // unchanged controls
+                    while ((n < item.StartB) && (n < currentInts.Length))
+                    {
+                        currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
+                        n++;
+                    }
+
+                    // deleted controls
+                    for (int m = 0; m < item.deletedA; m++)
+                    {
+                        var deletedControl = previousHashes[previousInts[item.StartA + m]];
+                        _conn.RemoveEventHandlers(deletedControl.Id);
+                        commands.Add($"remove {deletedControl.Id}");
+                    }
+
+                    // added controls
+                    while (n < item.StartB + item.insertedB)
+                    {
+                        var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, conn: _conn);
+                        commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
+                        n++;
+                    }
+                } // for
+
+                // the rest of unchanged controls
+                while (n < currentInts.Length)
                 {
                     currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
                     n++;
                 }
-
-                // deleted controls
-                for (int m = 0; m < item.deletedA; m++)
-                {
-                    var deletedControl = previousHashes[previousInts[item.StartA + m]];
-                    commands.Add($"remove {deletedControl.Id}");
-                }
-
-                // added controls
-                while (n < item.StartB + item.insertedB)
-                {
-                    var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, conn: _conn);
-                    commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
-                    n++;
-                }
-            } // for
-
-            // the rest of unchanged controls
-            while (n < currentInts.Length)
-            {
-                currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
-                n++;
             }
 
             PreviousChildren.Clear();
@@ -204,6 +231,12 @@ namespace Pglet
 
             if (!update)
             {
+                // remove event handlers
+                if (_id != null)
+                {
+                    _conn.RemoveEventHandlers(_id);
+                }
+
                 // reset ID
                 if (_id != null && _id.Split(':').Last().StartsWith("_"))
                 {
