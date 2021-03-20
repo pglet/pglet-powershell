@@ -71,5 +71,13 @@ namespace Pglet
         {
             return Task.CompletedTask;
         }
+
+        private void BuildUpdateCommands(List<string> commands, Control control)
+        {
+            var index = new List<Control>();
+
+            // update control settings
+            control.GetCommandString(update: true, index: index, conn: _conn);
+        }
     }
 }

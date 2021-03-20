@@ -98,8 +98,8 @@ stack horizontal
             //b = "a,1,c,2,e,3,g,4";
             //TestTextDiff(a, b);
 
-            var i1 = new int[] { 1, 2, 3 };
-            var i2 = new int[] { 2, 1, 3, 4, 5 };
+            var i1 = new int[] { 1, 2, 3, 4, 5, 6 };
+            var i2 = new int[] { 1, 7, 3, 8, 5, 9 };
             TestIntDiff(i1, i2);
         }
 

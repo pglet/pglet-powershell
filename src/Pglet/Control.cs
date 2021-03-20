@@ -14,6 +14,7 @@ namespace Pglet
 
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
+        private List<int> _previousChildren = new List<int>(); // hash codes of previous children
         private string _id;
         private Connection _conn;
 
@@ -68,6 +69,11 @@ namespace Pglet
         protected virtual IEnumerable<Control> GetChildren()
         {
             return null;
+        }
+
+        internal List<int> PreviousChildren
+        {
+            get { return _previousChildren; }
         }
 
         public Control(string id = null, string width = null, string height = null, string padding = null, string margin = null,
