@@ -21,9 +21,22 @@ namespace Pglet.Tests
             var page = await Pglet.Page("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
 
+            //page.ThemePrimaryColor = "";
+            //page.ThemeTextColor = "";
+            //page.ThemeBackgroundColor = "";
+
+            var firstName = new Textbox("First name");
+            var lastName = new Textbox("Last name");
+            var vaccinated = new Checkbox("Vaccinated");
+            var notes = new Textbox("Notes", multiline: true);
+
             var testBtn = new Button("Test!", onClick: (e) =>
             {
                 Console.WriteLine("clicked!");
+                Console.WriteLine($"First name: {firstName.Value}");
+                Console.WriteLine($"Last name: {lastName.Value}");
+                Console.WriteLine($"Vaccinated: {vaccinated.Value}");
+                Console.WriteLine($"Notes name: {notes.Value}");
             });
 
             var stack = new Stack
@@ -31,16 +44,20 @@ namespace Pglet.Tests
                 Controls =
                 {
                     new Icon("Shop", color: "orange"),
-                    new Icon("DependencyAdd", color: "green"),
-                    testBtn
+                    new Icon("DependencyAdd", color: "green")
                 }
             };
 
             // 1st render
-            await page.Add(stack);
+            await page.Add(
+                stack,
+                firstName,
+                lastName,
+                vaccinated,
+                notes,
+                testBtn);
 
             stack.Margin = "10";
-
             stack.Controls.Add(new Icon("Edit", color: "red"));
             stack.Controls.RemoveAt(0);
 
@@ -50,7 +67,12 @@ namespace Pglet.Tests
             await page.Update();
 
             await Task.Delay(5000);
-            testBtn.OnClick = null;
+            //testBtn.OnClick = null;
+
+            //page.ThemePrimaryColor = "#3ee66d";
+            //page.ThemeTextColor = "#edd2b7";
+            //page.ThemeBackgroundColor = "#262626";
+            //await page.Update();
 
             // 3rd update
             //await page.Clean();

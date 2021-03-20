@@ -26,11 +26,17 @@ namespace Pglet
         Event _lastEvent;
         AutoResetEvent _resetEvent = new AutoResetEvent(false);
 
-        Dictionary<string, Dictionary<string, EventHandler>> _controlEventHandlers = new Dictionary<string, Dictionary<string, EventHandler>>(StringComparer.OrdinalIgnoreCase);
+        Action<Event> _onEvent;
 
         public string PipeId
         {
             get { return _pipeId; }
+        }
+
+        public Action<Event> OnEvent
+        {
+            get { return _onEvent; }
+            set { _onEvent = value; }
         }
 
         public Connection(string pipeId)
@@ -54,13 +60,7 @@ namespace Pglet
                 _eventPipeReader = new StreamReader(_eventPipe);
             }
 
-            //var t = Task.Run(() => EventLoop());
-            var t = Task.Factory.StartNew(
-                action: () => EventLoop(),
-                cancellationToken: CancellationToken.None,
-                creationOptions: TaskCreationOptions.LongRunning,
-                scheduler: TaskScheduler.Default
-            );
+            var t = Task.Run(() => EventLoop());
         }
 
         public string SendBatch(IEnumerable<string> commands)
@@ -173,15 +173,7 @@ namespace Pglet
             {
                 _lastEvent = WaitEventInternal();
 
-                // call event handlers
-                if (_controlEventHandlers.ContainsKey(_lastEvent.Target))
-                {
-                    var controlHandlers = _controlEventHandlers[_lastEvent.Target];
-                    if (controlHandlers.ContainsKey(_lastEvent.Name))
-                    {
-                        var t = Task.Run(() => controlHandlers[_lastEvent.Name](_lastEvent));
-                    }
-                }
+                _onEvent?.Invoke(_lastEvent);
 
                 _resetEvent.Set();
             }
@@ -238,36 +230,6 @@ namespace Pglet
                     _eventPipeReader.Close();
                 }
             }
-        }
-
-        internal void AddEventHandler(string controlId, string eventName, EventHandler handler)
-        {
-            Dictionary<string, EventHandler> controlEvents = null;
-            if (_controlEventHandlers.ContainsKey(controlId))
-            {
-                controlEvents = _controlEventHandlers[controlId];
-            }
-            else
-            {
-                controlEvents = new Dictionary<string, EventHandler>();
-                _controlEventHandlers[controlId] = controlEvents;
-            }
-            controlEvents[eventName] = handler;
-        }
-
-        internal void RemoveEventHandler(string controlId, string eventName)
-        {
-            Dictionary<string, EventHandler> controlEvents = null;
-            if (_controlEventHandlers.ContainsKey(controlId))
-            {
-                controlEvents = _controlEventHandlers[controlId];
-                controlEvents.Remove(eventName);
-            }
-        }
-
-        internal void RemoveEventHandlers(string controlId)
-        {
-            _controlEventHandlers.Remove(controlId);
         }
 
         public void Close()

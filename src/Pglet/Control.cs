@@ -16,12 +16,12 @@ namespace Pglet
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
         private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
         private string _id;
-        private Connection _conn;
+        private Page _page;
 
-        public Connection Connection
+        public Page Page
         {
-            get { return _conn; }
-            internal set { _conn = value; }
+            get { return _page; }
+            internal set { _page = value; }
         }
 
         public string Id
@@ -104,15 +104,15 @@ namespace Pglet
         {
             _eventHandlers[eventName] = handler;
 
-            if (_conn != null)
+            if (_page != null)
             {
                 if (handler != null)
                 {
-                    _conn.AddEventHandler(this._id, eventName, handler);
+                    _page.AddEventHandler(this._id, eventName, handler);
                 }
                 else
                 {
-                    _conn.RemoveEventHandler(this._id, eventName);
+                    _page.RemoveEventHandler(this._id, eventName);
                 }
             }
         }
@@ -127,12 +127,12 @@ namespace Pglet
             SetAttr(name, value.ToString().ToLowerInvariant());
         }
 
-        protected bool GetBoolAttr(string name, bool defValue = false)
+        internal bool GetBoolAttr(string name, bool defValue = false)
         {
             return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
         }
 
-        protected void SetAttr(string name, string value)
+        internal void SetAttr(string name, string value)
         {
             if (value != null)
             {
@@ -145,7 +145,7 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? _attrs[name].Value : defValue;
         }
 
-        internal void BuildUpdateCommands(List<Control> index, List<string> commands)
+        internal void BuildUpdateCommands(Dictionary<string, Control> index, List<Control> addedControls, List<string> commands)
         {
             // update control settings
             var updateAttrs = this.GetCommandAttrs(update: true);
@@ -177,64 +177,67 @@ namespace Pglet
             // diff sequences
             var diffs = Diff.DiffInt(previousInts, currentInts);
 
-            if (diffs.Length == 1 && diffs[0].deletedA == previousInts.Length && diffs[0].insertedB == 0)
+            int n = 0;
+            for (int fdx = 0; fdx < diffs.Length; fdx++)
             {
-                // all items deleted
-                commands.Add($"clean {this.Id}");
-            }
-            else
-            {
-                int n = 0;
-                for (int fdx = 0; fdx < diffs.Length; fdx++)
+                Diff.Item item = diffs[fdx];
+
+                // unchanged controls
+                while ((n < item.StartB) && (n < currentInts.Length))
                 {
-                    Diff.Item item = diffs[fdx];
-
-                    // unchanged controls
-                    while ((n < item.StartB) && (n < currentInts.Length))
-                    {
-                        currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
-                        n++;
-                    }
-
-                    // deleted controls
-                    for (int m = 0; m < item.deletedA; m++)
-                    {
-                        var deletedControl = previousHashes[previousInts[item.StartA + m]];
-                        _conn.RemoveEventHandlers(deletedControl.Id);
-                        commands.Add($"remove {deletedControl.Id}");
-                    }
-
-                    // added controls
-                    while (n < item.StartB + item.insertedB)
-                    {
-                        var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, conn: _conn);
-                        commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
-                        n++;
-                    }
-                } // for
-
-                // the rest of unchanged controls
-                while (n < currentInts.Length)
-                {
-                    currentHashes[currentInts[n]].BuildUpdateCommands(index, commands);
+                    currentHashes[currentInts[n]].BuildUpdateCommands(index, addedControls, commands);
                     n++;
                 }
+
+                // deleted controls
+                for (int m = 0; m < item.deletedA; m++)
+                {
+                    var deletedControl = previousHashes[previousInts[item.StartA + m]];
+                    RemoveControlRecursively(index, deletedControl);
+                    commands.Add($"remove {deletedControl.Id}");
+                }
+
+                // added controls
+                while (n < item.StartB + item.insertedB)
+                {
+                    var cmd = currentHashes[currentInts[n]].GetCommandString(addedControls: addedControls);
+                    commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
+                    n++;
+                }
+            } // for
+
+            // the rest of unchanged controls
+            while (n < currentInts.Length)
+            {
+                currentHashes[currentInts[n]].BuildUpdateCommands(index, addedControls, commands);
+                n++;
             }
 
             PreviousChildren.Clear();
             PreviousChildren.AddRange(currentChildren);
         }
 
-        internal string GetCommandString(bool update = false, string indent = "", IList<Control> index = null, Connection conn = null)
+        private void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
         {
-            _conn = conn;
+            // remove all children
+            foreach (var child in control.GetChildren())
+            {
+                RemoveControlRecursively(index, child);
+            }
 
+            // remove control itself
+            _page.RemoveEventHandlers(control.Id);
+            index.Remove(control.Id);
+        }
+
+        internal string GetCommandString(bool update = false, string indent = "", IList<Control> addedControls = null)
+        {
             if (!update)
             {
                 // remove event handlers
                 if (_id != null)
                 {
-                    _conn.RemoveEventHandlers(_id);
+                    _page.RemoveEventHandlers(_id);
                 }
 
                 // reset ID
@@ -267,9 +270,9 @@ namespace Pglet
                 lines.Add(string.Join(" ", parts));
             }
 
-            if (index != null)
+            if (addedControls != null)
             {
-                index.Add(this);
+                addedControls.Add(this);
             }
 
             var children = GetChildren();
@@ -277,7 +280,7 @@ namespace Pglet
             {
                 foreach(var control in children)
                 {
-                    var childCmd = control.GetCommandString(update: update, indent: indent + "  ", index: index);
+                    var childCmd = control.GetCommandString(update: update, indent: indent + "  ", addedControls: addedControls);
                     if (childCmd != "")
                     {
                         lines.Add(childCmd);
