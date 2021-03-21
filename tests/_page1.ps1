@@ -7,6 +7,8 @@ ipg "clean page"
 
 Invoke-Pglet "add
 text id=txt1 value='aaabbb123sss'
+textbox id=name label='Your name'
+checkbox id=tested label='Tested'
 button id=submit text='Submit form'
 " -Page $page2
 Invoke-Pglet "set txt1 value='New text!'"
@@ -14,7 +16,8 @@ Invoke-Pglet "set txt1 value='New text!'"
 
 while($true) {
     $e = Wait-PgletEvent
-    Write-Host "$($e.target) $($e.name)"
+    Write-Host "$($e.target) $($e.name) $($e.data)"
+    #Start-Sleep -s 5
 }
 
 #Disconnect-Pglet

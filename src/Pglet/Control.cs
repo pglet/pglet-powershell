@@ -102,18 +102,9 @@ namespace Pglet
 
         protected void SetEventHandler(string eventName, EventHandler handler)
         {
-            _eventHandlers[eventName] = handler;
-
-            if (_page != null)
+            if (handler != null)
             {
-                if (handler != null)
-                {
-                    _page.AddEventHandler(this._id, eventName, handler);
-                }
-                else
-                {
-                    _page.RemoveEventHandler(this._id, eventName);
-                }
+                _eventHandlers[eventName] = handler;
             }
         }
 
@@ -200,7 +191,7 @@ namespace Pglet
                 // added controls
                 while (n < item.StartB + item.insertedB)
                 {
-                    var cmd = currentHashes[currentInts[n]].GetCommandString(addedControls: addedControls);
+                    var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, addedControls: addedControls);
                     commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
                     n++;
                 }
@@ -226,18 +217,17 @@ namespace Pglet
             }
 
             // remove control itself
-            _page.RemoveEventHandlers(control.Id);
             index.Remove(control.Id);
         }
 
-        internal string GetCommandString(bool update = false, string indent = "", IList<Control> addedControls = null)
+        internal string GetCommandString(bool update = false, string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
             if (!update)
             {
-                // remove event handlers
-                if (_id != null)
+                // remove control from index
+                if (_id != null && index != null)
                 {
-                    _page.RemoveEventHandlers(_id);
+                    index.Remove(_id);
                 }
 
                 // reset ID
@@ -280,7 +270,7 @@ namespace Pglet
             {
                 foreach(var control in children)
                 {
-                    var childCmd = control.GetCommandString(update: update, indent: indent + "  ", addedControls: addedControls);
+                    var childCmd = control.GetCommandString(update: update, indent: indent + "  ", index: index, addedControls: addedControls);
                     if (childCmd != "")
                     {
                         lines.Add(childCmd);

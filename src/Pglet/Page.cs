@@ -11,7 +11,6 @@ namespace Pglet
         string _url;
         List<Control> _controls = new List<Control>();
         Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
-        Dictionary<string, Dictionary<string, EventHandler>> _controlEventHandlers = new Dictionary<string, Dictionary<string, EventHandler>>(StringComparer.OrdinalIgnoreCase);
         private Connection _conn;
 
         public Connection Connection
@@ -101,12 +100,6 @@ namespace Pglet
                 // add to index
                 _index[id] = addedControls[n];
 
-                // re-subscribe event handlers
-                foreach (var evt in addedControls[n].EventHandlers)
-                {
-                    AddEventHandler(id, evt.Key, evt.Value);
-                }
-
                 n++;
             }
         }
@@ -136,10 +129,9 @@ namespace Pglet
         {
             //Console.WriteLine($"Event: {e.Target} - {e.Name} - {e.Data}");
 
-            // call event handlers
+            // update control properties
             if (e.Target == this.Id && e.Name == "change")
             {
-                // control properties update
                 var allProps = JsonSerializer.Deserialize<Dictionary<string, string>[]>(e.Data);
                 foreach(var props in allProps)
                 {
@@ -153,44 +145,15 @@ namespace Pglet
                     }
                 }
             }
-            else if (_controlEventHandlers.ContainsKey(e.Target))
+            // call event handlers
+            else if (_index.ContainsKey(e.Target))
             {
-                var controlHandlers = _controlEventHandlers[e.Target];
+                var controlHandlers = _index[e.Target].EventHandlers;
                 if (controlHandlers.ContainsKey(e.Name))
                 {
                     var t = Task.Run(() => controlHandlers[e.Name](e));
                 }
             }
-        }
-
-        internal void AddEventHandler(string controlId, string eventName, EventHandler handler)
-        {
-            Dictionary<string, EventHandler> controlEvents;
-            if (_controlEventHandlers.ContainsKey(controlId))
-            {
-                controlEvents = _controlEventHandlers[controlId];
-            }
-            else
-            {
-                controlEvents = new Dictionary<string, EventHandler>();
-                _controlEventHandlers[controlId] = controlEvents;
-            }
-            controlEvents[eventName] = handler;
-        }
-
-        internal void RemoveEventHandler(string controlId, string eventName)
-        {
-            Dictionary<string, EventHandler> controlEvents;
-            if (_controlEventHandlers.ContainsKey(controlId))
-            {
-                controlEvents = _controlEventHandlers[controlId];
-                controlEvents.Remove(eventName);
-            }
-        }
-
-        internal void RemoveEventHandlers(string controlId)
-        {
-            _controlEventHandlers.Remove(controlId);
         }
     }
 }

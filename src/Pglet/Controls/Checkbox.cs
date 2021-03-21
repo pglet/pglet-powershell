@@ -9,7 +9,7 @@ namespace Pglet.Controls
         protected override string ControlName => "checkbox";
 
         public Checkbox(
-            string label = null, bool? value = null,
+            string label = null, bool? value = null, EventHandler onChange = null,
             string id = null, string width = null, string height = null, string padding = null, string margin = null,
             bool? visible = null, bool? disabled = null) : base(id: id, width: width, height: height, padding: padding, margin: margin, visible: visible, disabled: disabled)
         {
@@ -19,6 +19,8 @@ namespace Pglet.Controls
             {
                 Value = value.Value;
             }
+
+            OnChange = onChange;
         }
 
         public string Label
@@ -31,6 +33,12 @@ namespace Pglet.Controls
         {
             get { return GetBoolAttr("value"); }
             set { SetBoolAttr("value", value); }
+        }
+
+        public EventHandler OnChange
+        {
+            get { return GetEventHandler("change"); }
+            set { SetEventHandler("change", value); }
         }
     }
 }

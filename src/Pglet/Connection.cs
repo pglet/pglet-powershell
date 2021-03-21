@@ -171,11 +171,15 @@ namespace Pglet
         {
             while(true)
             {
-                _lastEvent = WaitEventInternal();
+                var e = WaitEventInternal();
 
-                _onEvent?.Invoke(_lastEvent);
+                _onEvent?.Invoke(e);
 
-                _resetEvent.Set();
+                if (e.Target != "page" || e.Name != "change")
+                {
+                    _lastEvent = e;
+                    _resetEvent.Set();
+                }
             }
         }
 
