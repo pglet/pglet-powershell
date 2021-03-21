@@ -20,9 +20,9 @@ namespace Pglet
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public static async Task<Page> Page(string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, int ticker = 0)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0)
         {
-            var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
+            var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
 
             string result = ExecuteProcess(await GetPgletPath(), args);
 
@@ -45,9 +45,9 @@ namespace Pglet
         }
 
         public static async Task App(Func<Page, Task> sessionHandler, CancellationToken cancellationToken, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, int ticker = 0)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0)
         {
-            var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, ticker: ticker);
+            var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
 
             using (var proc = new Process
             {
@@ -113,7 +113,7 @@ namespace Pglet
         }
 
         private static string ParseArgs(string action, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, int ticker = 0)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = false, int ticker = 0)
         {
             var args = new List<string>
             {
@@ -133,6 +133,11 @@ namespace Pglet
             if (noWindow)
             {
                 args.Add("--no-window");
+            }
+
+            if (allEvents)
+            {
+                args.Add("--all-events");
             }
 
             if (ticker > 0)
