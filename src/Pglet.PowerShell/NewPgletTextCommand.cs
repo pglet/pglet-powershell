@@ -1,16 +1,12 @@
 ﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
-namespace Pglet.PowerShell.Controls
+namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommon.New, "PgletTextbox")]
+    [Cmdlet(VerbsCommon.New, "PgletText")]
     [OutputType(typeof(Page))]
-    public class NewPgletTextboxCommand : PSCmdlet
+    public class NewPgletTextCommand : PSCmdlet
     {
-        [Parameter(Mandatory = false, Position = 0)]
-        public string Label { get; set; }
-
         [Parameter(Mandatory = false)]
         public string Id { get; set; }
 
@@ -19,8 +15,7 @@ namespace Pglet.PowerShell.Controls
 
         protected override void ProcessRecord()
         {
-            var ctl = new Textbox();
-            ctl.Label = Label;
+            var ctl = new Text();
             ctl.Id = Id;
             ctl.Value = Value;
 

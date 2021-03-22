@@ -1,8 +1,7 @@
 ﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
-namespace Pglet.PowerShell.Controls
+namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsCommon.New, "PgletStack")]
     [OutputType(typeof(Page))]
