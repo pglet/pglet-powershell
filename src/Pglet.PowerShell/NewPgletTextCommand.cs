@@ -15,9 +15,11 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new Text();
-            ctl.Id = Id;
-            ctl.Value = Value;
+            var ctl = new Text
+            {
+                Id = Id,
+                Value = Value
+            };
 
             WriteObject(ctl);
         }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Pglet.PowerShell
 {
-    public interface IPsEventTarget
+    public interface IPsEventControl
     {
         ScriptBlock GetEventHandlerScript(string eventName);
     }

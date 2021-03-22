@@ -191,7 +191,17 @@ namespace Pglet
                 var controlHandlers = _index[e.Target].EventHandlers;
                 if (controlHandlers.ContainsKey(e.Name))
                 {
-                    var t = Task.Run(() => controlHandlers[e.Name](e));
+                    var control = _index[e.Target];
+
+                    var ce = new ControlEvent
+                    {
+                        Target = e.Target,
+                        Name = e.Name,
+                        Data = e.Data,
+                        Control = _index[e.Target],
+                        Page = this
+                    };
+                    var t = Task.Run(() => controlHandlers[e.Name](ce));
                 }
             }
         }

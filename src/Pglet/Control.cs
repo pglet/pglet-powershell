@@ -131,9 +131,9 @@ namespace Pglet
             }
         }
 
-        protected string GetAttr(string name, string defValue = null)
+        protected string GetAttr(string name)
         {
-            return _attrs.ContainsKey(name) ? _attrs[name].Value : defValue;
+            return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
         }
 
         internal void BuildUpdateCommands(Dictionary<string, Control> index, List<Control> addedControls, List<string> commands)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 using System.Threading;
 
 namespace Pglet.PowerShell
@@ -8,7 +9,7 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Event))]
     public class SwitchPgletEventsCommand : PSCmdlet
     {
-        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        readonly CancellationTokenSource _cancellationSource = new();
 
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "Page object to wait for event from.")]
         public Page Page { get; set; }
@@ -36,7 +37,7 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var eventCtl = ctl as IPsEventTarget;
+                IPsEventControl eventCtl = ctl as IPsEventControl;
                 if (eventCtl == null)
                 {
                     continue;
@@ -48,7 +49,8 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var result = this.InvokeCommand.InvokeScript(true, handlerScript, null, e);
+                var script = $"$event = $args[0]\n{handlerScript}";
+                var result = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
                 foreach (var obj in result)
                 {
                     WriteObject(obj);

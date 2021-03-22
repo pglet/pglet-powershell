@@ -3,7 +3,7 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 
 $page = Connect-PgletPage "index" -NoWindow
 
-ipg "clean page"
+Invoke-Pglet "clean page"
 
 Write-Trace "This is trace!"
 
@@ -14,7 +14,7 @@ $stack = Stack -Controls (Text -Value "Results")
 
 $b = 10
 $btn1 = Button -Text "-" -OnClick {
-    $args[0].target
+    $event.target
     $a = $b - 1
     Write-Host "Clicked! $a"
     #Start-Sleep -s 1
@@ -22,7 +22,7 @@ $btn1 = Button -Text "-" -OnClick {
 }
 
 $btn2 = Button -Text "Get results" -OnClick {
-    $args[0].target
+    $event.target
     $txt1.value = $name.Value
 
     $line = New-PgletText -Value "Hello, $($name.Value)"

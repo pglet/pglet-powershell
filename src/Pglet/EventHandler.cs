@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Pglet
 {
-    public delegate void EventHandler(Event e);
+    public delegate void EventHandler(ControlEvent e);
 }

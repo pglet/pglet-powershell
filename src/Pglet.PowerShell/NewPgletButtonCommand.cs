@@ -8,9 +8,9 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Page))]
     public class NewPgletButtonCommand : PSCmdlet
     {
-        public class PsButton : Button, IPsEventTarget
+        public class PsButton : Button, IPsEventControl
         {
-            Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>();
+            readonly Dictionary<string, ScriptBlock> _psEvents = new();
 
             public new ScriptBlock OnClick
             {
@@ -41,10 +41,12 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsButton();
-            ctl.Id = Id;
-            ctl.Text = Text;
-            ctl.OnClick = OnClick;
+            var ctl = new PsButton
+            {
+                Id = Id,
+                Text = Text,
+                OnClick = OnClick
+            };
 
             WriteObject(ctl);
         }

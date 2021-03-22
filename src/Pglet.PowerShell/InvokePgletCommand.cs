@@ -25,7 +25,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            string result = null;
+            string result;
             if (Command.Length == 1)
             {
                 result = page.Connection.Send(Command[0]);

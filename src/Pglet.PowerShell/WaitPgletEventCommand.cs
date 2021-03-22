@@ -8,7 +8,7 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Event))]
     public class WaitPgletEventCommand : PSCmdlet
     {
-        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        readonly CancellationTokenSource _cancellationSource = new();
 
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "Page object to wait for event from.")]
         public Page Page { get; set; }

@@ -8,7 +8,7 @@ namespace Pglet.PowerShell
     [Cmdlet(VerbsCommunications.Connect, "PgletApp")]
     public class ConnectPgletAppCommand : PSCmdlet
     {
-        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        readonly CancellationTokenSource _cancellationSource = new();
 
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }

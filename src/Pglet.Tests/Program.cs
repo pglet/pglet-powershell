@@ -27,11 +27,18 @@ namespace Pglet.Tests
 
             var firstName = new Textbox("First name");
             var lastName = new Textbox("Last name");
-            var vaccinated = new Checkbox("Vaccinated", onChange: (e) =>
+            var notes = new Textbox("Notes", multiline: true, visible: false);
+
+            var vaccinated = new Checkbox("Vaccinated")
             {
-                Console.WriteLine("vaccinated changed: " + e.Data);
-            });
-            var notes = new Textbox("Notes", multiline: true);
+                Label = "Vaccinated",
+                OnChange = async (e) =>
+                {
+                    Console.WriteLine("vaccinated changed: " + e.Data);
+                    notes.Visible = (e.Control as Checkbox).Value;
+                    await page.UpdateAsync();
+                }
+            };
 
             var testBtn = new Button("Test!", onClick: (e) =>
             {
