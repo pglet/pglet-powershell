@@ -20,8 +20,9 @@ namespace Pglet
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public static async Task<Page> Page(string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
         {
+            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
             var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
 
             string result = ExecuteProcess(await GetPgletPath(), args);
@@ -34,7 +35,7 @@ namespace Pglet
 
                 // create and open connection
                 var conn = new Connection(pipeId);
-                await conn.OpenAsync();
+                await conn.OpenAsync(ct);
 
                 return new Page(conn, pageUrl);
             }
@@ -44,9 +45,10 @@ namespace Pglet
             }
         }
 
-        public static async Task App(Func<Page, Task> sessionHandler, CancellationToken cancellationToken, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0)
+        public static async Task App(Func<Page, Task> sessionHandler, string name = null, bool web = false,
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
         {
+            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
             var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
 
             using (var proc = new Process
@@ -88,7 +90,7 @@ namespace Pglet
                     {
                         try
                         {
-                            line = bc.Take(cancellationToken);
+                            line = bc.Take(ct);
 
                             if (line == null)
                             {
@@ -97,7 +99,7 @@ namespace Pglet
 
                             // create and open connection
                             var conn = new Connection(line);
-                            await conn.OpenAsync();
+                            await conn.OpenAsync(ct);
 
                             var page = new Page(conn, pageUrl);
                             var h = sessionHandler(page);

@@ -23,6 +23,8 @@ namespace Pglet
         StreamReader _eventPipeReader;
         bool _inBatch;
 
+        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
         Event _lastEvent;
         AutoResetEvent _resetEvent = new AutoResetEvent(false);
 
@@ -44,15 +46,15 @@ namespace Pglet
             _pipeId = pipeId;
         }
 
-        public async Task OpenAsync()
+        public async Task OpenAsync(CancellationToken cancellationToken)
         {
             if (!RuntimeInfo.IsLinux && !RuntimeInfo.IsMac)
             {
                 _commandPipe = new NamedPipeClientStream(_pipeId);
                 _eventPipe = new NamedPipeClientStream($"{_pipeId}.events");
 
-                await _commandPipe.ConnectAsync(CONNECTION_TIMEOUT);
-                await _eventPipe.ConnectAsync(CONNECTION_TIMEOUT);
+                await _commandPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
+                await _eventPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
 
                 _commandPipeReader = new StreamReader(_commandPipe);
                 _commandPipeWriter = new StreamWriter(_commandPipe, new UTF8Encoding(false, true), MAX_WRITE_BUFFER);
@@ -68,26 +70,60 @@ namespace Pglet
             return SendBatchAsync(commands).GetAwaiter().GetResult();
         }
 
+        public Task<string> SendBatchAsync(IEnumerable<string> commands)
+        {
+            return SendBatchAsync(commands, CancellationToken.None);
+        }
+
+        public async Task<string> SendBatchAsync(IEnumerable<string> commands, CancellationToken cancellationToken)
+        {
+            await _semaphore.WaitAsync(cancellationToken);
+
+            try
+            {
+                _inBatch = true;
+                await SendAsyncInternal("begin");
+
+                foreach (var command in commands)
+                {
+                    await SendAsyncInternal(command);
+                }
+
+                _inBatch = false;
+                return await SendAsyncInternal("end");
+            }
+            finally
+            {
+                _inBatch = false;
+                _semaphore.Release();
+            }
+        }
+
         public string Send(string commandText)
         {
             return SendAsync(commandText).GetAwaiter().GetResult();
         }
 
-        public async Task<string> SendBatchAsync(IEnumerable<string> commands)
+        public Task<string> SendAsync(string commandText)
         {
-            _inBatch = true;
-            await SendAsync("begin");
-
-            foreach(var command in commands)
-            {
-                await SendAsync(command);
-            }
-
-            _inBatch = false;
-            return await SendAsync("end");
+            return SendAsync(commandText, CancellationToken.None);
         }
 
-        public async Task<string> SendAsync(string commandText)
+        public async Task<string> SendAsync(string commandText, CancellationToken cancellationToken)
+        {
+            await _semaphore.WaitAsync(cancellationToken);
+
+            try
+            {
+                return await SendAsyncInternal(commandText);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private async Task<string> SendAsyncInternal(string commandText)
         {
             bool waitResult = true;
             if (_inBatch)

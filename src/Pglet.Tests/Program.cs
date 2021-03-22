@@ -136,7 +136,7 @@ stack horizontal
                 await Task.Delay(30000);
                 Console.WriteLine("Session end");
 
-            }, CancellationToken.None, "index", noWindow: true);
+            }, "index", noWindow: true);
         }
 
         private static void TestDiffs()

@@ -19,7 +19,14 @@ namespace Pglet.Controls
             string padding = null,
             string margin = null,
             bool? visible = null,
-            bool? disabled = null) : base(id: id, width: width, height: height, padding: padding, margin: margin, visible: visible, disabled: disabled)
+            bool? disabled = null) : base(
+                id: id,
+                width: width,
+                height: height,
+                padding: padding,
+                margin: margin,
+                visible: visible,
+                disabled: disabled)
         {
             Text = text;
             OnClick = onClick;
