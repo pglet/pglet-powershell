@@ -30,6 +30,11 @@ namespace Pglet
 
         protected override string ControlName => "page";
 
+        public Control GetControl(string id)
+        {
+            return _index.ContainsKey(id) ? _index[id] : null;
+        }
+
         protected override IEnumerable<Control> GetChildren()
         {
             return _controls;

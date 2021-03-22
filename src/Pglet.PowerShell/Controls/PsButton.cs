@@ -4,7 +4,7 @@ using System.Management.Automation;
 
 namespace Pglet.PowerShell.Controls
 {
-    public class PsButton : Button
+    public class PsButton : Button, IPsEventTarget
     {
         Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>();
 
@@ -18,6 +18,11 @@ namespace Pglet.PowerShell.Controls
             {
                 _psEvents["click"] = value;
             }
+        }
+
+        public ScriptBlock GetEventHandlerScript(string eventName)
+        {
+            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
         }
     }
 }
