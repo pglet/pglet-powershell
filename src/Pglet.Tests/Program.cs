@@ -40,13 +40,17 @@ namespace Pglet.Tests
                 }
             };
 
-            var testBtn = new Button("Test!", onClick: (e) =>
+            var testBtn = new Button("Test!", onClick: async (e) =>
             {
                 Console.WriteLine("clicked!");
                 Console.WriteLine($"First name: {firstName.Value}");
                 Console.WriteLine($"Last name: {lastName.Value}");
                 Console.WriteLine($"Vaccinated: {vaccinated.Value}");
                 Console.WriteLine($"Notes name: {notes.Value}");
+
+                firstName.Value = "";
+                lastName.Value = "";
+                await page.UpdateAsync();
             });
 
             var stack = new Stack

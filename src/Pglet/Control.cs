@@ -220,25 +220,22 @@ namespace Pglet
             index.Remove(control.Id);
         }
 
-        internal string GetCommandString(bool update = false, string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
+        internal string GetCommandString(string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
-            if (!update)
+            // remove control from index
+            if (_id != null && index != null)
             {
-                // remove control from index
-                if (_id != null && index != null)
-                {
-                    index.Remove(_id);
-                }
+                index.Remove(_id);
+            }
 
-                // reset ID
-                if (_id != null && _id.Split(':').Last().StartsWith("_"))
-                {
-                    _id = null;
-                }
-                else if (_id != null)
-                {
-                    _id = _id.Split(':').Last();
-                }
+            // reset ID
+            if (_id != null && _id.Split(':').Last().StartsWith("_"))
+            {
+                _id = null;
+            }
+            else if (_id != null)
+            {
+                _id = _id.Split(':').Last();
             }
 
             var lines = new List<string>();
@@ -246,19 +243,13 @@ namespace Pglet
             // main command
             var parts = new List<string>();
 
-            if (!update)
-            {
-                parts.Add(indent + ControlName);
-            }
+            // control name
+            parts.Add(indent + ControlName);
 
             // base props
-            var attrParts = GetCommandAttrs(update);
-
-            if (attrParts.Count > 0 || !update)
-            {
-                parts.AddRange(attrParts);
-                lines.Add(string.Join(" ", parts));
-            }
+            var attrParts = GetCommandAttrs(update: false);
+            parts.AddRange(attrParts);
+            lines.Add(string.Join(" ", parts));
 
             if (addedControls != null)
             {
@@ -270,7 +261,7 @@ namespace Pglet
             {
                 foreach(var control in children)
                 {
-                    var childCmd = control.GetCommandString(update: update, indent: indent + "  ", index: index, addedControls: addedControls);
+                    var childCmd = control.GetCommandString(indent: indent + "  ", index: index, addedControls: addedControls);
                     if (childCmd != "")
                     {
                         lines.Add(childCmd);
