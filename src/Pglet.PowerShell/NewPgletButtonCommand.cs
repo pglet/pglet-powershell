@@ -14,6 +14,7 @@ namespace Pglet.PowerShell
 
         protected override void EndProcessing()
         {
+            var sb = ScriptBlock.Create("sss");
             WriteObject("Button!");
         }
     }
