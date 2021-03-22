@@ -5,13 +5,15 @@ $page = Connect-PgletPage "index" -NoWindow
 
 ipg "clean page"
 
-$txt1 = New-PgletText -Value "Line 1"
-$name = New-PgletTextbox -Label "Your name"
+Write-Trace "This is trace!"
 
-$stack = New-PgletStack -Controls (New-PgletText -Value "Results")
+$txt1 = Text -Value "Line 1"
+$name = Textbox -Label "Your name"
+
+$stack = Stack -Controls (Text -Value "Results")
 
 $b = 10
-$btn1 = New-PgletButton -Text "-" -OnClick {
+$btn1 = Button -Text "-" -OnClick {
     $args[0].target
     $a = $b - 1
     Write-Host "Clicked! $a"
@@ -19,7 +21,7 @@ $btn1 = New-PgletButton -Text "-" -OnClick {
     "ddd"
 }
 
-$btn2 = New-PgletButton -Text "Get results" -OnClick {
+$btn2 = Button -Text "Get results" -OnClick {
     $args[0].target
     $txt1.value = $name.Value
 

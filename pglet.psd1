@@ -9,19 +9,11 @@
     PowerShellVersion = '5.0'
     NestedModules     = @('bin\Pglet.PowerShell.dll')
     FunctionsToExport = @(
-        'Connect-PgletApp',
-        'Connect-PgletPage',
-        'Disconnect-Pglet',
-        'Invoke-Pglet',
-        'Wait-PgletEvent',
         'Write-Trace'
         )
     CmdletsToExport   = '*'
     VariablesToExport = '*'
-    AliasesToExport   = @(
-        'ipg',
-        'Button'
-        )
+    AliasesToExport   = '*'
     PrivateData       = @{
         PSData = @{
             #Tags = @()

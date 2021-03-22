@@ -22,7 +22,11 @@ function Write-Trace {
 }
 
 New-Alias -Name ipg -Value Invoke-Pglet
+
 New-Alias -Name Button -Value New-PgletButton
+New-Alias -Name Text -Value New-PgletText
+New-Alias -Name Textbox -Value New-PgletTextbox
+New-Alias -Name Stack -Value New-PgletStack
 
 # Exported functions
 #Export-ModuleMember -Function Disconnect-Pglet, Write-Trace -Alias ipg
