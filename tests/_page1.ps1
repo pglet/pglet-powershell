@@ -6,24 +6,26 @@ $page = Connect-PgletPage "index" -NoWindow
 ipg "clean page"
 
 $txt1 = New-PgletText -Value "Line 1"
-$txt2 = New-PgletText -Value "Line 2"
+$name = New-PgletTextbox -Label "Your name"
 
-$a = 1
+$b = 10
 $btn1 = New-PgletButton -Text "-" -OnClick {
-    $a -= 1
+    $args[0].target
+    $a = $b - 1
     Write-Host "Clicked! $a"
-    Start-Sleep -s 2
+    #Start-Sleep -s 1
+    "ddd"
 }
 
-$btn2 = New-PgletButton -Text "+" -OnClick {
-    $a += 1
-    Write-Host "Clicked! $a"
-    Start-Sleep -s 2
+$btn2 = New-PgletButton -Text "Get results" -OnClick {
+    $args[0].target
+    $txt1.value = $name.Value
+    $page.Update()
 }
 
-$page.Add($txt1, $txt2, $btn1, $btn2).Wait()
+$page.Add($txt1, $name, $btn1, $btn2)
 
-Switch-PgletEvent
+Switch-PgletEvents
 
 
 # while($true) {

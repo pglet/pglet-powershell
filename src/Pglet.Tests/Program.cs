@@ -52,7 +52,7 @@ namespace Pglet.Tests
             };
 
             // 1st render
-            await page.Add(
+            await page.AddAsync(
                 stack,
                 firstName,
                 lastName,
@@ -67,7 +67,7 @@ namespace Pglet.Tests
             page.Controls.Add(new Stack { });
 
             // 2nd update
-            await page.Update();
+            await page.UpdateAsync();
 
             await Task.Delay(5000);
             //testBtn.OnClick = null;

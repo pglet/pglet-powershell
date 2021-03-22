@@ -4,9 +4,9 @@ using System.Threading;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommon.Switch, "PgletEvent")]
+    [Cmdlet(VerbsCommon.Switch, "PgletEvents")]
     [OutputType(typeof(Event))]
-    public class SwitchPgletEventCommand : PSCmdlet
+    public class SwitchPgletEventsCommand : PSCmdlet
     {
         readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
@@ -43,10 +43,16 @@ namespace Pglet.PowerShell
                 }
 
                 var handlerScript = eventCtl.GetEventHandlerScript(e.Name);
+                if (handlerScript == null)
+                {
+                    continue;
+                }
 
-                this.InvokeCommand.InvokeScript(this.SessionState, handlerScript, e);
-
-                //WriteObject(e);
+                var result = this.InvokeCommand.InvokeScript(true, handlerScript, null, e);
+                foreach (var obj in result)
+                {
+                    WriteObject(obj);
+                }
             }
         }
 

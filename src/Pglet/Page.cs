@@ -65,24 +65,44 @@ namespace Pglet
             _url = url;
         }
 
-        public Task Add(params Control[] controls)
+        public void Add(params Control[] controls)
+        {
+            AddAsync(controls).GetAwaiter().GetResult();
+        }
+
+        public Task AddAsync(params Control[] controls)
         {
             _controls.AddRange(controls);
-            return Update();
+            return UpdateAsync();
         }
 
-        public Task Insert(int at, params Control[] controls)
+        public void Insert(int at, params Control[] controls)
+        {
+            InsertAsync(at, controls).GetAwaiter().GetResult();
+        }
+
+        public Task InsertAsync(int at, params Control[] controls)
         {
             _controls.InsertRange(at, controls);
-            return Update();
+            return UpdateAsync();
         }
 
-        public Task Update()
+        public void Update()
         {
-            return Update(this);
+            UpdateAsync().GetAwaiter().GetResult();
         }
 
-        public async Task Update(params Control[] controls)
+        public Task UpdateAsync()
+        {
+            return UpdateAsync(this);
+        }
+
+        public void Update(params Control[] controls)
+        {
+            UpdateAsync(controls).GetAwaiter().GetResult();
+        }
+
+        public async Task UpdateAsync(params Control[] controls)
         {
             var addedControls = new List<Control>();
             var commands = new List<string>();
@@ -109,25 +129,40 @@ namespace Pglet
             }
         }
 
-        public Task Remove(params Control[] controls)
+        public Task RemoveAsync(params Control[] controls)
         {
             foreach(var control in controls)
             {
                 _controls.Remove(control);
             }
-            return Update();
+            return UpdateAsync();
         }
 
-        public Task RemoveAt(int index)
+        public void Remove(params Control[] controls)
+        {
+            RemoveAsync(controls).GetAwaiter().GetResult();
+        }
+
+        public Task RemoveAtAsync(int index)
         {
             _controls.RemoveAt(index);
-            return Update();
+            return UpdateAsync();
         }
 
-        public Task Clean()
+        public void RemoveAt(int index)
+        {
+            RemoveAtAsync(index).GetAwaiter().GetResult();
+        }
+
+        public Task CleanAsync()
         {
             _controls.Clear();
-            return Update();
+            return UpdateAsync();
+        }
+
+        public void Clean()
+        {
+            CleanAsync().GetAwaiter().GetResult();
         }
 
         private void OnEvent(Event e)
