@@ -1,24 +1,36 @@
-$observableCollection = New-Object System.Collections.ObjectModel.ObservableCollection[object]
+Remove-Module pglet -ErrorAction SilentlyContinue
+Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-#Set up an event watcher
-Register-ObjectEvent -InputObject $observableCollection -EventName CollectionChanged -Action {
-    $Global:test = $Event
-    Switch ($test.SourceEventArgs.Action) {
-        "Add" {
-            $test.SourceEventArgs.NewItems | ForEach {
-                Write-Host ("{0} was added" -f $_) -ForegroundColor Yellow -BackgroundColor Black
-            }
-        }
-        "Remove" {
-            $test.SourceEventArgs.OldItems | ForEach {
-                Write-Host ("{0} was removed" -f $_) -ForegroundColor Yellow -BackgroundColor Black
-            }
-        }
-        Default {
-            Write-Host ("The following action occurred: {0}" -f $test.SourceEventArgs.Action) -ForegroundColor Yellow -BackgroundColor Black
-        }
+Connect-PgletApp "index2" -NoWindow -ScriptBlock {
+
+    $page = $PGLET_PAGE
+
+    $txt1 = New-PgletText -Value "Line 1"
+    $name = New-PgletTextbox -Label "Your name"
+    
+    $b = 10
+    $btn1 = New-PgletButton -Text "-" -OnClick {
+        $args[0].target
+        $a = $b - 1
+        Write-Host "Clicked! $a"
+        #Start-Sleep -s 1
+        "ddd"
     }
+    
+    $btn2 = New-PgletButton -Text "Get results" -OnClick {
+        $args[0].target
+        $txt1.value = $name.Value
+    
+        $line = New-PgletText -Value "Hello, $($name.Value)"
+    
+        $idx = $page.controls.IndexOf($name)
+        $page.controls.insert($idx + 1, $line)
+    
+        $name.value = ""
+        $page.Update()
+    }
+    
+    $page.Add($txt1, $name, $btn1, $btn2)
+    
+    Switch-PgletEvents
 }
-$observableCollection.Add(5) 
-$observableCollection.Remove(5) 
-$observableCollection.Clear()
