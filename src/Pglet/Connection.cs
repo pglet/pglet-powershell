@@ -21,7 +21,6 @@ namespace Pglet
         StreamReader _commandPipeReader;
         StreamWriter _commandPipeWriter;
         StreamReader _eventPipeReader;
-        bool _inBatch;
 
         readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
@@ -81,7 +80,6 @@ namespace Pglet
 
             try
             {
-                _inBatch = true;
                 await SendAsyncInternal("begin");
 
                 foreach (var command in commands)
@@ -89,12 +87,10 @@ namespace Pglet
                     await SendAsyncInternal(command);
                 }
 
-                _inBatch = false;
                 return await SendAsyncInternal("end");
             }
             finally
             {
-                _inBatch = false;
                 _semaphore.Release();
             }
         }
@@ -126,20 +122,13 @@ namespace Pglet
         private async Task<string> SendAsyncInternal(string commandText)
         {
             bool waitResult = true;
-            if (_inBatch)
+            var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
+            if (match.Success)
             {
-                waitResult = false;
-            }
-            else
-            {
-                var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
-                if (match.Success)
+                var commandName = match.Groups["commandName"].Value;
+                if (commandName.ToLowerInvariant().EndsWith("f"))
                 {
-                    var commandName = match.Groups["commandName"].Value;
-                    if (commandName.ToLowerInvariant().EndsWith("f"))
-                    {
-                        waitResult = false;
-                    }
+                    waitResult = false;
                 }
             }
 
