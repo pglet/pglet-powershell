@@ -47,19 +47,16 @@ namespace Pglet
 
         public async Task OpenAsync(CancellationToken cancellationToken)
         {
-            if (!RuntimeInfo.IsLinux && !RuntimeInfo.IsMac)
-            {
-                _commandPipe = new NamedPipeClientStream(_pipeId);
-                _eventPipe = new NamedPipeClientStream($"{_pipeId}.events");
+            _commandPipe = new NamedPipeClientStream(_pipeId);
+            _eventPipe = new NamedPipeClientStream($"{_pipeId}.events");
 
-                await _commandPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
-                await _eventPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
+            await _commandPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
+            await _eventPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
 
-                _commandPipeReader = new StreamReader(_commandPipe);
-                _commandPipeWriter = new StreamWriter(_commandPipe, new UTF8Encoding(false, true), MAX_WRITE_BUFFER);
-                _commandPipeWriter.AutoFlush = true;
-                _eventPipeReader = new StreamReader(_eventPipe);
-            }
+            _commandPipeReader = new StreamReader(_commandPipe);
+            _commandPipeWriter = new StreamWriter(_commandPipe, new UTF8Encoding(false, true), MAX_WRITE_BUFFER);
+            _commandPipeWriter.AutoFlush = true;
+            _eventPipeReader = new StreamReader(_eventPipe);
 
             var t = Task.Run(() => EventLoop());
         }
@@ -132,61 +129,36 @@ namespace Pglet
                 }
             }
 
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-            {
-                _commandPipeWriter = new StreamWriter(_pipeId);
-            }
-
             await _commandPipeWriter.WriteLineAsync(commandText);
-
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-            {
-                _commandPipeWriter.Close();
-            }
 
             if (waitResult)
             {
-                try
+                var result = _commandPipeReader.ReadLine();
+
+                if (result.StartsWith($"{ERROR_RESULT} "))
                 {
-                    if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+                    throw new Exception(result.Substring(ERROR_RESULT.Length + 1));
+                }
+                else
+                {
+                    var resultMatch = Regex.Match(result, @"(?<lines_count>[\d]+)\s(?<result>.*)");
+                    if (resultMatch.Success)
                     {
-                        _commandPipeReader = new StreamReader(_pipeId);
-                    }
-
-                    var result = _commandPipeReader.ReadLine();
-
-                    if (result.StartsWith($"{ERROR_RESULT} "))
-                    {
-                        throw new Exception(result.Substring(ERROR_RESULT.Length + 1));
+                        var linesCount = Int32.Parse(resultMatch.Groups["lines_count"].Value);
+                        result = resultMatch.Groups["result"].Value;
+                        for (int i = 0; i < linesCount; i++)
+                        {
+                            var line = _commandPipeReader.ReadLine();
+                            result += $"\n{line}";
+                        }
                     }
                     else
                     {
-                        var resultMatch = Regex.Match(result, @"(?<lines_count>[\d]+)\s(?<result>.*)");
-                        if (resultMatch.Success)
-                        {
-                            var linesCount = Int32.Parse(resultMatch.Groups["lines_count"].Value);
-                            result = resultMatch.Groups["result"].Value;
-                            for (int i = 0; i < linesCount; i++)
-                            {
-                                var line = _commandPipeReader.ReadLine();
-                                result += $"\n{line}";
-                            }
-                        }
-                        else
-                        {
-                            throw new Exception($"Invalid result: {result}");
-                        }
+                        throw new Exception($"Invalid result: {result}");
                     }
+                }
 
-                    return result;
-                }
-                finally
-                {
-                    if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-                    {
-                        _commandPipeReader.Close();
-                    }
-                }
+                return result;
             }
 
             return null;
@@ -229,26 +201,7 @@ namespace Pglet
 
         private IEnumerable<Event> WaitEventsInternal()
         {
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-            {
-                _eventPipeReader = new StreamReader($"{_pipeId}.events");
-                try
-                {
-                    string line = null;
-                    while((line = _eventPipeReader.ReadLine()) != null)
-                    {
-                        yield return ParseEventLine(line);
-                    }
-                }
-                finally
-                {
-                    _eventPipeReader.Close();
-                }
-            }
-            else
-            {
-                yield return ParseEventLine(_eventPipeReader.ReadLine());
-            }
+            yield return ParseEventLine(_eventPipeReader.ReadLine());
         }
 
         private Event ParseEventLine(string line)
@@ -271,13 +224,10 @@ namespace Pglet
 
         public void Close()
         {
-            if (!RuntimeInfo.IsLinux && !RuntimeInfo.IsMac)
-            {
-                _eventPipeReader.Dispose();
-                _commandPipeReader.Dispose();
-                _commandPipe.Dispose();
-                _eventPipe.Dispose();
-            }
+            _eventPipeReader.Dispose();
+            _commandPipeReader.Dispose();
+            _commandPipe.Dispose();
+            _eventPipe.Dispose();
         }
     }
 }

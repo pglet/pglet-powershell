@@ -160,6 +160,11 @@ namespace Pglet
                 args.Add($"\"{token}\"");
             }
 
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+            {
+                args.Add("--uds");
+            }
+
             return string.Join(" ", args);
         }
 
