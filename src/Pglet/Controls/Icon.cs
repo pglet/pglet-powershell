@@ -6,6 +6,7 @@ namespace Pglet.Controls
 {
     public class Icon : Control
     {
+        protected override string ControlName => "icon";
         public string Name
         {
             get { return GetAttr("name"); }

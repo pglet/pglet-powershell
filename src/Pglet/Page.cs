@@ -56,6 +56,8 @@ namespace Pglet
             set { SetAttr("themeBackgroundColor", value); }
         }
 
+        protected override string ControlName => "page";
+
         public Page(Connection conn, string url)
         {
             Id = "page";

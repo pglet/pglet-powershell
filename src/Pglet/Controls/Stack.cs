@@ -6,6 +6,8 @@ namespace Pglet.Controls
 {
     public class Stack : Control
     {
+        protected override string ControlName => "stack";
+
         IList<Control> _controls = new List<Control>();
 
         public IList<Control> Controls

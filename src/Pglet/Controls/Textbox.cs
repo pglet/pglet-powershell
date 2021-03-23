@@ -6,6 +6,8 @@ namespace Pglet.Controls
 {
     public class Textbox : Control
     {
+        protected override string ControlName => "textbox";
+
         public string Label
         {
             get { return GetAttr("label"); }

@@ -6,6 +6,7 @@ namespace Pglet.Controls
 {
     public class Checkbox : Control
     {
+        protected override string ControlName => "checkbox";
         public string Label
         {
             get { return GetAttr("label"); }

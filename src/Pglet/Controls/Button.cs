@@ -6,6 +6,8 @@ namespace Pglet.Controls
 {
     public class Button : Control
     {
+        protected override string ControlName => "button";
+
         public bool Primary
         {
             get { return GetBoolAttr("primary"); }

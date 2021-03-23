@@ -12,6 +12,8 @@ namespace Pglet
             public bool IsDirty { get; set; }
         }
 
+        protected abstract string ControlName { get; }
+
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
         private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
@@ -225,7 +227,7 @@ namespace Pglet
             var parts = new List<string>();
 
             // control name
-            parts.Add(indent + GetControlName());
+            parts.Add(indent + ControlName);
 
             // base props
             var attrParts = GetCommandAttrs(update: false);
@@ -291,11 +293,6 @@ namespace Pglet
             }
 
             return parts;
-        }
-
-        private string GetControlName()
-        {
-            return GetType().Name.Camelize();
         }
     }
 }
