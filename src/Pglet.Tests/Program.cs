@@ -25,11 +25,11 @@ namespace Pglet.Tests
             //page.ThemeTextColor = "";
             //page.ThemeBackgroundColor = "";
 
-            var firstName = new Textbox("First name");
-            var lastName = new Textbox("Last name");
-            var notes = new Textbox("Notes", multiline: true, visible: false);
+            var firstName = new Textbox { Label = "First name" };
+            var lastName = new Textbox { Label = "Last name" };
+            var notes = new Textbox { Label = "Notes", Multiline = true, Visible = false };
 
-            var vaccinated = new Checkbox("Vaccinated")
+            var vaccinated = new Checkbox
             {
                 Label = "Vaccinated",
                 OnChange = async (e) =>
@@ -40,25 +40,29 @@ namespace Pglet.Tests
                 }
             };
 
-            var testBtn = new Button("Test!", onClick: async (e) =>
+            var testBtn = new Button
             {
-                Console.WriteLine("clicked!");
-                Console.WriteLine($"First name: {firstName.Value}");
-                Console.WriteLine($"Last name: {lastName.Value}");
-                Console.WriteLine($"Vaccinated: {vaccinated.Value}");
-                Console.WriteLine($"Notes name: {notes.Value}");
+                Text = "Test!",
+                OnClick = async (e) =>
+                {
+                    Console.WriteLine("clicked!");
+                    Console.WriteLine($"First name: {firstName.Value}");
+                    Console.WriteLine($"Last name: {lastName.Value}");
+                    Console.WriteLine($"Vaccinated: {vaccinated.Value}");
+                    Console.WriteLine($"Notes name: {notes.Value}");
 
-                firstName.Value = "";
-                lastName.Value = "";
-                await page.UpdateAsync();
-            });
+                    firstName.Value = "";
+                    lastName.Value = "";
+                    await page.UpdateAsync();
+                }
+            };
 
             var stack = new Stack
             {
                 Controls =
                 {
-                    new Icon("Shop", color: "orange"),
-                    new Icon("DependencyAdd", color: "green")
+                    new Icon { Name = "Shop", Color = "orange" },
+                    new Icon { Name = "DependencyAdd", Color = "green" }
                 }
             };
 
@@ -72,7 +76,7 @@ namespace Pglet.Tests
                 testBtn);
 
             stack.Margin = "10";
-            stack.Controls.Add(new Icon("Edit", color: "red"));
+            stack.Controls.Add(new Icon { Name = "Edit", Color = "red" });
             stack.Controls.RemoveAt(0);
 
             page.Controls.Add(new Stack { });

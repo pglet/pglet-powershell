@@ -71,7 +71,6 @@ namespace Pglet
             get { return _eventHandlers; }
         }
 
-        protected abstract string ControlName { get; }
         protected virtual IEnumerable<Control> GetChildren()
         {
             return new Control[] {};
@@ -80,24 +79,6 @@ namespace Pglet
         internal List<Control> PreviousChildren
         {
             get { return _previousChildren; }
-        }
-
-        public Control(string id = null, string width = null, string height = null, string padding = null, string margin = null,
-            bool? visible = null, bool? disabled = null)
-        {
-            Id = id;
-            Width = width;
-            Height = height;
-            Padding = padding;
-            Margin = margin;
-            if (visible.HasValue)
-            {
-                Visible = visible.Value;
-            }
-            if (disabled.HasValue)
-            {
-                Disabled = disabled.Value;
-            }
         }
 
         protected void SetEventHandler(string eventName, EventHandler handler)
@@ -123,11 +104,11 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
         }
 
-        internal void SetAttr(string name, string value)
+        internal void SetAttr(string name, string value, bool dirty = true)
         {
             if (value != null)
             {
-                _attrs[name] = new AttrValue { Value = value, IsDirty = true };
+                _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
             }
         }
 
@@ -244,7 +225,7 @@ namespace Pglet
             var parts = new List<string>();
 
             // control name
-            parts.Add(indent + ControlName);
+            parts.Add(indent + GetControlName());
 
             // base props
             var attrParts = GetCommandAttrs(update: false);
@@ -310,6 +291,11 @@ namespace Pglet
             }
 
             return parts;
+        }
+
+        private string GetControlName()
+        {
+            return GetType().Name.Camelize();
         }
     }
 }

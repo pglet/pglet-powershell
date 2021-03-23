@@ -28,8 +28,6 @@ namespace Pglet
             get { return _controls; }
         }
 
-        protected override string ControlName => "page";
-
         public Control GetControl(string id)
         {
             return _index.ContainsKey(id) ? _index[id] : null;
@@ -58,8 +56,9 @@ namespace Pglet
             set { SetAttr("themeBackgroundColor", value); }
         }
 
-        public Page(Connection conn, string url) : base(id: "page")
+        public Page(Connection conn, string url)
         {
+            Id = "page";
             _conn = conn;
             _conn.OnEvent = OnEvent;
             _url = url;
@@ -180,7 +179,7 @@ namespace Pglet
                     {
                         foreach(var key in props.Keys.Where(k => k != "i"))
                         {
-                            _index[id].SetAttr(key, props[key]);
+                            _index[id].SetAttr(key, props[key], dirty: false);
                         }
                     }
                 }
