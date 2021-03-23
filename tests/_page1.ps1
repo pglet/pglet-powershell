@@ -12,10 +12,14 @@ $name = Textbox -Label "Your name"
 
 $stack = Stack -Controls (Text -Value "Results")
 
-$b = 10
+$nums = @{
+    b = 10
+}
+
 $btn1 = Button -Text "-" -OnClick {
     $event.target
-    $a = $b - 1
+    $a = $nums.b - 1
+    $nums.b = $a
     Write-Host "Clicked! $a"
     #Start-Sleep -s 1
     "ddd"
@@ -23,6 +27,11 @@ $btn1 = Button -Text "-" -OnClick {
 
 $btn2 = Button -Text "Get results" -OnClick {
     $event.target
+
+    $a = $nums.b + 1
+    $nums.b = $a
+    Write-Host "Clicked! $a"
+
     $txt1.value = $name.Value
 
     $line = New-PgletText -Value "Hello, $($name.Value)"
