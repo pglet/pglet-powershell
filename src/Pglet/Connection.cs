@@ -196,14 +196,15 @@ namespace Pglet
         {
             while(true)
             {
-                var e = WaitEventInternal();
-
-                _onEvent?.Invoke(e);
-
-                if (e.Target != "page" || e.Name != "change")
+                foreach(var e in WaitEventsInternal())
                 {
-                    _lastEvent = e;
-                    _resetEvent.Set();
+                    _onEvent?.Invoke(e);
+
+                    if (e.Target != "page" || e.Name != "change")
+                    {
+                        _lastEvent = e;
+                        _resetEvent.Set();
+                    }
                 }
             }
         }
@@ -226,38 +227,45 @@ namespace Pglet
             return _lastEvent;
         }
 
-        private Event WaitEventInternal()
+        private IEnumerable<Event> WaitEventsInternal()
         {
             if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
             {
                 _eventPipeReader = new StreamReader($"{_pipeId}.events");
-            }
-
-            try
-            {
-                var line = _eventPipeReader.ReadLine();
-
-                var match = Regex.Match(line, @"(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*");
-                if (match.Success)
+                try
                 {
-                    return new Event
+                    string line = null;
+                    while((line = _eventPipeReader.ReadLine()) != null)
                     {
-                        Target = match.Groups["target"].Value,
-                        Name = match.Groups["name"].Value,
-                        Data = match.Groups["data"].Value
-                    };
+                        yield return ParseEventLine(line);
+                    }
                 }
-                else
-                {
-                    throw new Exception($"Invalid event data: {line}");
-                }
-            }
-            finally
-            {
-                if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+                finally
                 {
                     _eventPipeReader.Close();
                 }
+            }
+            else
+            {
+                yield return ParseEventLine(_eventPipeReader.ReadLine());
+            }
+        }
+
+        private Event ParseEventLine(string line)
+        {
+            var match = Regex.Match(line, @"(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*");
+            if (match.Success)
+            {
+                return new Event
+                {
+                    Target = match.Groups["target"].Value,
+                    Name = match.Groups["name"].Value,
+                    Data = match.Groups["data"].Value
+                };
+            }
+            else
+            {
+                throw new Exception($"Invalid event data: {line}");
             }
         }
 
