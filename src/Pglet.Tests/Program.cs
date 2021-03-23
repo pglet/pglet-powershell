@@ -54,6 +54,10 @@ namespace Pglet.Tests
                     firstName.Value = "";
                     lastName.Value = "";
                     await page.UpdateAsync();
+
+                    await Task.Delay(5000);
+
+                    Console.WriteLine("done!");
                 }
             };
 

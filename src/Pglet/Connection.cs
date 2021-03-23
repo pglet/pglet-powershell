@@ -168,15 +168,14 @@ namespace Pglet
         {
             while(true)
             {
-                foreach(var e in WaitEventsInternal())
-                {
-                    _onEvent?.Invoke(e);
+                var e = WaitEventInternal();
 
-                    if (e.Target != "page" || e.Name != "change")
-                    {
-                        _lastEvent = e;
-                        _resetEvent.Set();
-                    }
+                _onEvent?.Invoke(e);
+
+                if (e.Target != "page" || e.Name != "change")
+                {
+                    _lastEvent = e;
+                    _resetEvent.Set();
                 }
             }
         }
@@ -199,9 +198,9 @@ namespace Pglet
             return _lastEvent;
         }
 
-        private IEnumerable<Event> WaitEventsInternal()
+        private Event WaitEventInternal()
         {
-            yield return ParseEventLine(_eventPipeReader.ReadLine());
+            return ParseEventLine(_eventPipeReader.ReadLine());
         }
 
         private Event ParseEventLine(string line)
