@@ -60,7 +60,7 @@ namespace Pglet
 
         public Page(Connection conn, string url)
         {
-            Id = "page";
+            Gid = Id = "page";
             _conn = conn;
             _conn.OnEvent = OnEvent;
             _url = url;
@@ -113,6 +113,11 @@ namespace Pglet
                 control.BuildUpdateCommands(_index, addedControls, commands);
             }
 
+            if (commands.Count == 0)
+            {
+                return;
+            }
+
             // execute commands
             var ids = await Connection.SendBatchAsync(commands);
 
@@ -120,7 +125,7 @@ namespace Pglet
             int n = 0;
             foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
             {
-                addedControls[n].Id = id;
+                addedControls[n].Gid = id;
                 addedControls[n].Page = this;
 
                 // add to index
@@ -155,15 +160,22 @@ namespace Pglet
             RemoveAtAsync(index).GetAwaiter().GetResult();
         }
 
-        public Task CleanAsync()
+        public async Task CleanAsync(bool force = false)
         {
-            _controls.Clear();
-            return UpdateAsync();
+            if (force)
+            {
+                await _conn.SendAsync("clean page");
+            }
+            else
+            {
+                _controls.Clear();
+                await UpdateAsync();
+            }
         }
 
-        public void Clean()
+        public void Clean(bool force = false)
         {
-            CleanAsync().GetAwaiter().GetResult();
+            CleanAsync(force).GetAwaiter().GetResult();
         }
 
         private void OnEvent(Event e)
@@ -171,7 +183,7 @@ namespace Pglet
             //Console.WriteLine($"Event: {e.Target} - {e.Name} - {e.Data}");
 
             // update control properties
-            if (e.Target == this.Id && e.Name == "change")
+            if (e.Target == "page" && e.Name == "change")
             {
                 var allProps = JsonSerializer.Deserialize<Dictionary<string, string>[]>(e.Data);
                 foreach(var props in allProps)

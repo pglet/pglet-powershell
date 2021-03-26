@@ -17,7 +17,7 @@ namespace Pglet
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
         private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
-        private string _id;
+        private string _gid;
         private Page _page;
 
         public Page Page
@@ -26,10 +26,16 @@ namespace Pglet
             internal set { _page = value; }
         }
 
+        internal string Gid
+        {
+            get { return _gid; }
+            set { _gid = value; }
+        }
+
         public string Id
         {
-            get { return _id; }
-            set { _id = value; }
+            get { return GetAttr("id"); }
+            set { SetAttr("id", value); }
         }
 
         public string Width
@@ -164,18 +170,23 @@ namespace Pglet
                 }
 
                 // deleted controls
+                var deletedIds = new List<string>();
                 for (int m = 0; m < item.deletedA; m++)
                 {
                     var deletedControl = previousHashes[previousInts[item.StartA + m]];
                     RemoveControlRecursively(index, deletedControl);
-                    commands.Add($"remove {deletedControl.Id}");
+                    deletedIds.Add(deletedControl.Gid);
+                }
+                if (deletedIds.Count > 0)
+                {
+                    commands.Add($"remove {string.Join(" ", deletedIds)}");
                 }
 
                 // added controls
                 while (n < item.StartB + item.insertedB)
                 {
                     var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, addedControls: addedControls);
-                    commands.Add($"add to=\"{this.Id}\" at=\"{n}\"\n{cmd}");
+                    commands.Add($"add to=\"{this.Gid}\" at=\"{n}\"\n{cmd}");
                     n++;
                 }
             } // for
@@ -200,34 +211,25 @@ namespace Pglet
             }
 
             // remove control itself
-            index.Remove(control.Id);
+            index.Remove(control.Gid);
         }
 
         internal string GetCommandString(string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
             // remove control from index
-            if (_id != null && index != null)
+            if (_gid != null && index != null)
             {
-                index.Remove(_id);
-            }
-
-            // reset ID
-            if (_id != null && _id.Split(':').Last().StartsWith("_"))
-            {
-                _id = null;
-            }
-            else if (_id != null)
-            {
-                _id = _id.Split(':').Last();
+                index.Remove(_gid);
             }
 
             var lines = new List<string>();
 
             // main command
-            var parts = new List<string>();
-
-            // control name
-            parts.Add(indent + ControlName);
+            var parts = new List<string>
+            {
+                // control name
+                indent + ControlName
+            };
 
             // base props
             var attrParts = GetCommandAttrs(update: false);
@@ -262,7 +264,7 @@ namespace Pglet
         {
             var parts = new List<string>();
 
-            if (update && _id == null)
+            if (update && _gid == null)
             {
                 return parts;
             }
@@ -270,7 +272,7 @@ namespace Pglet
             foreach(string attrName in _attrs.Keys.OrderBy(k => k))
             {
                 var dirty = _attrs[attrName].IsDirty;
-                if (update && !dirty)
+                if ((update && !dirty) || attrName == "id")
                 {
                     continue;
                 }
@@ -280,16 +282,13 @@ namespace Pglet
                 _attrs[attrName].IsDirty = false;
             }
 
-            if (_id != null)
+            if (!update && Id != null)
             {
-                if (!update)
-                {
-                    parts.Insert(0, $"id=\"{_id.Encode()}\"");
-                }
-                else if (parts.Count > 0)
-                {
-                    parts.Insert(0, $"\"{_id.Encode()}\"");
-                }
+                parts.Insert(0, $"id=\"{Id.Encode()}\"");
+            }
+            else if (update && parts.Count > 0)
+            {
+                parts.Insert(0, $"\"{_gid.Encode()}\"");
             }
 
             return parts;
