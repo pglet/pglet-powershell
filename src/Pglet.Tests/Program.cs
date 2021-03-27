@@ -83,7 +83,37 @@ namespace Pglet.Tests
             stack.Controls.Add(new Icon { Name = "Edit", Color = "red" });
             stack.Controls.RemoveAt(0);
 
-            page.Controls.Add(new Stack { });
+            page.Controls.Add(new Button
+            {
+                Split = true,
+                Text = "Button with menu",
+                OnClick = (e) => { Console.WriteLine("Button click!"); },
+                MenuItems =
+                {
+                    new Button.MenuItem
+                    {
+                        Text = "Item 1",
+                        OnClick = (e) => { Console.WriteLine("Menu item click!"); }
+                    },
+                    new Button.MenuItem
+                    {
+                        Text = "Sub menu",
+                        SubMenuItems =
+                        {
+                            new Button.MenuItem
+                            {
+                                Text = "Sub menu item 1",
+                                OnClick = (e) => { Console.WriteLine("Sub menu 1 item click!"); },
+                            },
+                            new Button.MenuItem
+                            {
+                                Text = "Sub menu item 2",
+                                OnClick = (e) => { Console.WriteLine("Sub menu 2 item click!"); },
+                            }
+                        }
+                    }
+                }
+            });
 
             // 2nd update
             await page.UpdateAsync();
