@@ -72,12 +72,6 @@ namespace Pglet.Controls
                 set { SetBoolAttr("divider", value); }
             }
 
-            public string Data
-            {
-                get { return GetAttr("data"); }
-                set { SetAttr("data", value); }
-            }
-
             public EventHandler OnClick
             {
                 get { return GetEventHandler("click"); }
@@ -170,12 +164,6 @@ namespace Pglet.Controls
         {
             get { return GetAttr("iconColor"); }
             set { SetAttr("iconColor", value); }
-        }
-
-        public string Data
-        {
-            get { return GetAttr("data"); }
-            set { SetAttr("data", value); }
         }
 
         public EventHandler OnClick

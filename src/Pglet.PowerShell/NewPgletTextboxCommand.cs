@@ -18,7 +18,7 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new Textbox
+            var ctl = new TextBox
             {
                 Label = Label,
                 Id = Id,

@@ -25,9 +25,9 @@ namespace Pglet.Tests
             //page.ThemeTextColor = "";
             //page.ThemeBackgroundColor = "";
 
-            var firstName = new Textbox { Label = "First name" };
-            var lastName = new Textbox { Label = "Last name" };
-            var notes = new Textbox { Label = "Notes", Multiline = true, Visible = false };
+            var firstName = new TextBox { Label = "First name" };
+            var lastName = new TextBox { Label = "Last name" };
+            var notes = new TextBox { Label = "Notes", Multiline = true, Visible = false };
 
             var vaccinated = new Checkbox
             {
@@ -83,6 +83,7 @@ namespace Pglet.Tests
             stack.Controls.Add(new Icon { Name = "Edit", Color = "red" });
             stack.Controls.RemoveAt(0);
 
+            // button with menu
             page.Controls.Add(new Button
             {
                 Split = true,
@@ -113,6 +114,14 @@ namespace Pglet.Tests
                         }
                     }
                 }
+            });
+
+            // checkbox
+            page.Controls.Add(new Checkbox
+            {
+                Label = "Check it, check it, check it",
+                BoxSide = BoxSide.End,
+                Value = true
             });
 
             // 2nd update

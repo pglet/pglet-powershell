@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Pglet.Controls
 {
-    public class Textbox : Control
+    public class TextBox : Control
     {
         protected override string ControlName => "textbox";
 

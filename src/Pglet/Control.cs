@@ -19,6 +19,7 @@ namespace Pglet
         private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
         private string _gid;
         private Page _page;
+        private object _data;
 
         public Page Page
         {
@@ -74,6 +75,12 @@ namespace Pglet
             set { SetBoolAttr("disabled", value); }
         }
 
+        public object Data
+        {
+            get { return _data; }
+            set { _data = value; }
+        }
+
         internal Dictionary<string, EventHandler> EventHandlers
         {
             get { return _eventHandlers; }
@@ -100,6 +107,23 @@ namespace Pglet
         protected EventHandler GetEventHandler(string eventName)
         {
             return _eventHandlers.ContainsKey(eventName) ? _eventHandlers[eventName] : null;
+        }
+
+        protected void SetEnumAttr<T>(string name, T value, bool dirty = true)
+        {
+            SetAttr(name, value.ToString(), dirty);
+        }
+
+        protected T GetEnumAttr<T>(string name) where T : struct
+        {
+            if (_attrs.ContainsKey(name))
+            {
+                if (Enum.TryParse(_attrs[name].Value, out T result))
+                {
+                    return result;
+                }
+            }
+            return default;
         }
 
         protected void SetBoolAttr(string name, bool value)

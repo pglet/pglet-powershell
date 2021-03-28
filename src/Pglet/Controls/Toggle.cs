@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Pglet.Controls
 {
-    public class Checkbox : Control
+    public class Toggle : Control
     {
-        protected override string ControlName => "checkbox";
+        protected override string ControlName => "toggle";
 
         public string Label
         {
@@ -24,6 +24,24 @@ namespace Pglet.Controls
         {
             get { return GetEnumAttr<BoxSide>("boxSide"); }
             set { SetEnumAttr("boxSide", value); }
+        }
+
+        public bool Inline
+        {
+            get { return GetBoolAttr("inline"); }
+            set { SetBoolAttr("inline", value); }
+        }
+
+        public string OnText
+        {
+            get { return GetAttr("onText"); }
+            set { SetAttr("onText", value); }
+        }
+
+        public string OffText
+        {
+            get { return GetAttr("offText"); }
+            set { SetAttr("offText", value); }
         }
 
         public EventHandler OnChange
