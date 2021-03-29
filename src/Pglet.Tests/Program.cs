@@ -124,6 +124,35 @@ namespace Pglet.Tests
                 Value = true
             });
 
+            // dialog
+            var dlg = new Dialog
+            {
+                Title = "Title 1",
+                SubText = "Sub Text",
+                Controls =
+                {
+                    new Text { Value = "Body text" }
+                },
+                Footer = new Footer
+                {
+                    Controls =
+                    {
+                        new Button { Text = "OK" },
+                        new Button { Text = "Cancel" }
+                    }
+                }
+            };
+            page.Controls.Add(dlg);
+            page.Controls.Add(new Button
+            {
+                Text = "Show dialog",
+                OnClick = async (e) =>
+                {
+                    dlg.Open = true;
+                    await page.UpdateAsync();
+                }
+            });
+
             // 2nd update
             await page.UpdateAsync();
 
