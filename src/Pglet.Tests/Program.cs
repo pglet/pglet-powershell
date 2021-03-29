@@ -21,6 +21,10 @@ namespace Pglet.Tests
             var page = await Pglet.Page("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
 
+            page.Title = "Example 1";
+            page.HorizontalAlign = Align.Start;
+            await page.UpdateAsync();
+
             //page.ThemePrimaryColor = "";
             //page.ThemeTextColor = "";
             //page.ThemeBackgroundColor = "";
@@ -63,6 +67,8 @@ namespace Pglet.Tests
 
             var stack = new Stack
             {
+                Horizontal = true,
+                HorizontalAlign = Align.SpaceBetween,
                 Controls =
                 {
                     new Icon { Name = "Shop", Color = "orange" },

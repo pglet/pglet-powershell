@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System;
 using System.Text.Json;
+using Pglet.Controls;
 
 namespace Pglet
 {
@@ -36,6 +37,36 @@ namespace Pglet
         protected override IEnumerable<Control> GetChildren()
         {
             return _controls;
+        }
+
+        public string Title
+        {
+            get { return GetAttr("title"); }
+            set { SetAttr("title", value); }
+        }
+
+        public bool VerticalFill
+        {
+            get { return GetBoolAttr("verticalFill"); }
+            set { SetBoolAttr("verticalFill", value); }
+        }
+
+        public Align HorizontalAlign
+        {
+            get { return GetEnumAttr<Align>("horizontalAlign"); }
+            set { SetEnumAttr("horizontalAlign", value); }
+        }
+
+        public Align VerticalAlign
+        {
+            get { return GetEnumAttr<Align>("verticalAlign"); }
+            set { SetEnumAttr("verticalAlign", value); }
+        }
+
+        public int Gap
+        {
+            get { return GetIntAttr("gap"); }
+            set { SetIntAttr("gap", value); }
         }
 
         public string ThemePrimaryColor

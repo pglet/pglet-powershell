@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Pglet
@@ -111,7 +112,18 @@ namespace Pglet
 
         protected void SetEnumAttr<T>(string name, T value, bool dirty = true)
         {
-            SetAttr(name, value.ToString(), dirty);
+            var strValue = value.ToString();
+            var memberInfo = typeof(T).GetMember(strValue);
+            if (memberInfo != null && memberInfo.Length > 0)
+            {
+                object[] attrs = memberInfo[0].GetCustomAttributes(typeof(DescriptionAttribute), false);
+                if (attrs != null && attrs.Length > 0)
+                {
+                    strValue = ((DescriptionAttribute)attrs[0]).Description;
+                }
+            }
+
+            SetAttr(name, strValue, dirty);
         }
 
         protected T GetEnumAttr<T>(string name) where T : struct
@@ -122,8 +134,36 @@ namespace Pglet
                 {
                     return result;
                 }
+                else
+                {
+                    var strValue = _attrs[name].Value;
+                    foreach (var field in typeof(T).GetFields())
+                    {
+                        if (Attribute.GetCustomAttribute(field,
+                        typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
+                        {
+                            if (attribute.Description.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                return (T)field.GetValue(null);
+                        }
+                        else
+                        {
+                            if (field.Name.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                return (T)field.GetValue(null);
+                        }
+                    }
+                }
             }
             return default;
+        }
+
+        protected void SetIntAttr(string name, int value)
+        {
+            SetAttr(name, value.ToString().ToLowerInvariant());
+        }
+
+        internal int GetIntAttr(string name, int defValue = 0)
+        {
+            return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
         }
 
         protected void SetBoolAttr(string name, bool value)
