@@ -159,6 +159,17 @@ namespace Pglet.Tests
                 }
             });
 
+            // BarChart
+            page.Controls.Add(new BarChart
+            {
+                DataMode = BarChartDataMode.Percentage,
+                Points =
+                {
+                    new BarChart.DataPoint { X = 10, Y = 20, Color = "Yellow", Legend = "Disk C:" },
+                    new BarChart.DataPoint { X = 10, Y = 100, Color = "Green", Legend = "Disk D:" }
+                }
+            });
+
             // 2nd update
             await page.UpdateAsync();
 

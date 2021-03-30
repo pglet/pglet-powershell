@@ -18,7 +18,7 @@ namespace Pglet
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
         private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
-        private string _gid;
+        private string _uid;
         private Page _page;
         private object _data;
 
@@ -28,10 +28,10 @@ namespace Pglet
             internal set { _page = value; }
         }
 
-        internal string Gid
+        public string Uid
         {
-            get { return _gid; }
-            set { _gid = value; }
+            get { return _uid; }
+            set { _uid = value; }
         }
 
         public string Id
@@ -78,8 +78,18 @@ namespace Pglet
 
         public object Data
         {
-            get { return _data; }
-            set { _data = value; }
+            get
+            {
+                return _data;
+            }
+            set
+            {
+                _data = value;
+                if (value != null)
+                {
+                    SetAttr("data", value.ToString());
+                }
+            }
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -189,6 +199,39 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
         }
 
+        internal void SetAttr<T>(string name, T value, bool dirty = true) where T : notnull
+        {
+            if (value != null)
+            {
+                _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
+            }
+        }
+
+        protected T GetAttr<T>(string name) where T :  notnull
+        {
+            var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+            if (sval == null)
+            {
+                return default(T);
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                return int.TryParse(sval, out int result) ? (T)(object)result: (T)(object)0;
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                return long.TryParse(sval, out long result) ? (T)(object)result : (T)(object)0;
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                return float.TryParse(sval, out float result) ? (T)(object)result : (T)(object)0;
+            }
+            else
+            {
+                return (T)(object)sval;
+            }
+        }
+
         internal void BuildUpdateCommands(Dictionary<string, Control> index, List<Control> addedControls, List<string> commands)
         {
             // update control settings
@@ -239,7 +282,7 @@ namespace Pglet
                 {
                     var deletedControl = previousHashes[previousInts[item.StartA + m]];
                     RemoveControlRecursively(index, deletedControl);
-                    deletedIds.Add(deletedControl.Gid);
+                    deletedIds.Add(deletedControl.Uid);
                 }
                 if (deletedIds.Count > 0)
                 {
@@ -250,7 +293,7 @@ namespace Pglet
                 while (n < item.StartB + item.insertedB)
                 {
                     var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, addedControls: addedControls);
-                    commands.Add($"add to=\"{this.Gid}\" at=\"{n}\"\n{cmd}");
+                    commands.Add($"add to=\"{this.Uid}\" at=\"{n}\"\n{cmd}");
                     n++;
                 }
             } // for
@@ -275,15 +318,15 @@ namespace Pglet
             }
 
             // remove control itself
-            index.Remove(control.Gid);
+            index.Remove(control.Uid);
         }
 
         internal string GetCommandString(string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
             // remove control from index
-            if (_gid != null && index != null)
+            if (_uid != null && index != null)
             {
-                index.Remove(_gid);
+                index.Remove(_uid);
             }
 
             var lines = new List<string>();
@@ -328,7 +371,7 @@ namespace Pglet
         {
             var parts = new List<string>();
 
-            if (update && _gid == null)
+            if (update && _uid == null)
             {
                 return parts;
             }
@@ -352,7 +395,7 @@ namespace Pglet
             }
             else if (update && parts.Count > 0)
             {
-                parts.Insert(0, $"\"{_gid.Encode()}\"");
+                parts.Insert(0, $"\"{_uid.Encode()}\"");
             }
 
             return parts;

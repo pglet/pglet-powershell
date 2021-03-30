@@ -91,7 +91,7 @@ namespace Pglet
 
         public Page(Connection conn, string url)
         {
-            Gid = Id = "page";
+            Uid = Id = "page";
             _conn = conn;
             _conn.OnEvent = OnEvent;
             _url = url;
@@ -156,7 +156,7 @@ namespace Pglet
             int n = 0;
             foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
             {
-                addedControls[n].Gid = id;
+                addedControls[n].Uid = id;
                 addedControls[n].Page = this;
 
                 // add to index
