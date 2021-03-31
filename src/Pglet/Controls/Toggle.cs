@@ -20,12 +20,6 @@ namespace Pglet.Controls
             set { SetBoolAttr("value", value); }
         }
 
-        public BoxSide BoxSide
-        {
-            get { return GetEnumAttr<BoxSide>("boxSide"); }
-            set { SetEnumAttr("boxSide", value); }
-        }
-
         public bool Inline
         {
             get { return GetBoolAttr("inline"); }
