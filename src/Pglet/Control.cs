@@ -31,7 +31,7 @@ namespace Pglet
         public string Uid
         {
             get { return _uid; }
-            set { _uid = value; }
+            internal set { _uid = value; }
         }
 
         public string Id

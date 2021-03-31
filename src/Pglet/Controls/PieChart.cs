@@ -5,33 +5,17 @@ using System.Text;
 
 namespace Pglet.Controls
 {
-    public enum BarChartDataMode
-    {
-        [Description("fraction")]
-        Fraction,
-
-        [Description("percentage")]
-        Percentage
-    }
-
-    public class BarChart : Control
+    public class PieChart : Control
     {
         public class DataPoint: Control
         {
             protected override string ControlName => "p";
 
-            object _x;
-            public object X
+            object _value;
+            public object Value
             {
-                get { return _x; }
-                set { SetAttr("x", value); _x = value; }
-            }
-
-            object _y;
-            public object Y
-            {
-                get { return _y; }
-                set { SetAttr("y", value); _y = value; }
+                get { return _value; }
+                set { SetAttr("value", value); _value = value; }
             }
 
             public string Legend
@@ -46,16 +30,10 @@ namespace Pglet.Controls
                 set { SetAttr("color", value); }
             }
 
-            public string XTooltip
+            public string Tooltip
             {
-                get { return GetAttr("xTooltip"); }
-                set { SetAttr("xTooltip", value); }
-            }
-
-            public string YTooltip
-            {
-                get { return GetAttr("yTooltip"); }
-                set { SetAttr("yTooltip", value); }
+                get { return GetAttr("tooltip"); }
+                set { SetAttr("tooltip", value); }
             }
         }
 
@@ -77,7 +55,7 @@ namespace Pglet.Controls
             }
         }
 
-        protected override string ControlName => "barchart";
+        protected override string ControlName => "piechart";
 
         readonly ChartData _data = new();
 
@@ -87,16 +65,29 @@ namespace Pglet.Controls
             set { _data.Points = value; }
         }
 
-        public BarChartDataMode DataMode
+        public bool Legend
         {
-            get { return GetEnumAttr<BarChartDataMode>("dataMode"); }
-            set { SetEnumAttr("dataMode", value); }
+            get { return GetBoolAttr("legend"); }
+            set { SetBoolAttr("legend", value); }
         }
 
         public bool Tooltips
         {
             get { return GetBoolAttr("tooltips"); }
             set { SetBoolAttr("tooltips", value); }
+        }
+
+        object _innerValue;
+        public object InnerValue
+        {
+            get { return _innerValue; }
+            set { SetAttr("innerValue", value); _innerValue = value; }
+        }
+
+        public int InnerRadius
+        {
+            get { return GetIntAttr("innerRadius"); }
+            set { SetIntAttr("innerRadius", value); }
         }
 
         protected override IEnumerable<Control> GetChildren()
