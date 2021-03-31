@@ -97,22 +97,22 @@ namespace Pglet.Tests
                 OnClick = (e) => { Console.WriteLine("Button click!"); },
                 MenuItems =
                 {
-                    new Button.MenuItem
+                    new MenuItem
                     {
                         Text = "Item 1",
                         OnClick = (e) => { Console.WriteLine("Menu item click!"); }
                     },
-                    new Button.MenuItem
+                    new MenuItem
                     {
                         Text = "Sub menu",
                         SubMenuItems =
                         {
-                            new Button.MenuItem
+                            new MenuItem
                             {
                                 Text = "Sub menu item 1",
                                 OnClick = (e) => { Console.WriteLine("Sub menu 1 item click!"); },
                             },
-                            new Button.MenuItem
+                            new MenuItem
                             {
                                 Text = "Sub menu item 2",
                                 OnClick = (e) => { Console.WriteLine("Sub menu 2 item click!"); },

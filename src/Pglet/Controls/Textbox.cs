@@ -25,5 +25,15 @@ namespace Pglet.Controls
             get { return GetBoolAttr("multiline"); }
             set { SetBoolAttr("multiline", value); }
         }
+
+        public EventHandler OnChange
+        {
+            get { return GetEventHandler("change"); }
+            set
+            {
+                SetEventHandler("change", value);
+                SetBoolAttr("onchange", value != null);
+            }
+        }
     }
 }

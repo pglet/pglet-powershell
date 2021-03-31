@@ -1,9 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace Pglet.Controls
 {
+    public enum MessageType
+    {
+        [Description("info")]
+        Info,
+
+        [Description("error")]
+        Error,
+
+        [Description("blocked")]
+        Blocked,
+
+        [Description("severeWarning")]
+        SevereWarning,
+
+        [Description("success")]
+        Success,
+
+        [Description("warning")]
+        Warning
+    }
+
     public class Message : Control
     {
         public class Button : Control
