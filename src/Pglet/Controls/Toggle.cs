@@ -20,6 +20,12 @@ namespace Pglet.Controls
             set { SetBoolAttr("value", value); }
         }
 
+        public string ValueField
+        {
+            get { return GetAttr("value"); }
+            set { SetAttr("value", $"{{{value}}}"); }
+        }
+
         public bool Inline
         {
             get { return GetBoolAttr("inline"); }

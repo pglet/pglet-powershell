@@ -15,10 +15,16 @@ namespace Pglet.Controls
             set { SetAttr("label", value); }
         }
 
-        public string Value
+        public float Value
+        {
+            get { return GetAttr<float>("value"); }
+            set { SetAttr("value", value); }
+        }
+
+        public string ValueField
         {
             get { return GetAttr("value"); }
-            set { SetAttr("value", value); }
+            set { SetAttr("value", $"{{{value}}}"); }
         }
 
         public string Icon
