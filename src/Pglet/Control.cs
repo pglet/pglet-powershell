@@ -203,7 +203,7 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
         }
 
-        internal void SetAttr(string name, string value, bool dirty = true)
+        internal virtual void SetAttr(string name, string value, bool dirty = true)
         {
             if (value != null)
             {

@@ -30,6 +30,12 @@ namespace Pglet.Controls
             set { SetBoolAttr("value", value); }
         }
 
+        public string ValueField
+        {
+            get { return GetAttr("value"); }
+            set { SetAttr("value", $"{{{value}}}"); }
+        }
+
         public BoxSide BoxSide
         {
             get { return GetEnumAttr<BoxSide>("boxSide"); }

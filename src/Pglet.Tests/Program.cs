@@ -174,13 +174,83 @@ namespace Pglet.Tests
             });
             await stack.UpdateAsync();
 
-            await Task.Delay(5000);
+
+            var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
+            var p2 = new Person { FirstName = "Samantha", LastName = "Fox", Age = 43, Employee = false };
+            var p3 = new Person { FirstName = "Alice", LastName = "Brown", Age = 25, Employee = true };
+
+            var grid = new Grid
+            {
+                Columns =
+                {
+                    new Grid.Column
+                    {
+                        Name = "Employee",
+                        FieldName = "Employee",
+                        MaxWidth = 100,
+                        TemplateControls =
+                        {
+                            new Checkbox { ValueField = "Employee" }
+                        }
+                    },
+                    new Grid.Column
+                    {
+                        Name = "First name",
+                        FieldName = "FirstName",
+                        TemplateControls =
+                        {
+                            new TextBox { Value = "{FirstName}" }
+                        }
+                    },
+                    new Grid.Column { Name = "Last name", FieldName = "LastName" },
+                    new Grid.Column { Name = "Age name", FieldName = "Age" }
+                },
+                Items =
+                {
+                    p1, p2, p3
+                }
+            };
+
+            int n = 1;
+            var btnAddRecord = new Button
+            {
+                Text = "Add record",
+                OnClick = async (e) =>
+                {
+                    grid.Items.RemoveAt(0);
+                    grid.Items.Add(new Person
+                    {
+                        FirstName = $"First {n}",
+                        LastName = $"Last {n}",
+                        Age = n
+                    });
+                    await grid.UpdateAsync();
+                    n++;
+                }
+            };
+
+            var btnShowRecords = new Button
+            {
+                Text = "Show records",
+                OnClick = (e) =>
+                {
+                    (grid.Items[0] as Person).Age = 22;
+                    foreach(var p in grid.Items)
+                    {
+                        Console.WriteLine(p);
+                    }
+                }
+            };
+
+            page.Add(grid, btnAddRecord, btnShowRecords);
+
+            //await Task.Delay(5000);
             //testBtn.OnClick = null;
 
             //page.ThemePrimaryColor = "#3ee66d";
             //page.ThemeTextColor = "#edd2b7";
             //page.ThemeBackgroundColor = "#262626";
-            //await page.Update();
+            //await page.UpdateAsync();
 
             // 3rd update
             //await page.Clean();
