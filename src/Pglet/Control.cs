@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Pglet
 {
@@ -89,6 +90,22 @@ namespace Pglet
                 {
                     SetAttr("data", value.ToString());
                 }
+            }
+        }
+
+        public void Update()
+        {
+            if (_page != null)
+            {
+                _page.Update(this);
+            }
+        }
+
+        public async Task UpdateAsync()
+        {
+            if (_page != null)
+            {
+                await _page.UpdateAsync(this);
             }
         }
 

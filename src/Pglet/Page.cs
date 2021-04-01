@@ -119,12 +119,12 @@ namespace Pglet
             return UpdateAsync();
         }
 
-        public void Update()
+        public new void Update()
         {
             UpdateAsync().GetAwaiter().GetResult();
         }
 
-        public Task UpdateAsync()
+        public new Task UpdateAsync()
         {
             return UpdateAsync(this);
         }

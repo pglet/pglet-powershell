@@ -159,8 +159,11 @@ namespace Pglet.Tests
                 }
             });
 
+            // 2nd update
+            await page.UpdateAsync();
+
             // BarChart
-            page.Controls.Add(new BarChart
+            stack.Controls.Add(new BarChart
             {
                 DataMode = BarChartDataMode.Percentage,
                 Points =
@@ -169,9 +172,7 @@ namespace Pglet.Tests
                     new BarChart.DataPoint { X = 10, Y = 100, Color = "Green", Legend = "Disk D:" }
                 }
             });
-
-            // 2nd update
-            await page.UpdateAsync();
+            await stack.UpdateAsync();
 
             await Task.Delay(5000);
             //testBtn.OnClick = null;
