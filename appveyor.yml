@@ -30,8 +30,8 @@ build_script:
     Write-Host "Module version: $ver"
     Write-Host "Version suffix: $ver_suffix"
 
-    dotnet build src\Pglet --configuration $env:CONFIGURATION /p:Version=$ver --version-suffix $ver_suffix
-    dotnet build src\Pglet.PowerShell --configuration $env:CONFIGURATION /p:Version=$ver --version-suffix $ver_suffix
+    dotnet build src\Pglet --configuration $env:CONFIGURATION /p:Version=$ver /p:VersionSuffix=$ver_suffix
+    dotnet build src\Pglet.PowerShell --configuration $env:CONFIGURATION /p:Version=$ver /p:VersionSuffix=$ver_suffix
 
     # copy module contents
     New-Item pglet -Type Directory | Out-Null
