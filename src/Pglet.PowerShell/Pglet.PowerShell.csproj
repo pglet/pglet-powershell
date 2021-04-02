@@ -19,7 +19,7 @@
     <PackageTags>Web, UI, SPA, internal apps</PackageTags>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup>
     <OutputPath>..\..\bin\</OutputPath>
   </PropertyGroup>
 
