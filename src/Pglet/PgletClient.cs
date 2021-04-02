@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace Pglet
 {
-    public static class Pglet
+    public static class PgletClient
     {
         public const string PGLET_VERSION = "0.2.4";
 
         private static string _pgletExe;
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public static async Task<Page> Page(string name = null, bool web = false,
+        public static async Task<Page> ConnectPage(string name = null, bool web = false,
             string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
@@ -45,7 +45,7 @@ namespace Pglet
             }
         }
 
-        public static async Task App(Func<Page, Task> sessionHandler, string name = null, bool web = false,
+        public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool web = false,
             string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;

@@ -26,7 +26,7 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var page = Pglet.Page(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+            var page = PgletClient.ConnectPage(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                 server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).GetAwaiter().GetResult();
             SessionState.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
             WriteObject(page);

@@ -35,7 +35,7 @@ namespace Pglet.PowerShell
         {
             var pgletModulePath = this.MyInvocation.MyCommand.Module.Path.Replace(".psm1", ".psd1");
 
-            Pglet.App((page) =>
+            PgletClient.ServeApp((page) =>
             {
                 return Task.Run(() =>
                 {

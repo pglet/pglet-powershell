@@ -22,18 +22,18 @@ build_script:
       $idx = $ver.indexOf('-')
       if ($idx -ne -1) {
         $ver_suffix = $ver.Substring($idx + 1)
-        $ver = $ver.Substring(0, $idx)
+        $ver_num = $ver.Substring(0, $idx)
       }
     } else {
-      $ver = $env:APPVEYOR_BUILD_VERSION
+      $ver = $ver_num = $env:APPVEYOR_BUILD_VERSION
       $ver_suffix = ''
     }
 
     Write-Host "Module version: $ver"
     Write-Host "Version suffix: $ver_suffix"
 
-    dotnet build src\Pglet --configuration $env:CONFIGURATION /p:Version=$ver /p:VersionSuffix=$ver_suffix
-    dotnet build src\Pglet.PowerShell --configuration $env:CONFIGURATION /p:Version=$ver /p:VersionSuffix=$ver_suffix
+    dotnet build src\Pglet --configuration $env:CONFIGURATION /p:Version=$ver
+    dotnet build src\Pglet.PowerShell --configuration $env:CONFIGURATION /p:Version=$ver
 
     # copy module contents
     New-Item pglet -Type Directory | Out-Null
@@ -44,7 +44,7 @@ build_script:
 
     # publish module
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
-      (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
+      (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver_num'") | Set-Content pglet\pglet.psd1
       if ($ver_suffix) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$ver_suffix'") | Set-Content pglet\pglet.psd1}
       Publish-Module -Path $env:APPVEYOR_BUILD_FOLDER\pglet -NuGetApiKey $env:psg_api_key
 

@@ -18,7 +18,7 @@ namespace Pglet.Tests
 
         private static async Task TestControls()
         {
-            var page = await Pglet.Page("index", noWindow: true);
+            var page = await PgletClient.ConnectPage("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
 
             page.Title = "Example 1";
@@ -261,7 +261,7 @@ namespace Pglet.Tests
 
         private static async Task TestPage()
         {
-            var page = await Pglet.Page("index", noWindow: true);
+            var page = await PgletClient.ConnectPage("index", noWindow: true);
             await page.Connection.SendAsync("clean page");
 
             int i = 0;
@@ -298,7 +298,7 @@ stack horizontal
 
         private static async Task TestApp()
         {
-            await Pglet.App(async (page) =>
+            await PgletClient.ServeApp(async (page) =>
             {
                 Console.WriteLine($"Session started: {page.Connection.PipeId}");
                 await Task.Delay(30000);
