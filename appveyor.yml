@@ -3,6 +3,8 @@ environment:
   configuration: Release
   psg_api_key: 
     secure: e3uoVHqaTTa+BqEphKfjGYLXG4OXTmAktNhbWXAD+ZT6BD94F0dqabjfwbcKk14t
+  nuget_api_key:
+    secure: 7qhExxbMr9K4LxzMbhJ2YHynyvZde6y/6duaZuT1Vzyg6CfI9QHDJD2y8DWtGXSA
 
 build_script:
 - ps: |
@@ -53,3 +55,9 @@ artifacts:
   - path: '**/*.nupkg'
 
 test: off
+
+deploy:
+  - provider: NuGet
+    api_key: $(nuget_api_key)
+    on:
+      APPVEYOR_REPO_TAG: true
