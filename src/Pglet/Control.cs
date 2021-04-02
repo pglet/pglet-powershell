@@ -205,7 +205,17 @@ namespace Pglet
 
         internal virtual void SetAttr(string name, string value, bool dirty = true)
         {
-            if (value != null)
+            string origValue = null;
+            if (_attrs.ContainsKey(name))
+            {
+                origValue = _attrs[name].Value;
+            }
+
+            if (value == null && origValue != null)
+            {
+                _attrs.Remove(name);
+            }
+            else if (value != null && value != origValue)
             {
                 _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
             }
