@@ -209,15 +209,9 @@ namespace Pglet
             CleanAsync(force).GetAwaiter().GetResult();
         }
 
-        public async Task CloseAsync()
+        public void Close()
         {
-            await _conn.SendAsync("close");
             _conn.Close();
-        }
-
-        public void Close(bool force = false)
-        {
-            CloseAsync().GetAwaiter().GetResult();
         }
 
         private void OnEvent(Event e)

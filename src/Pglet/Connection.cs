@@ -174,6 +174,12 @@ namespace Pglet
             {
                 var e = WaitEventInternal();
 
+                if (e.Target == "page" && e.Name == "close")
+                {
+                    Close();
+                    return;
+                }
+
                 _onEvent?.Invoke(e);
 
                 if (e.Target != "page" || e.Name != "change")
