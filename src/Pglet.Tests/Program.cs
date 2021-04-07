@@ -11,8 +11,8 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestDiffs();
-            //await TestApp();
-            await TestControls();
+            await TestApp();
+            //await TestControls();
             //await TestPage();
         }
 

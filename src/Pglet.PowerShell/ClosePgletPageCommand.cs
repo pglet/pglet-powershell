@@ -3,8 +3,8 @@ using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommunications.Disconnect, "Pglet")]
-    public class DisconnectPgletCommand : PSCmdlet
+    [Cmdlet(VerbsCommon.Close, "PgletPage")]
+    public class ClosePgletPageCommand : PSCmdlet
     {
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "Page object to disconnect from.")]
         public Page Page { get; set; }
@@ -22,7 +22,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            page.Connection.Close();
+            page.Close();
         }
     }
 }

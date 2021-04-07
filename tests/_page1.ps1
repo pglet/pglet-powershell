@@ -48,7 +48,9 @@ $btn2 = Button -Text "Get results" -OnClick {
 
 $page.Add($txt1, $name, $btn1, $btn2, $stack)
 
-Switch-PgletEvents
+#Switch-PgletEvents
+#$page.close()
+Close-PgletPage
 
 
 # while($true) {

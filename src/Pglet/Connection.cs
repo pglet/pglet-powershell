@@ -128,6 +128,10 @@ namespace Pglet
                     waitResult = false;
                 }
             }
+            else if (String.Equals(commandText, "close", StringComparison.OrdinalIgnoreCase))
+            {
+                waitResult = false;
+            }
 
             await _commandPipeWriter.WriteLineAsync(commandText);
 
