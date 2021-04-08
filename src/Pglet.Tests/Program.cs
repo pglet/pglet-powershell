@@ -312,7 +312,18 @@ stack horizontal
 
                 Console.WriteLine($"Session started: {page.Connection.PipeId}");
                 Console.WriteLine($"Hash: {page.Hash}");
-                await Task.Delay(30000);
+
+                var txt = new TextBox();
+                await page.AddAsync(txt, new Button
+                {
+                    Text = "Test!",
+                    OnClick = (e) =>
+                    {
+                        Console.WriteLine(txt.Value);
+                    }
+                });
+
+                await Task.Delay(5000);
                 Console.WriteLine("Session end");
 
             }, "index", noWindow: true);

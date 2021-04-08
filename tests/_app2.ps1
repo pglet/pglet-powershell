@@ -4,8 +4,11 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 Connect-PgletApp "index2" -NoWindow -ScriptBlock {
 
     $page = $PGLET_PAGE
+    $page.OnHashChange = {
+        Write-Host "Hash change: $($e.data)"
+    }
 
-    $txt1 = New-PgletText -Value "Line 1"
+    $txt1 = New-PgletText -Value "Line 101"
     $name = New-PgletTextbox -Label "Your name"
     
     $b = 10
@@ -15,6 +18,9 @@ Connect-PgletApp "index2" -NoWindow -ScriptBlock {
         Write-Host "Clicked! $a"
         #Start-Sleep -s 1
         "ddd"
+
+        $name.value = ""
+        $page.Update()
     }
     
     $btn2 = New-PgletButton -Text "Get results" -OnClick {

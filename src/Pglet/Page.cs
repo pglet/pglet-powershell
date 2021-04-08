@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using System;
-using System.Text.Json;
+﻿using Newtonsoft.Json;
 using Pglet.Controls;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Pglet
 {
@@ -245,13 +245,13 @@ namespace Pglet
             // update control properties
             if (e.Target == "page" && e.Name == "change")
             {
-                var allProps = JsonSerializer.Deserialize<Dictionary<string, string>[]>(e.Data);
-                foreach(var props in allProps)
+                var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
+                foreach (var props in allProps)
                 {
                     var id = props["i"];
                     if (_index.ContainsKey(id))
                     {
-                        foreach(var key in props.Keys.Where(k => k != "i"))
+                        foreach (var key in props.Keys.Where(k => k != "i"))
                         {
                             _index[id].SetAttr(key, props[key], dirty: false);
                         }

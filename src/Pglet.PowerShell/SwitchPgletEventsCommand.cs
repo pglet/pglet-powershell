@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pglet.PowerShell.Controls;
+using System;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
@@ -50,8 +51,9 @@ namespace Pglet.PowerShell
                 }
 
                 var script = $"$event = $args[0]\n{handlerScript}";
-                var result = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
-                foreach (var obj in result)
+                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
+
+                foreach (var obj in results)
                 {
                     WriteObject(obj);
                 }

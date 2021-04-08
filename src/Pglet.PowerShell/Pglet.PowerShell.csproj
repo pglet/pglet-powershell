@@ -6,7 +6,6 @@
     <LangVersion>latest</LangVersion>
     <Version>1.0.1</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Authors>Feodor Fitsner</Authors>
     <Company>Appveyor Systems Inc.</Company>
     <Description>Pglet ("piglet") is fast and secure way to build internal web apps. Build web apps like a frontend pro in the language you already know. No knowledge of HTML, CSS or JavaScript required.</Description>

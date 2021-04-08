@@ -20,7 +20,7 @@ namespace Pglet
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public static async Task<Page> ConnectPage(string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
             var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
@@ -37,7 +37,15 @@ namespace Pglet
                 var conn = new Connection(pipeId);
                 await conn.OpenAsync(ct);
 
-                var page = new Page(conn, pageUrl);
+                Page page;
+                if (createPage != null)
+                {
+                    page = createPage(conn, pageUrl);
+                }
+                else
+                {
+                    page = new Page(conn, pageUrl);
+                }
                 await page.LoadHash();
                 return page;
             }
@@ -48,7 +56,7 @@ namespace Pglet
         }
 
         public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, CancellationToken? cancellationToken = null)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, Func<Connection, string, Page> createPage = null, CancellationToken ? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
             var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
@@ -103,7 +111,15 @@ namespace Pglet
                             var conn = new Connection(line);
                             await conn.OpenAsync(ct);
 
-                            var page = new Page(conn, pageUrl);
+                            Page page;
+                            if (createPage != null)
+                            {
+                                page = createPage(conn, pageUrl);
+                            }
+                            else
+                            {
+                                page = new Page(conn, pageUrl);
+                            }
                             await page.LoadHash();
                             var h = sessionHandler(page);
                         }
