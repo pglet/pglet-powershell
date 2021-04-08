@@ -87,6 +87,24 @@ namespace Pglet
             set { SetAttr("themeBackgroundColor", value); }
         }
 
+        public string Hash
+        {
+            get { return GetAttr("hash"); }
+            set { SetAttr("hash", value); }
+        }
+
+        public EventHandler OnClose
+        {
+            get { return GetEventHandler("close"); }
+            set { SetEventHandler("close", value); }
+        }
+
+        public EventHandler OnHashChange
+        {
+            get { return GetEventHandler("hashChange"); }
+            set { SetEventHandler("hashChange", value); }
+        }
+
         protected override string ControlName => "page";
 
         public Page(Connection conn, string url)
@@ -95,6 +113,12 @@ namespace Pglet
             _conn = conn;
             _conn.OnEvent = OnEvent;
             _url = url;
+            _index[Id] = this;
+        }
+
+        internal async Task LoadHash()
+        {
+            Hash = await _conn.SendAsync("get page hash");
         }
 
         public void Add(params Control[] controls)
@@ -204,14 +228,14 @@ namespace Pglet
             }
         }
 
-        public void Clean(bool force = false)
+        public async Task CloseAsync()
         {
-            CleanAsync(force).GetAwaiter().GetResult();
+            await _conn.SendAsync("close");
         }
 
         public void Close()
         {
-            _conn.Close();
+            CloseAsync().GetAwaiter().GetResult();
         }
 
         private void OnEvent(Event e)

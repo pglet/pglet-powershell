@@ -37,7 +37,9 @@ namespace Pglet
                 var conn = new Connection(pipeId);
                 await conn.OpenAsync(ct);
 
-                return new Page(conn, pageUrl);
+                var page = new Page(conn, pageUrl);
+                await page.LoadHash();
+                return page;
             }
             else
             {
@@ -102,6 +104,7 @@ namespace Pglet
                             await conn.OpenAsync(ct);
 
                             var page = new Page(conn, pageUrl);
+                            await page.LoadHash();
                             var h = sessionHandler(page);
                         }
                         catch (OperationCanceledException)

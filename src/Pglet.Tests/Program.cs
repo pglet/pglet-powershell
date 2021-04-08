@@ -300,7 +300,18 @@ stack horizontal
         {
             await PgletClient.ServeApp(async (page) =>
             {
+                page.OnClose = (e) =>
+                {
+                    Console.WriteLine("Session closed");
+                };
+
+                page.OnHashChange = (e) =>
+                {
+                    Console.WriteLine("Hash changed: " + e.Data);
+                };
+
                 Console.WriteLine($"Session started: {page.Connection.PipeId}");
+                Console.WriteLine($"Hash: {page.Hash}");
                 await Task.Delay(30000);
                 Console.WriteLine("Session end");
 
