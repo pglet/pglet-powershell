@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace Pglet
+﻿namespace Pglet
 {
     public class Event
     {
@@ -10,7 +8,7 @@ namespace Pglet
 
         public override string ToString()
         {
-            return JsonSerializer.Serialize(this);
+            return $"{Target} {Name} {Data}";
         }
     }
 }

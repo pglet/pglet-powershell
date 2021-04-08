@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace Pglet
+﻿namespace Pglet
 {
     public class ControlEvent : Event
     {

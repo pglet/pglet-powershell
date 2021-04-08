@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Pglet.Controls
+﻿namespace Pglet.Controls
 {
     public class SearchBox : Control
     {
