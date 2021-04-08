@@ -16,6 +16,7 @@
     <RepositoryUrl>https://github.com/pglet/pglet-powershell</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>Web, UI, SPA, internal apps</PackageTags>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup>
