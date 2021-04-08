@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using Pglet.PowerShell.Controls;
+using System;
+using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {
@@ -27,7 +29,9 @@ namespace Pglet.PowerShell
         protected override void ProcessRecord()
         {
             var page = PgletClient.ConnectPage(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).GetAwaiter().GetResult();
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0,
+                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl)).GetAwaiter().GetResult();
+
             SessionState.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
             WriteObject(page);
         }

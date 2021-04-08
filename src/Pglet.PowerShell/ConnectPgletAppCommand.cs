@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿using Pglet.PowerShell.Controls;
+using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +57,8 @@ namespace Pglet.PowerShell
                 });
             },
             cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0).Wait();
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0,
+                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl)).Wait();
         }
 
         protected override void StopProcessing()
