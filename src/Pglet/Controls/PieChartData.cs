@@ -2,24 +2,21 @@
 
 namespace Pglet.Controls
 {
-    public partial class PieChart
+    public class PieChartData : Control
     {
-        public class PieChartData : Control
+        IList<PieChartDataPoint> _points = new List<PieChartDataPoint>();
+
+        protected override string ControlName => "data";
+
+        public IList<PieChartDataPoint> Points
         {
-            IList<PieChartDataPoint> _points = new List<PieChartDataPoint>();
+            get { return _points; }
+            set { _points = value; }
+        }
 
-            protected override string ControlName => "data";
-
-            public IList<PieChartDataPoint> Points
-            {
-                get { return _points; }
-                set { _points = value; }
-            }
-
-            protected override IEnumerable<Control> GetChildren()
-            {
-                return _points;
-            }
+        protected override IEnumerable<Control> GetChildren()
+        {
+            return _points;
         }
     }
 }

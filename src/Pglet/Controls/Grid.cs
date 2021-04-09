@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class Grid : Control
+    public class Grid : Control
     {
         protected override string ControlName => "grid";
 

@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class BarChart : Control
+    public class BarChart : Control
     {
         protected override string ControlName => "barchart";
 

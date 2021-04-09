@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class Toolbar : Control
+    public class Toolbar : Control
     {
         protected override string ControlName => "toolbar";
 

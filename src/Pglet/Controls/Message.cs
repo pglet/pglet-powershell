@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class Message : Control
+    public class Message : Control
     {
         protected override string ControlName => "message";
 

@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class ChoiceGroup : Control
+    public class ChoiceGroup : Control
     {
         protected override string ControlName => "choicegroup";
 

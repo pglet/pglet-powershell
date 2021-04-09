@@ -2,24 +2,21 @@
 
 namespace Pglet.Controls
 {
-    public partial class Grid
+    public class GridColumns : Control
     {
-        public class GridColumns : Control
+        IList<GridColumn> _columns = new List<GridColumn>();
+
+        protected override string ControlName => "columns";
+
+        public IList<GridColumn> Items
         {
-            IList<GridColumn> _columns = new List<GridColumn>();
+            get { return _columns; }
+            set { _columns = value; }
+        }
 
-            protected override string ControlName => "columns";
-
-            public IList<GridColumn> Items
-            {
-                get { return _columns; }
-                set { _columns = value; }
-            }
-
-            protected override IEnumerable<Control> GetChildren()
-            {
-                return _columns;
-            }
+        protected override IEnumerable<Control> GetChildren()
+        {
+            return _columns;
         }
     }
 }

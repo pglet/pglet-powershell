@@ -2,7 +2,7 @@
 
 namespace Pglet.Controls
 {
-    public partial class Dropdown : Control
+    public class Dropdown : Control
     {
         protected override string ControlName => "dropdown";
 

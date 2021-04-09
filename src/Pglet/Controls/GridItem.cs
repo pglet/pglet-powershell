@@ -3,60 +3,57 @@ using System.Reflection;
 
 namespace Pglet.Controls
 {
-    public partial class Grid
+    public class GridItem : Control
     {
-        public class GridItem : Control
+        protected override string ControlName => "item";
+
+        object _obj;
+
+        public object Obj
         {
-            protected override string ControlName => "item";
+            get { return _obj; }
+        }
 
-            object _obj;
-
-            public object Obj
+        public GridItem(object obj)
+        {
+            if (obj == null)
             {
-                get { return _obj; }
+                throw new ArgumentNullException("obj");
             }
 
-            public GridItem(object obj)
-            {
-                if (obj == null)
-                {
-                    throw new ArgumentNullException("obj");
-                }
+            _obj = obj;
+        }
 
-                _obj = obj;
+        internal override void SetAttr(string name, string value, bool dirty = true)
+        {
+            base.SetAttr(name, value, false);
+
+            var prop = _obj.GetType().GetProperty(name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null)
+            {
+                prop.SetValue(_obj, Convert.ChangeType(value, prop.PropertyType), null);
             }
+        }
 
-            internal override void SetAttr(string name, string value, bool dirty = true)
+        internal void FetchAttrs()
+        {
+            foreach (var prop in _obj.GetType().GetProperties())
             {
-                base.SetAttr(name, value, false);
-
-                var prop = _obj.GetType().GetProperty(name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null)
+                var val = prop.GetValue(_obj);
+                if (val != null)
                 {
-                    prop.SetValue(_obj, Convert.ChangeType(value, prop.PropertyType), null);
-                }
-            }
+                    var sval = val.ToString();
 
-            internal void FetchAttrs()
-            {
-                foreach(var prop in _obj.GetType().GetProperties())
-                {
-                    var val = prop.GetValue(_obj);
-                    if (val != null)
+                    if (prop.PropertyType == typeof(bool))
                     {
-                        var sval = val.ToString();
+                        sval = sval.ToLowerInvariant();
+                    }
 
-                        if (prop.PropertyType == typeof(bool))
-                        {
-                            sval = sval.ToLowerInvariant();
-                        }
+                    var origSval = this.GetAttr(prop.Name);
 
-                        var origSval = this.GetAttr(prop.Name);
-
-                        if (sval != origSval)
-                        {
-                            base.SetAttr(prop.Name, sval, dirty: true);
-                        }
+                    if (sval != origSval)
+                    {
+                        base.SetAttr(prop.Name, sval, dirty: true);
                     }
                 }
             }
