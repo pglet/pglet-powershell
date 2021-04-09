@@ -41,8 +41,4 @@ Connect-PgletApp "index2" -NoWindow -ScriptBlock {
     }
     
     $page.Add($txt1, $name, $btn1, $btn2)
-    
-    Switch-PgletEvents
-
-    Write-Trace "Session end"
 }

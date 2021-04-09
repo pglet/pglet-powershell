@@ -51,6 +51,7 @@ namespace Pglet.PowerShell
                             runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
                             ps.AddScript($"Import-Module '{pgletModulePath}'");
                             ps.AddScript(ScriptBlock.ToString());
+                            ps.AddScript("\nSwitch-PgletEvents");
                             ps.Invoke();
                         }
                     }
