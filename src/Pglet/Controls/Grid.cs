@@ -21,7 +21,7 @@ namespace Pglet.Controls
             set { _items.Items = value; }
         }
 
-        public GridSelectionMode Selection
+        public GridSelectionMode SelectionMode
         {
             get { return GetEnumAttr<GridSelectionMode>("selection"); }
             set { SetEnumAttr("selection", value); }
@@ -43,6 +43,18 @@ namespace Pglet.Controls
         {
             get { return GetIntAttr("shimmerLines"); }
             set { SetIntAttr("shimmerLines", value); }
+        }
+
+        public EventHandler OnSelect
+        {
+            get { return GetEventHandler("select"); }
+            set { SetEventHandler("select", value); }
+        }
+
+        public EventHandler OnItemInvoke
+        {
+            get { return GetEventHandler("itemInvoke"); }
+            set { SetEventHandler("itemInvoke", value); }
         }
 
         protected override IEnumerable<Control> GetChildren()

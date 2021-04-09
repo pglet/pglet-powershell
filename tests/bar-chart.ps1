@@ -2,12 +2,12 @@ Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
 $page = Connect-PgletPage "bar-chart"
-$page.clean($true)
+Clear-PgletPage
 
 $chart = BarChart -Points @(
     BarChartDataPoint -X 10 -Y 20 -Legend "Disk A:"
     BarChartDataPoint -X 20 -Y 100 -Legend "Disk B:"
-) -DataMode Percentage
+) -DataMode Percentage -Tooltips
 
 $page.add($chart)
 
