@@ -5,7 +5,11 @@ Connect-PgletApp "index2" -NoWindow -ScriptBlock {
 
     $page = $PGLET_PAGE
     $page.OnHashChange = {
-        Write-Host "Hash change: $($e.data)"
+        Write-Trace "Hash change: $($event.data)"
+    }
+
+    $page.OnClose = {
+        Write-Trace "Session closed"
     }
 
     $txt1 = New-PgletText -Value "Line 101"
@@ -39,4 +43,6 @@ Connect-PgletApp "index2" -NoWindow -ScriptBlock {
     $page.Add($txt1, $name, $btn1, $btn2)
     
     Switch-PgletEvents
+
+    Write-Trace "Session end"
 }

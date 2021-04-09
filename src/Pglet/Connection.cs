@@ -176,15 +176,22 @@ namespace Pglet
 
                 _onEvent?.Invoke(e);
 
+                bool close = false;
                 if (e.Target == "page" && e.Name == "close")
                 {
-                    Close();
-                    return;
+                    close = true;
                 }
-                else if (e.Target != "page" || e.Name != "change")
+
+                if (e.Target != "page" || e.Name != "change")
                 {
                     _lastEvent = e;
                     _resetEvent.Set();
+                }
+
+                if (close)
+                {
+                    Close();
+                    return;
                 }
             }
         }

@@ -57,6 +57,11 @@ namespace Pglet.PowerShell
                 {
                     WriteObject(obj);
                 }
+
+                if (e.Target == "page" && e.Name == "close")
+                {
+                    return;
+                }
             }
         }
 
