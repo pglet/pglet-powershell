@@ -4,9 +4,9 @@ using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommon.New, "PgletTextbox")]
+    [Cmdlet(VerbsCommon.New, "PgletTextBox")]
     [OutputType(typeof(PsTextBox))]
-    public class NewPgletTextboxCommand : NewControlCmdletBase
+    public class NewPgletTextBoxCommand : NewControlCmdletBase
     {
         [Parameter(Mandatory = false, Position = 0)]
         public string Label { get; set; }
