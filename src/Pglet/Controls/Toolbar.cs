@@ -2,49 +2,13 @@
 
 namespace Pglet.Controls
 {
-    public class Toolbar : Control
+    public partial class Toolbar : Control
     {
-        public class Overflow : Control
-        {
-            IList<MenuItem> _menuItems = new List<MenuItem>();
-
-            protected override string ControlName => "overflow";
-
-            public IList<MenuItem> MenuItems
-            {
-                get { return _menuItems; }
-                set { _menuItems = value; }
-            }
-
-            protected override IEnumerable<Control> GetChildren()
-            {
-                return _menuItems;
-            }
-        }
-
-        public class Far : Control
-        {
-            IList<MenuItem> _menuItems = new List<MenuItem>();
-
-            protected override string ControlName => "far";
-
-            public IList<MenuItem> MenuItems
-            {
-                get { return _menuItems; }
-                set { _menuItems = value; }
-            }
-
-            protected override IEnumerable<Control> GetChildren()
-            {
-                return _menuItems;
-            }
-        }
-
         protected override string ControlName => "toolbar";
 
         IList<MenuItem> _items = new List<MenuItem>();
-        readonly Overflow _overflow = new();
-        readonly Far _far = new();
+        readonly ToolbarOverflow _overflow = new();
+        readonly ToolbarFar _far = new();
 
         public IList<MenuItem> Items
         {

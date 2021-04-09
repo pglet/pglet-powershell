@@ -1,16 +1,5 @@
-﻿using System.ComponentModel;
-
-namespace Pglet.Controls
+﻿namespace Pglet.Controls
 {
-    public enum BoxSide
-    {
-        [Description("start")]
-        Start,
-
-        [Description("end")]
-        End
-    }
-
     public class Checkbox : Control
     {
         protected override string ControlName => "checkbox";

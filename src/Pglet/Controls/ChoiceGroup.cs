@@ -2,41 +2,12 @@
 
 namespace Pglet.Controls
 {
-    public class ChoiceGroup : Control
+    public partial class ChoiceGroup : Control
     {
-        public class Option : Control
-        {
-            protected override string ControlName => "option";
-
-            public string Key
-            {
-                get { return GetAttr("key"); }
-                set { SetAttr("key", value); }
-            }
-
-            public string Text
-            {
-                get { return GetAttr("text"); }
-                set { SetAttr("text", value); }
-            }
-
-            public string Icon
-            {
-                get { return GetAttr("icon"); }
-                set { SetAttr("icon", value); }
-            }
-
-            public string IconColor
-            {
-                get { return GetAttr("iconColor"); }
-                set { SetAttr("iconColor", value); }
-            }
-        }
-
         protected override string ControlName => "choicegroup";
 
-        IList<Option> _options = new List<Option>();
-        public IList<Option> Options
+        IList<ChoiceGroupOption> _options = new List<ChoiceGroupOption>();
+        public IList<ChoiceGroupOption> Options
         {
             get { return _options; }
             set { _options = value; }

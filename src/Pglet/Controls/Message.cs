@@ -1,52 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Pglet.Controls
 {
-    public enum MessageType
+    public partial class Message : Control
     {
-        [Description("info")]
-        Info,
-
-        [Description("error")]
-        Error,
-
-        [Description("blocked")]
-        Blocked,
-
-        [Description("severeWarning")]
-        SevereWarning,
-
-        [Description("success")]
-        Success,
-
-        [Description("warning")]
-        Warning
-    }
-
-    public class Message : Control
-    {
-        public class Button : Control
-        {
-            protected override string ControlName => "button";
-
-            public string Action
-            {
-                get { return GetAttr("action"); }
-                set { SetAttr("action", value); }
-            }
-
-            public string Text
-            {
-                get { return GetAttr("text"); }
-                set { SetAttr("text", value); }
-            }
-        }
-
         protected override string ControlName => "message";
 
-        IList<Button> _buttons = new List<Button>();
-        public IList<Button> Buttons
+        IList<MessageButton> _buttons = new List<MessageButton>();
+        public IList<MessageButton> Buttons
         {
             get { return _buttons; }
             set { _buttons = value; }

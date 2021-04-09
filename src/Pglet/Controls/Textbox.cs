@@ -1,16 +1,5 @@
-﻿using System.ComponentModel;
-
-namespace Pglet.Controls
+﻿namespace Pglet.Controls
 {
-    public enum TextBoxAlign
-    {
-        [Description("left")]
-        Left,
-
-        [Description("right")]
-        Right
-    }
-
     public class TextBox : Control
     {
         protected override string ControlName => "textbox";

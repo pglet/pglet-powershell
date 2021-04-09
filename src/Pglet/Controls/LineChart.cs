@@ -1,98 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Pglet.Controls
 {
-    public enum LineChartXType
+    public partial class LineChart : Control
     {
-        [Description("number")]
-        Number,
-
-        [Description("date")]
-        Date
-    }
-
-    public class LineChart : Control
-    {
-        public class DataPoint: Control
-        {
-            protected override string ControlName => "p";
-
-            object _x;
-            public object X
-            {
-                get { return _x; }
-                set { SetAttr("x", value); _x = value; }
-            }
-
-            object _y;
-            public object Y
-            {
-                get { return _y; }
-                set { SetAttr("y", value); _y = value; }
-            }
-
-            object _tick;
-            public object Tick
-            {
-                get { return _tick; }
-                set { SetAttr("tick", value); _tick = value; }
-            }
-
-            public string Legend
-            {
-                get { return GetAttr("legend"); }
-                set { SetAttr("legend", value); }
-            }
-
-            public string XTooltip
-            {
-                get { return GetAttr("xTooltip"); }
-                set { SetAttr("xTooltip", value); }
-            }
-
-            public string YTooltip
-            {
-                get { return GetAttr("yTooltip"); }
-                set { SetAttr("yTooltip", value); }
-            }
-        }
-
-        public class ChartData : Control
-        {
-            IList<DataPoint> _points = new List<DataPoint>();
-
-            protected override string ControlName => "data";
-
-            public IList<DataPoint> Points
-            {
-                get { return _points; }
-                set { _points = value; }
-            }
-
-            public string Legend
-            {
-                get { return GetAttr("legend"); }
-                set { SetAttr("legend", value); }
-            }
-
-            public string Color
-            {
-                get { return GetAttr("color"); }
-                set { SetAttr("color", value); }
-            }
-
-            protected override IEnumerable<Control> GetChildren()
-            {
-                return _points;
-            }
-        }
-
         protected override string ControlName => "linechart";
 
-        IList<ChartData> _lines = new List<ChartData>();
+        IList<LineChartData> _lines = new List<LineChartData>();
 
-        public IList<ChartData> Lines
+        public IList<LineChartData> Lines
         {
             get { return _lines; }
             set { _lines = value; }

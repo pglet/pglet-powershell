@@ -1,19 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Pglet.Controls
 {
-    public enum BarChartDataMode
-    {
-        [Description("fraction")]
-        Fraction,
-
-        [Description("percentage")]
-        Percentage
-    }
-
     public class BarChart : Control
     {
         public class DataPoint: Control

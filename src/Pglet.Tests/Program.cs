@@ -183,7 +183,7 @@ namespace Pglet.Tests
             {
                 Columns =
                 {
-                    new Grid.Column
+                    new Grid.GridColumn
                     {
                         Name = "Employee",
                         FieldName = "Employee",
@@ -193,7 +193,7 @@ namespace Pglet.Tests
                             new Checkbox { ValueField = "Employee" }
                         }
                     },
-                    new Grid.Column
+                    new Grid.GridColumn
                     {
                         Name = "First name",
                         FieldName = "FirstName",
@@ -202,8 +202,8 @@ namespace Pglet.Tests
                             new TextBox { Value = "{FirstName}" }
                         }
                     },
-                    new Grid.Column { Name = "Last name", FieldName = "LastName" },
-                    new Grid.Column { Name = "Age name", FieldName = "Age" }
+                    new Grid.GridColumn { Name = "Last name", FieldName = "LastName" },
+                    new Grid.GridColumn { Name = "Age name", FieldName = "Age" }
                 },
                 Items =
                 {
