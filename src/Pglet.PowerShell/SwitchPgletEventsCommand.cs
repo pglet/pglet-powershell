@@ -50,7 +50,7 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var script = $"$event = $args[0]\n{handlerScript}";
+                var script = $"$e = $args[0]\n{handlerScript}";
                 var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
 
                 foreach (var obj in results)

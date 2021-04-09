@@ -5,7 +5,7 @@ Connect-PgletApp "index2" -NoWindow -ScriptBlock {
 
     $page = $PGLET_PAGE
     $page.OnHashChange = {
-        Write-Trace "Hash change: $($event.data)"
+        Write-Trace "Hash change: $($e.data)"
     }
 
     $page.OnClose = {

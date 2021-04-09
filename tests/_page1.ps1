@@ -16,8 +16,8 @@ $nums = @{
     b = 10
 }
 
-$btn1 = Button -Text "-" -OnClick {
-    $event.target
+$btn1 = Button -Text "---" -OnClick {
+    $e.target
     $a = $nums.b - 1
     $nums.b = $a
     Write-Host "Clicked! $a"
@@ -26,7 +26,7 @@ $btn1 = Button -Text "-" -OnClick {
 }
 
 $btn2 = Button -Text "Get results" -OnClick {
-    $event.target
+    $e.target
 
     $a = $nums.b + 1
     $nums.b = $a

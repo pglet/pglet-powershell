@@ -5,11 +5,8 @@ namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsCommon.New, "PgletButton")]
     [OutputType(typeof(Page))]
-    public class NewPgletButtonCommand : PSCmdlet
+    public class NewPgletButtonCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
-        public string Id { get; set; }
-
         [Parameter(Mandatory = false)]
         public string Text { get; set; }
 
@@ -20,10 +17,11 @@ namespace Pglet.PowerShell
         {
             var ctl = new PsButton
             {
-                Id = Id,
                 Text = Text,
                 OnClick = OnClick
             };
+
+            SetControlProps(ctl);
 
             WriteObject(ctl);
         }

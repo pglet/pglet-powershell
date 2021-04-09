@@ -4,28 +4,26 @@ using System.Management.Automation;
 namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsCommon.New, "PgletTextbox")]
-    [OutputType(typeof(Page))]
-    public class NewPgletTextboxCommand : PSCmdlet
+    [OutputType(typeof(TextBox))]
+    public class NewPgletTextboxCommand : NewControlCmdletBase
     {
         [Parameter(Mandatory = false, Position = 0)]
         public string Label { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public string Id { get; set; }
 
         [Parameter(Mandatory = false)]
         public string Value { get; set; }
 
         protected override void ProcessRecord()
         {
-            var ctl = new TextBox
+            var control = new TextBox
             {
                 Label = Label,
-                Id = Id,
                 Value = Value
             };
 
-            WriteObject(ctl);
+            SetControlProps(control);
+
+            WriteObject(control);
         }
     }
 }
