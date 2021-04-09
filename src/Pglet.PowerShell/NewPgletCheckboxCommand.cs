@@ -12,7 +12,7 @@ namespace Pglet.PowerShell
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public bool Value { get; set; }
+        public bool? Value { get; set; }
 
         [Parameter(Mandatory = false)]
         public string ValueField { get; set; }
@@ -28,12 +28,16 @@ namespace Pglet.PowerShell
             var control = new PsCheckbox
             {
                 Label = Label,
-                Value = Value,
                 ValueField = ValueField,
                 OnChange = OnChange
             };
 
             SetControlProps(control);
+
+            if (Value.HasValue)
+            {
+                control.Value = Value.Value;
+            }
 
             if (BoxSide.HasValue)
             {

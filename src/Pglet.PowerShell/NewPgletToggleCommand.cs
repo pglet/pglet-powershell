@@ -12,7 +12,7 @@ namespace Pglet.PowerShell
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public bool Value { get; set; }
+        public bool? Value { get; set; }
 
         [Parameter(Mandatory = false)]
         public string ValueField { get; set; }
@@ -34,7 +34,6 @@ namespace Pglet.PowerShell
             var control = new PsToggle
             {
                 Label = Label,
-                Value = Value,
                 ValueField = ValueField,
                 OnText = OnText,
                 OffText = OffText,
@@ -42,6 +41,11 @@ namespace Pglet.PowerShell
             };
 
             SetControlProps(control);
+
+            if (Value.HasValue)
+            {
+                control.Value = Value.Value;
+            }
 
             if (Inline.IsPresent)
             {
