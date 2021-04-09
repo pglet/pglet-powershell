@@ -1,27 +1,13 @@
-﻿using Pglet.PowerShell.Controls;
+﻿using Pglet.Controls;
+using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommon.New, "PgletButton")]
-    [OutputType(typeof(PsButton))]
-    public class NewPgletButtonCommand : NewControlCmdletBase
+    [Cmdlet(VerbsCommon.New, "PgletMenuItem")]
+    [OutputType(typeof(PsMenuItem))]
+    public class NewPgletMenuItemCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Primary { get; set; }
-        
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Compound { get; set; }
-        
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Action { get; set; }
-        
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Toolbar { get; set; }
-        
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Split { get; set; }
-
         [Parameter(Mandatory = false)]
         public string Text { get; set; }
 
@@ -35,28 +21,33 @@ namespace Pglet.PowerShell
         public SwitchParameter NewWindow { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string Title { get; set; }
-
-        [Parameter(Mandatory = false)]
         public string Icon { get; set; }
 
         [Parameter(Mandatory = false)]
         public string IconColor { get; set; }
 
         [Parameter(Mandatory = false)]
-        public PsMenuItem[] MenuItems { get; set; }
+        public SwitchParameter IconOnly { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Split { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Divider { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public PsMenuItem[] SubMenuItems { get; set; }
 
         [Parameter(Mandatory = false)]
         public ScriptBlock OnClick { get; set; }
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsButton
+            var ctl = new PsMenuItem
             {
                 Text = Text,
                 SecondaryText = SecondaryText,
                 Url = Url,
-                Title = Title,
                 Icon = Icon,
                 IconColor = IconColor,
                 OnClick = OnClick
@@ -67,29 +58,27 @@ namespace Pglet.PowerShell
                 ctl.NewWindow = NewWindow.ToBool();
             }
 
-            if (Primary.IsPresent)
+            if (IconOnly.IsPresent)
             {
-                ctl.Primary = Primary.ToBool();
-            }
-
-            if (Compound.IsPresent)
-            {
-                ctl.Compound = Compound.ToBool();
-            }
-
-            if (Action.IsPresent)
-            {
-                ctl.Action = Action.ToBool();
-            }
-
-            if (Toolbar.IsPresent)
-            {
-                ctl.Toolbar = Toolbar.ToBool();
+                ctl.IconOnly = IconOnly.ToBool();
             }
 
             if (Split.IsPresent)
             {
                 ctl.Split = Split.ToBool();
+            }
+
+            if (Divider.IsPresent)
+            {
+                ctl.Divider = Divider.ToBool();
+            }
+
+            if (SubMenuItems != null)
+            {
+                foreach (var subMenuItem in SubMenuItems)
+                {
+                    ctl.SubMenuItems.Add(subMenuItem);
+                }
             }
 
             SetControlProps(ctl);

@@ -215,10 +215,20 @@ namespace Pglet
             RemoveAtAsync(index).GetAwaiter().GetResult();
         }
 
+        public void Clean(bool force = false)
+        {
+            CleanAsync(force).GetAwaiter().GetResult();
+        }
+
         public async Task CleanAsync(bool force = false)
         {
             if (force)
             {
+                _controls.Clear();
+                EventHandlers.Clear();
+                PreviousChildren.Clear();
+                _index.Clear();
+                _index[Id] = this;
                 await _conn.SendAsync("clean page");
             }
             else

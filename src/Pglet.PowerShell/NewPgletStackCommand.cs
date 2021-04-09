@@ -12,15 +12,18 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var stack = new Stack {};
-            SetControlProps(stack);
+            var ctl = new Stack { };
+            SetControlProps(ctl);
 
-            foreach (var control in Controls)
+            if (Controls != null)
             {
-                stack.Controls.Add(control);
+                foreach (var control in Controls)
+                {
+                    ctl.Controls.Add(control);
+                }
             }
 
-            WriteObject(stack);
+            WriteObject(ctl);
         }
     }
 }

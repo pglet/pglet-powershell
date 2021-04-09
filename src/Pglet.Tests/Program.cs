@@ -168,8 +168,8 @@ namespace Pglet.Tests
                 DataMode = BarChartDataMode.Percentage,
                 Points =
                 {
-                    new BarChart.DataPoint { X = 10, Y = 20, Color = "Yellow", Legend = "Disk C:" },
-                    new BarChart.DataPoint { X = 10, Y = 100, Color = "Green", Legend = "Disk D:" }
+                    new BarChartDataPoint { X = 10, Y = 20, Color = "Yellow", Legend = "Disk C:" },
+                    new BarChartDataPoint { X = 10, Y = 100, Color = "Green", Legend = "Disk D:" }
                 }
             });
             await stack.UpdateAsync();
