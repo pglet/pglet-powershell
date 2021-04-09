@@ -7,10 +7,10 @@ namespace Pglet.Controls
         protected override string ControlName => "dialog";
 
         Footer _footer = new Footer();
-        public Footer Footer
+        public IList<Control> FooterControls
         {
-            get { return _footer; }
-            set { _footer = value; }
+            get { return _footer.Controls; }
+            set { _footer.Controls = value; }
         }
 
         IList<Control> _controls = new List<Control>();

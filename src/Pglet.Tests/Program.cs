@@ -139,13 +139,10 @@ namespace Pglet.Tests
                 {
                     new Text { Value = "Body text" }
                 },
-                Footer = new Footer
+                FooterControls = 
                 {
-                    Controls =
-                    {
-                        new Button { Text = "OK" },
-                        new Button { Text = "Cancel" }
-                    }
+                    new Button { Text = "OK" },
+                    new Button { Text = "Cancel" }
                 }
             };
             page.Controls.Add(dlg);
