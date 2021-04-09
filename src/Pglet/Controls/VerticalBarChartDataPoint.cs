@@ -1,6 +1,6 @@
 ﻿namespace Pglet.Controls
 {
-    public class VerticalBarDataPoint : Control
+    public class VerticalBarChartDataPoint : Control
     {
         protected override string ControlName => "p";
 

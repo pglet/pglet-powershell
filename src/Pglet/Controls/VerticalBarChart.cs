@@ -8,7 +8,7 @@ namespace Pglet.Controls
 
         readonly VerticalBarChartData _data = new();
 
-        public IList<VerticalBarDataPoint> Points
+        public IList<VerticalBarChartDataPoint> Points
         {
             get { return _data.Points; }
             set { _data.Points = value; }
@@ -41,7 +41,7 @@ namespace Pglet.Controls
             }
             set
             {
-                SetAttr("yFormat", string.Join(" ", value));
+                SetAttr("colors", string.Join(" ", value));
             }
         }
 

@@ -4,11 +4,11 @@ namespace Pglet.Controls
 {
     public class VerticalBarChartData : Control
     {
-        IList<VerticalBarDataPoint> _points = new List<VerticalBarDataPoint>();
+        IList<VerticalBarChartDataPoint> _points = new List<VerticalBarChartDataPoint>();
 
         protected override string ControlName => "data";
 
-        public IList<VerticalBarDataPoint> Points
+        public IList<VerticalBarChartDataPoint> Points
         {
             get { return _points; }
             set { _points = value; }
