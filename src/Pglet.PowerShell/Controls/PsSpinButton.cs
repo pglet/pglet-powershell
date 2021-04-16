@@ -22,7 +22,12 @@ namespace Pglet.PowerShell.Controls
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(string eventName)
+        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        {
+            return GetEventHandlerScript(e.Name);
+        }
+
+        private ScriptBlock GetEventHandlerScript(string eventName)
         {
             return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
         }

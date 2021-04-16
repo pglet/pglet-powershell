@@ -11,8 +11,8 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestDiffs();
-            await TestApp();
-            //await TestControls();
+            //await TestApp();
+            await TestControls();
             //await TestPage();
         }
 
@@ -178,6 +178,15 @@ namespace Pglet.Tests
 
             var grid = new Grid
             {
+                SelectionMode = GridSelectionMode.Multiple,
+                OnSelect = (e) =>
+                {
+                    Console.WriteLine(e.Data);
+                    foreach(var item in (e.Control as Grid).SelectedItems)
+                    {
+                        Console.WriteLine(item);
+                    }
+                },
                 Columns =
                 {
                     new GridColumn
@@ -200,7 +209,7 @@ namespace Pglet.Tests
                         }
                     },
                     new GridColumn { Name = "Last name", FieldName = "LastName" },
-                    new GridColumn { Name = "Age name", FieldName = "Age" }
+                    new GridColumn { Name = "Age", FieldName = "Age" }
                 },
                 Items =
                 {

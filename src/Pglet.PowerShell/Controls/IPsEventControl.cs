@@ -4,6 +4,6 @@ namespace Pglet.PowerShell.Controls
 {
     public interface IPsEventControl
     {
-        ScriptBlock GetEventHandlerScript(string eventName);
+        ScriptBlock GetEventHandlerScript(ControlEvent e);
     }
 }

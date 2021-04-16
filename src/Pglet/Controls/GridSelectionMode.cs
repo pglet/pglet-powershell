@@ -7,7 +7,7 @@ namespace Pglet.Controls
         [Description("none")]
         None,
 
-        [Description("single ")]
+        [Description("single")]
         Single,
 
         [Description("multiple")]

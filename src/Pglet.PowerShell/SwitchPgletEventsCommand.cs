@@ -44,14 +44,23 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var handlerScript = eventCtl.GetEventHandlerScript(e.Name);
+                var ce = new ControlEvent
+                {
+                    Target = e.Target,
+                    Name = e.Name,
+                    Data = e.Data,
+                    Control = page.GetControl(e.Target),
+                    Page = page
+                };
+
+                var handlerScript = eventCtl.GetEventHandlerScript(ce);
                 if (handlerScript == null)
                 {
                     continue;
                 }
 
                 var script = $"$e = $args[0]\n{handlerScript}";
-                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
+                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, ce);
 
                 foreach (var obj in results)
                 {

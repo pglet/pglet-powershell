@@ -130,6 +130,10 @@ namespace Pglet
             {
                 _eventHandlers[eventName] = handler;
             }
+            else
+            {
+                _eventHandlers.Remove(eventName);
+            }
         }
 
         protected EventHandler GetEventHandler(string eventName)

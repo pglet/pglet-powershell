@@ -1,15 +1,14 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+$page = Connect-PgletPage -Name "index" -NoWindow
+Clear-PgletPage
 
-Invoke-Pglet "clean page"
-
-Invoke-Pglet "add
-stack id=items horizontal wrap
-  text value='1' align=center verticalAlign=center width=100 height=100 bgColor=Salmon color=white padding=5
-"
+$stack = Stack -Horizontal -Wrap
+$page.add($stack)
 
 for($i = 0; $i -lt 20; $i++) {
-  Invoke-Pglet "add text to=items value='$i' align=center verticalAlign=center width=100 height=100 bgColor=Salmon color=white padding=5"
+  $stack.controls.add((Text -Value "$i" -Align Center -VerticalAlign Center -Width 100 -Height 100 -BgColor Salmon -Color White -Padding 5))
 }
+
+$stack.update()

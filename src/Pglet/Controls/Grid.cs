@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Pglet.Controls
 {
@@ -8,6 +9,7 @@ namespace Pglet.Controls
 
         readonly GridColumns _columns = new();
         readonly GridItems _items = new();
+        IList<object> _selectedItems = new List<object>();
 
         public IList<GridColumn> Columns
         {
@@ -19,6 +21,11 @@ namespace Pglet.Controls
         {
             get { return _items.Items; }
             set { _items.Items = value; }
+        }
+
+        public IList<object> SelectedItems
+        {
+            get { return _selectedItems; }
         }
 
         public GridSelectionMode SelectionMode
@@ -45,10 +52,25 @@ namespace Pglet.Controls
             set { SetIntAttr("shimmerLines", value); }
         }
 
+        EventHandler _onSelectHandler;
         public EventHandler OnSelect
         {
-            get { return GetEventHandler("select"); }
-            set { SetEventHandler("select", value); }
+            get { return _onSelectHandler; }
+            set
+            {
+                _onSelectHandler = value;
+                if (_onSelectHandler != null)
+                {
+                    SetEventHandler("select", (e) =>
+                    {
+                        OnSelectInternal(e);
+                    });
+                }
+                else
+                {
+                    SetEventHandler("select", null);
+                }
+            }
         }
 
         public EventHandler OnItemInvoke
@@ -60,6 +82,12 @@ namespace Pglet.Controls
         protected override IEnumerable<Control> GetChildren()
         {
             return new Control[] { _columns, _items };
+        }
+
+        protected void OnSelectInternal(ControlEvent e)
+        {
+            _selectedItems = e.Data.Split(' ').Where(id => id != "").Select(id => (this.Page.GetControl(id) as GridItem).Obj).ToList();
+            _onSelectHandler?.Invoke(e);
         }
     }
 }

@@ -17,7 +17,8 @@ $nums = @{
 }
 
 $btn1 = Button -Text "---" -OnClick {
-    $e.target
+    $e | fl *
+
     $a = $nums.b - 1
     $nums.b = $a
     Write-Host "Clicked! $a"
