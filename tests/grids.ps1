@@ -21,7 +21,7 @@ class Person {
 }
 
 $grid = Grid -SelectionMode multiple -Columns @(
-  GridColumn -Name "First name" -FieldName "FirstName" -Sortable 'true'
+  GridColumn -FieldName "FirstName" -Sortable 'true'
   GridColumn -Name "Last name" -FieldName "LastName"
   GridColumn -Name "Age" -FieldName "Age" -Sortable 'number'
 ) -Items @(
