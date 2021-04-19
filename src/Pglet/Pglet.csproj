@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Pglet</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.1</Version>
+    <Authors>Appveyor Systems Inc.</Authors>
+    <Company>Appveyor Systems Inc.</Company>
+    <Description>Pglet ("piglet") is fast and secure way to build internal web apps. Build web apps like a frontend pro in the language you already know. No knowledge of HTML, CSS or JavaScript required.</Description>
+    <Copyright>Copyright (c) 2021 Appveyor Systems Inc.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://pglet.io</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pglet/pglet</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>Web, UI, SPA, internal apps</PackageTags>
+    <PackageIcon>pglet-logo-300.png</PackageIcon>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="SharpCompress" Version="0.28.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\img\pglet-logo-300.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

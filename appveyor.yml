@@ -1,16 +1,12 @@
 
 environment:
+  configuration: Release
   psg_api_key: 
     secure: e3uoVHqaTTa+BqEphKfjGYLXG4OXTmAktNhbWXAD+ZT6BD94F0dqabjfwbcKk14t
+  nuget_api_key:
+    secure: 7qhExxbMr9K4LxzMbhJ2YHynyvZde6y/6duaZuT1Vzyg6CfI9QHDJD2y8DWtGXSA
 
 build_script:
-
-# copy module contents
-- ps: New-Item pglet -Type Directory | Out-Null
-- ps: Copy-Item -Path *.psd1 -Destination pglet
-- ps: Copy-Item -Path *.psm1 -Destination pglet
-
-# publish module
 - ps: |
     $ErrorActionPreference = "Stop"
 
@@ -22,21 +18,49 @@ build_script:
       $ver = $env:APPVEYOR_REPO_TAG_NAME
       if ($ver.StartsWith('v')) { $ver = $ver.Substring(1) }
 
-      # prerelease moniker
+      # version suffix
       $idx = $ver.indexOf('-')
       if ($idx -ne -1) {
-        $prerelease = $ver.Substring($idx + 1)
-        $ver = $ver.Substring(0, $idx)
+        $ver_suffix = $ver.Substring($idx + 1)
+        $ver_num = $ver.Substring(0, $idx)
+      } else {
+        $ver_suffix = ''
+        $ver_num = $ver
       }
+    } else {
+      $ver = $ver_num = $env:APPVEYOR_BUILD_VERSION
+      $ver_suffix = ''
+    }
 
-      Write-Host "Module version: $ver"
-      Write-Host "Pre-release moniker: $prerelease"
+    Write-Host "Module version: $ver"
+    Write-Host "Version suffix: $ver_suffix"
 
-      (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver'") | Set-Content pglet\pglet.psd1
-      if ($prerelease) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$prerelease'") | Set-Content pglet\pglet.psd1}
+    dotnet build src\Pglet --configuration $env:CONFIGURATION /p:Version=$ver
+    dotnet build src\Pglet.PowerShell --configuration $env:CONFIGURATION /p:Version=$ver
+
+    # copy module contents
+    New-Item pglet -Type Directory | Out-Null
+    Copy-Item -Path *.psd1 -Destination pglet
+    Copy-Item -Path *.psm1 -Destination pglet
+    Copy-Item -Path 'bin' -Destination pglet -Recurse
+    Get-ChildItem pglet -Recurse
+
+    # publish module
+    if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+      (Get-Content pglet\pglet.psd1).replace("ModuleVersion     = '0.1.0'", "ModuleVersion = '$ver_num'") | Set-Content pglet\pglet.psd1
+      if ($ver_suffix) {(Get-Content pglet\pglet.psd1).replace("# Prerelease = 'beta'", "Prerelease = '$ver_suffix'") | Set-Content pglet\pglet.psd1}
       Publish-Module -Path $env:APPVEYOR_BUILD_FOLDER\pglet -NuGetApiKey $env:psg_api_key
 
       Write-Host "Module has been successfully published" -ForegroundColor Green
     }
 
+artifacts:
+  - path: '**/*.nupkg'
+
 test: off
+
+deploy:
+  - provider: NuGet
+    api_key: $(nuget_api_key)
+    on:
+      APPVEYOR_REPO_TAG: true

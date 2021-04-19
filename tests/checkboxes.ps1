@@ -1,18 +1,16 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+$page = Connect-PgletPage -Name "index" -NoWindow
+Clear-PgletPage
 
-Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign='start'"
+$page.HorizontalAlign = 'start'
+$page.update()
 
-Invoke-Pglet "add
-  stack
-    checkbox label='Regular checkbox'
-    checkbox label='Regular checkbox and checked' value='true'
-    checkbox label='Checkbox with tick on a right' boxSide='end'
-"
+$stack = Stack -Controls @(
+  Checkbox -Label 'Regular checkbox'
+  Checkbox -Label 'Regular checkbox and checked' -Value $true
+  Checkbox -Label 'Checkbox with tick on a right' -BoxSide 'end'
+)
 
-# while($true) {
-#     Wait-PgletEvent $pageID
-# }
+$page.add($stack)

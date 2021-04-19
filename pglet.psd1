@@ -7,23 +7,14 @@
     Copyright         = 'Copyright (c) 2021 Appveyor Systems Inc. All rights reserved.'
     Description       = 'Pglet client for PowerShell - easily create rich and responsive web apps in PowerShell.'
     PowerShellVersion = '5.0'
+    NestedModules     = @('bin\Pglet.PowerShell.dll')
     FunctionsToExport = @(
-        'Connect-PgletApp',
-        'Connect-PgletPage',
-        'Disconnect-Pglet',
-        'Invoke-Pglet',
-        'Wait-PgletEvent',
         'Write-Trace'
         )
     CmdletsToExport   = '*'
     VariablesToExport = '*'
-    AliasesToExport   = @(
-        'ipg'
-        )
+    AliasesToExport   = '*'
     PrivateData       = @{
-        Pglet  = @{
-            MinimumVersion = "0.2.2"
-        }
         PSData = @{
             #Tags = @()
             LicenseUri = 'https://github.com/pglet/pglet-powershell/blob/main/LICENSE'

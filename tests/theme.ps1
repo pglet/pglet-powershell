@@ -8,6 +8,7 @@ Invoke-Pglet "clean page"
 Invoke-Pglet "set page horizontalAlign='stretch' themePrimaryColor='#3ee66d' themeTextColor='#edd2b7' themeBackgroundColor='#262626'"
 
 Invoke-Pglet "add
+  textbox
   stack horizontal horizontalAlign=space-between
     text value='Theme selector example' size=large
     toggle id=theme label=Theme inline onText=Light offText=Dark

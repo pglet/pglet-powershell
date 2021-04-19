@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Pglet.PowerShell</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.1</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Authors>Appveyor Systems Inc.</Authors>
+    <Company>Appveyor Systems Inc.</Company>
+    <Description>Pglet ("piglet") is fast and secure way to build internal web apps. Build web apps like a frontend pro in the language you already know. No knowledge of HTML, CSS or JavaScript required.</Description>
+    <Product>Pglet</Product>
+    <Copyright>Copyright (c) 2021 Appveyor Systems Inc.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://pglet.io</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pglet/pglet-powershell</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>Web, UI, SPA, internal apps</PackageTags>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pglet\Pglet.csproj" />
+  </ItemGroup>
+
+</Project>
