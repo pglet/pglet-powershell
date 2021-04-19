@@ -23,6 +23,9 @@ build_script:
       if ($idx -ne -1) {
         $ver_suffix = $ver.Substring($idx + 1)
         $ver_num = $ver.Substring(0, $idx)
+      } else {
+        $ver_suffix = ''
+        $ver_num = $ver
       }
     } else {
       $ver = $ver_num = $env:APPVEYOR_BUILD_VERSION
