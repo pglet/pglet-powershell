@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Reflection;
 
 namespace Pglet.Controls
@@ -37,23 +38,64 @@ namespace Pglet.Controls
 
         internal void FetchAttrs()
         {
-            foreach (var prop in _obj.GetType().GetProperties())
+            var otype = _obj.GetType();
+            
+            if (otype.Name == "PSObject")
             {
-                var val = prop.GetValue(_obj);
-                if (val != null)
+                var propsMember = otype.GetProperty("Properties");
+                var props = propsMember.GetValue(_obj);
+
+                var getEnum = props.GetType().GetMethod("GetEnumerator");
+                var objEnum = getEnum.Invoke(props, null);
+
+                var moveNext = objEnum.GetType().GetMethod("MoveNext");
+                var current = objEnum.GetType().GetProperty("System.Collections.IEnumerator.Current", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+
+                while ((bool)moveNext.Invoke(objEnum, null))
                 {
-                    var sval = val.ToString();
+                    var member = current.GetValue(objEnum);
+                    var nameProp = member.GetType().GetProperty("Name");
+                    var valueProp = member.GetType().GetProperty("Value");
 
-                    if (prop.PropertyType == typeof(bool))
+                    var name = nameProp.GetValue(member) as string;
+                    var val = valueProp.GetValue(member);
+                    if (val != null)
                     {
-                        sval = sval.ToLowerInvariant();
+                        var sval = val.ToString();
+
+                        if (val.GetType() == typeof(bool))
+                        {
+                            sval = sval.ToLowerInvariant();
+                        }
+
+                        var origSval = this.GetAttr(name);
+
+                        if (sval != origSval)
+                        {
+                            base.SetAttr(name, sval, dirty: true);
+                        }
                     }
-
-                    var origSval = this.GetAttr(prop.Name);
-
-                    if (sval != origSval)
+                }
+            } else
+            {
+                foreach (var prop in otype.GetProperties())
+                {
+                    var val = prop.GetValue(_obj);
+                    if (val != null)
                     {
-                        base.SetAttr(prop.Name, sval, dirty: true);
+                        var sval = val.ToString();
+
+                        if (prop.PropertyType == typeof(bool))
+                        {
+                            sval = sval.ToLowerInvariant();
+                        }
+
+                        var origSval = this.GetAttr(prop.Name);
+
+                        if (sval != origSval)
+                        {
+                            base.SetAttr(prop.Name, sval, dirty: true);
+                        }
                     }
                 }
             }
