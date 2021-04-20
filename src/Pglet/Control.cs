@@ -123,7 +123,6 @@ namespace Pglet
                 throw new Exception("Control must be added to the page first.");
             }
 
-            EventHandlers.Clear();
             PreviousChildren.Clear();
 
             foreach (var child in GetChildren())

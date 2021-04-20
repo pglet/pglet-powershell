@@ -222,7 +222,6 @@ namespace Pglet
 
         public override async Task CleanAsync()
         {
-            EventHandlers.Clear();
             PreviousChildren.Clear();
 
             foreach (var child in GetChildren())
