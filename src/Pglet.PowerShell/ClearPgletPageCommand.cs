@@ -22,7 +22,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            page.Clean(true);
+            page.Clean();
         }
     }
 }

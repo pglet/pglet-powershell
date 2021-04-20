@@ -103,10 +103,35 @@ namespace Pglet
 
         public async Task UpdateAsync()
         {
-            if (_page != null)
+            if (_page == null)
             {
-                await _page.UpdateAsync(this);
+                throw new Exception("Control must be added to the page first.");
             }
+
+            await _page.UpdateAsync(this);
+        }
+
+        public void Clean()
+        {
+            CleanAsync().GetAwaiter().GetResult();
+        }
+
+        public virtual async Task CleanAsync()
+        {
+            if (_page == null)
+            {
+                throw new Exception("Control must be added to the page first.");
+            }
+
+            EventHandlers.Clear();
+            PreviousChildren.Clear();
+
+            foreach (var child in GetChildren())
+            {
+                RemoveControlRecursively(_page.Index, child);
+            }
+
+            await _page.Connection.SendAsync($"clean {Uid}");
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -340,7 +365,7 @@ namespace Pglet
             PreviousChildren.AddRange(currentChildren);
         }
 
-        private void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
+        protected void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
         {
             // remove all children
             foreach (var child in control.GetChildren())

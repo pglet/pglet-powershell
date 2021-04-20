@@ -26,7 +26,15 @@ $page.title = 'Task Manager'
 $page.padding = '10px'
 $page.update()
 
-$page.add((Text -Id 'title' -Value 'Task Manager' -Size xLarge))
+$tab = Tab -Id $compName -Text $compName
+
+$page.add(
+    (Text -Id 'title' -Value 'Task Manager' -Size xLarge),
+    (Tabs -Id 'computers' -Width '100%' -TabItems @(
+    $tab
+)))
+
+$tab.clean()
 
 $proc_grid = Grid -ShimmerLines 5 -SelectionMode Single -HeaderVisible -Columns @(
   GridColumn -Resizable -Sortable 'string' -FieldName 'name' -Name 'Process name' -MaxWidth 100
@@ -35,37 +43,34 @@ $proc_grid = Grid -ShimmerLines 5 -SelectionMode Single -HeaderVisible -Columns 
   GridColumn -Resizable -Sortable 'string' -FieldName 'path' -Name 'Path'
 )
 
-# # Generate 30 empty values for the last minute to initially fill charts
-# $points=@()
-# for($i = -30; $i -lt 0; $i++) {
-#   $d=(Get-Date).AddSeconds($i*2)
-#   $points += LineChartDataPoint -X $d -Y 0
-# }
+# Generate 30 empty values for the last minute to initially fill charts
+$points=@()
+for($i = -30; $i -lt 0; $i++) {
+  $d=(Get-Date).AddSeconds($i*2)
+  $points += LineChartDataPoint -X $d -Y 0
+}
 
-$cpu_chart = New-PgletLineChartData -Legend 'CPU'
-$ram_chart = New-PgletLineChartData -Legend 'RAM'
+$cpu_chart = New-PgletLineChartData -Legend 'CPU' -Points $points
+$ram_chart = New-PgletLineChartData -Legend 'RAM' -Points $points
 
-$tabs = Tabs -Id 'computers' -Width '100%' -TabItems @(
-  Tab -Id $compName -Text $compName -Controls @(
-    Stack -Horizontal -Gap 20 -Controls @(
-      Stack -Width '50%' -Controls @(
+$stack = Stack -Horizontal -Controls @(
+    Stack -Width '50%' -Controls @(
         $proc_grid
-      )
-      Stack -Width '40%' -Controls @(
+    )
+    Stack -Width '40%' -Controls @(
         Text -Value 'CPU, %' -Size Large
         LineChart -Tooltips -XType Date -YTicks 5 -YMax 100 -YFormat '{y}%' -Height 250 -Lines @(
-          $cpu_chart
+            $cpu_chart
         )
         Text -Value 'RAM, MB' -Size Large
         LineChart -Tooltips -XType Date -YTicks 5 -YMax $totalRam -Height 250 -Lines @(
-          $ram_chart
+            $ram_chart
         )
-      )
     )
-  )
 )
 
-$page.add($tabs)
+$tab.controls.add($stack)
+$tab.update()
 
 # Main update loop
 while($true) {
