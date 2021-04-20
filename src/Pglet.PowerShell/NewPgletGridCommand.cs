@@ -30,6 +30,9 @@ namespace Pglet.PowerShell
         public SwitchParameter HeaderVisible { get; set; }
 
         [Parameter(Mandatory = false)]
+        public SwitchParameter PreserveSelection { get; set; }
+
+        [Parameter(Mandatory = false)]
         public int? ShimmerLines { get; set; }
 
         protected override void ProcessRecord()
@@ -60,6 +63,11 @@ namespace Pglet.PowerShell
             if (HeaderVisible.IsPresent)
             {
                 ctl.HeaderVisible = HeaderVisible.ToBool();
+            }
+
+            if (PreserveSelection.IsPresent)
+            {
+                ctl.PreserveSelection = PreserveSelection.ToBool();
             }
 
             if (Columns != null)

@@ -178,6 +178,7 @@ namespace Pglet.Tests
 
             var grid = new Grid
             {
+                PreserveSelection = true,
                 SelectionMode = GridSelectionMode.Multiple,
                 OnSelect = (e) =>
                 {
