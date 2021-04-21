@@ -6,7 +6,7 @@ $compName = $env:ComputerName
 $totalRam = (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum / 1024 / 1024
 
 #Connect-PgletPage -Name "$userName/$compName" -web
-Connect-PgletPage -Name "top-cpu" -Web
+Connect-PgletPage -Name "top-cpu"
 
 Invoke-Pglet "set page title='Task Manager' padding=10px"
 

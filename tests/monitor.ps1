@@ -31,7 +31,7 @@ $userName = $env:UserName
 $compName = $env:ComputerName
 $totalRam = (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum / 1024 / 1024
 
-$page = Connect-PgletPage -Name "ps-monitor" -NoWindow
+$page = Connect-PgletPage -Name "ps-monitor"
 $page.title = 'Task Manager'
 $page.padding = '10px'
 $page.update()
@@ -46,7 +46,7 @@ $page.add(
 
 $tab.clean()
 
-$proc_grid = Grid -ShimmerLines 5 -SelectionMode Single -HeaderVisible -Columns @(
+$proc_grid = Grid -ShimmerLines 5 -SelectionMode Single -PreserveSelection -HeaderVisible -Columns @(
   GridColumn -Resizable -Sortable 'string' -FieldName 'name' -Name 'Process name' -MaxWidth 100
   GridColumn -Resizable -Sortable 'number' -FieldName 'pid' -Name 'PID' -MaxWidth 100
   GridColumn -Resizable -Sortable 'string' -FieldName 'cpu_display' -SortField 'cpu' -Name 'CPU %' -MaxWidth 100
@@ -80,6 +80,7 @@ while($true) {
 
   $proc_grid.items = getTopProcesses 10 | ForEach-Object {
     @{
+      id = $_.PID
       pid = $_.PID
       name = $_.InstanceName
       cpu = $_.CPU
