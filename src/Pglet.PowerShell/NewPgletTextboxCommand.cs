@@ -24,6 +24,18 @@ namespace Pglet.PowerShell
         public string Description { get; set; }
 
         [Parameter(Mandatory = false)]
+        public string Prefix { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public string Suffix { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public string Icon { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public string IconColor { get; set; }
+
+        [Parameter(Mandatory = false)]
         public TextBoxAlign? Align { get; set; }
 
         [Parameter(Mandatory = false)]
@@ -34,6 +46,18 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Required { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter ReadOnly { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AutoAdjustHeight { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Underlined { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Borderless { get; set; }
 
         [Parameter(Mandatory = false)]
         public ScriptBlock OnChange { get; set; }
@@ -47,6 +71,10 @@ namespace Pglet.PowerShell
                 Placeholder = Placeholder,
                 ErrorMessage = ErrorMessage,
                 Description = Description,
+                Prefix = Prefix,
+                Suffix = Suffix,
+                Icon = Icon,
+                IconColor = IconColor,
                 OnChange = OnChange
             };
 
@@ -70,6 +98,26 @@ namespace Pglet.PowerShell
             if (Required.IsPresent)
             {
                 control.Required = Required.ToBool();
+            }
+
+            if (ReadOnly.IsPresent)
+            {
+                control.ReadOnly = ReadOnly.ToBool();
+            }
+
+            if (AutoAdjustHeight.IsPresent)
+            {
+                control.AutoAdjustHeight = AutoAdjustHeight.ToBool();
+            }
+
+            if (Underlined.IsPresent)
+            {
+                control.Underlined = Underlined.ToBool();
+            }
+
+            if (Borderless.IsPresent)
+            {
+                control.Borderless = Borderless.ToBool();
             }
 
             WriteObject(control);

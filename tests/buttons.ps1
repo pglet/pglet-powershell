@@ -1,12 +1,40 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+Connect-PgletApp -Name "pglet-buttons" -ScriptBlock {
+    $page = $PGLET_PAGE
 
-Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign=''"
+    $dialog = Dialog -Title "Hello" -SubText "Button clicked!"
 
-Invoke-Pglet "add
+    $view = @(
+        Text -Value "Standard button" -Size Large
+        Stack -Horizontal -Controls @(
+            Button -Text "Standard" -OnClick {
+                $dialog.Open = $true
+                $page.update()
+            }
+            Button -Disabled -Text "Standard disabled"
+        )
+
+        Text -Value "Primary button" -Size Large
+        Stack -Horizontal -Controls @(
+            Button -Primary -Text "Primary"
+            Button -Primary -Disabled -Text "Primary disabled"
+        )
+
+        Text -Value "Compound button" -Size Large
+        Stack -Horizontal -Controls @(
+            Button -Compound -Text "Compound" -SecondaryText "This is a secondary text"
+            Button -Compound -Primary -Text "Primary compound" -SecondaryText "This is a secondary text"
+        )
+
+        $dialog
+    )
+
+    $page.add($view)
+}
+
+"add
   stack horizontal
     button text='Standard'
     button disabled text='Standard disabled'
@@ -57,7 +85,3 @@ Invoke-Pglet "add
       item divider
       item text='To to Google' icon='Globe' iconColor=green url='https://google.com' newWindow secondaryText='New window'
 "
-
-# while($true) {
-#     Wait-PgletEvent $pageID
-# }
