@@ -8,7 +8,7 @@ namespace Pglet.PowerShell
     [OutputType(typeof(PsMenuItem))]
     public class NewPgletMenuItemCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 0)]
         public string Text { get; set; }
 
         [Parameter(Mandatory = false)]

@@ -7,7 +7,7 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Image))]
     public class NewPgletImageCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 0)]
         public string Src { get; set; }
 
         [Parameter(Mandatory = false)]

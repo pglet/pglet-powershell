@@ -46,12 +46,6 @@
             set { SetEventHandler("clear", value); }
         }
 
-        public EventHandler OnEscape
-        {
-            get { return GetEventHandler("escape"); }
-            set { SetEventHandler("escape", value); }
-        }
-
         public EventHandler OnChange
         {
             get { return GetEventHandler("change"); }

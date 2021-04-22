@@ -7,11 +7,11 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Progress))]
     public class NewPgletProgressCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
-        public int? Value { get; set; }
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string Label { get; set; }
+        public int? Value { get; set; }
 
         [Parameter(Mandatory = false)]
         public string Description { get; set; }

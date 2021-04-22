@@ -7,6 +7,9 @@ namespace Pglet.PowerShell
     [OutputType(typeof(PsButton))]
     public class NewPgletButtonCommand : NewControlCmdletBase
     {
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Text { get; set; }
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Primary { get; set; }
         
@@ -21,9 +24,6 @@ namespace Pglet.PowerShell
         
         [Parameter(Mandatory = false)]
         public SwitchParameter Split { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public string Text { get; set; }
 
         [Parameter(Mandatory = false)]
         public string SecondaryText { get; set; }

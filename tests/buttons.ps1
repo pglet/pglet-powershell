@@ -7,7 +7,7 @@ Connect-PgletApp -Name "pglet-buttons" -ScriptBlock {
     $dialog = Dialog -Title "Hello" -SubText "Button clicked!"
 
     $view = @(
-        Text -Value "Standard button" -Size Large
+        Text "Standard button" -Size Large
         Stack -Horizontal -Controls @(
             Button -Text "Standard" -OnClick {
                 $dialog.Open = $true
@@ -16,13 +16,13 @@ Connect-PgletApp -Name "pglet-buttons" -ScriptBlock {
             Button -Disabled -Text "Standard disabled"
         )
 
-        Text -Value "Primary button" -Size Large
+        Text "Primary button" -Size Large
         Stack -Horizontal -Controls @(
             Button -Primary -Text "Primary"
             Button -Primary -Disabled -Text "Primary disabled"
         )
 
-        Text -Value "Compound button" -Size Large
+        Text "Compound button" -Size Large
         Stack -Horizontal -Controls @(
             Button -Compound -Text "Compound" -SecondaryText "This is a secondary text"
             Button -Compound -Primary -Text "Primary compound" -SecondaryText "This is a secondary text"

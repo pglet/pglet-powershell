@@ -7,7 +7,7 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Icon))]
     public class NewPgletIconCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 0)]
         public string Name { get; set; }
 
         [Parameter(Mandatory = false)]

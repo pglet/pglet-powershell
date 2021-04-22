@@ -33,18 +33,6 @@ namespace Pglet.PowerShell.Controls
             }
         }
 
-        public new ScriptBlock OnEscape
-        {
-            get
-            {
-                return GetEventHandlerScript("escape");
-            }
-            set
-            {
-                _psEvents["escape"] = value;
-            }
-        }
-
         public new ScriptBlock OnChange
         {
             get

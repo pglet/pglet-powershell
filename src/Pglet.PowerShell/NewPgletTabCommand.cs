@@ -8,11 +8,11 @@ namespace Pglet.PowerShell
     [OutputType(typeof(Tab))]
     public class NewPgletTabCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
-        public string Key { get; set; }
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Text { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string Text { get; set; }
+        public string Key { get; set; }
 
         [Parameter(Mandatory = false)]
         public string Icon { get; set; }

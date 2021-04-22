@@ -7,11 +7,11 @@ namespace Pglet.PowerShell
     [OutputType(typeof(MessageButton))]
     public class NewPgletMessageButtonCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
-        public string Action { get; set; }
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Text { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string Text { get; set; }
+        public string Action { get; set; }
 
         protected override void ProcessRecord()
         {
