@@ -221,6 +221,16 @@ namespace Pglet
             return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
         }
 
+        protected void SetDateAttr(string name, DateTime? value)
+        {
+            SetAttr(name, value.HasValue ? value.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture) : null);
+        }
+
+        internal DateTime? GetDateAttr(string name)
+        {
+            return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
+        }
+
         protected void SetBoolAttr(string name, bool value)
         {
             SetAttr(name, value.ToString().ToLowerInvariant());

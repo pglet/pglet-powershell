@@ -121,7 +121,13 @@ namespace Pglet
                                 page = new Page(conn, pageUrl);
                             }
                             await page.LoadHash();
-                            var h = sessionHandler(page);
+                            var h = sessionHandler(page).ContinueWith(async t =>
+                            {
+                                if (t.IsFaulted)
+                                {
+                                    await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
+                                }
+                            });
                         }
                         catch (OperationCanceledException)
                         {

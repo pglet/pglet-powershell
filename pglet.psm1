@@ -14,6 +14,7 @@ New-Alias -Name Checkbox -Value New-PgletCheckbox
 New-Alias -Name ChoiceGroup -Value New-PgletChoiceGroup
 New-Alias -Name ChoiceGroupOption -Value New-PgletChoiceGroupOption
 New-Alias -Name Dialog -Value New-PgletDialog
+New-Alias -Name DatePicker -Value New-PgletDatePicker
 New-Alias -Name Dropdown -Value New-PgletDropdown
 New-Alias -Name DropdownOption -Value New-PgletDropdownOption
 New-Alias -Name GridColumn -Value New-PgletGridColumn

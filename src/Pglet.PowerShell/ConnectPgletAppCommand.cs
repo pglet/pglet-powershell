@@ -1,4 +1,5 @@
 ﻿using Pglet.PowerShell.Controls;
+using System;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
@@ -46,13 +47,21 @@ namespace Pglet.PowerShell
                         {
                             using CancellationTokenRegistration ctr = _cancellationSource.Token.Register(() => ps.Stop());
 
-                            ps.Runspace = runspace;
-                            runspace.Open();
-                            runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
-                            ps.AddScript($"Import-Module '{pgletModulePath}'");
-                            ps.AddScript(ScriptBlock.ToString());
-                            ps.AddScript("\nSwitch-PgletEvents");
-                            ps.Invoke();
+                            try
+                            {
+                                ps.Runspace = runspace;
+                                runspace.Open();
+                                runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
+                                ps.AddScript($"Import-Module '{pgletModulePath}'");
+                                ps.AddScript(ScriptBlock.ToString());
+                                ps.AddScript("\nSwitch-PgletEvents");
+                                ps.Invoke();
+                            }
+                            catch (RuntimeException ex)
+                            {
+                                Host.UI.WriteErrorLine(ex.ErrorRecord.ToString() + "\n" + ex.ErrorRecord.InvocationInfo.PositionMessage);
+                                throw;
+                            }
                         }
                     }
                 });

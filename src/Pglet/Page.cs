@@ -237,6 +237,16 @@ namespace Pglet
             await _conn.SendAsync("close");
         }
 
+        public void Error(string message)
+        {
+            ErrorAsync(message).GetAwaiter().GetResult();
+        }
+
+        public async Task ErrorAsync(string message)
+        {
+            await _conn.SendAsync($"error \"{message.Encode()}\"");
+        }
+
         public void Close()
         {
             CloseAsync().GetAwaiter().GetResult();

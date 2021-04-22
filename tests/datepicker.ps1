@@ -1,18 +1,35 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "pglet-datepicker"
+Connect-PgletApp -Name "pglet-datepicker" -ScriptBlock {
+  $ErrorActionPreference = 'stop'
 
-Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign='start'"
+  Write-Trace "session started!"
 
-$d = Get-Date
+  $d = Get-Date
 
-Invoke-Pglet "add
-  DatePicker label='Start date' value='$d'
-  DatePicker label='End date'
-  DatePicker label='Allow text input' allowTextInput
-  DatePicker label='Allow text input with placeholder' placeholder='Select date...' allowTextInput  width='50%' height='300px'
-  DatePicker value='01/01/2012' label='Required' placeholder='Select date...' required allowTextInput width='50%' align=right
-  DatePicker label='Wrong date should set to empty' value='15/15/2001'
-"
+  #try {
+    $controls = @(
+      DatePicker -Label 'Start date' -Value $d
+      DatePicker -Label 'End date'
+      DatePicker -Label 'Allow text input' -AllowTextInput
+      DatePicker -Label 'Allow text input with placeholder' -Placeholder 'Select date...' -AllowTextInput  -Width '50%'
+      DatePicker -Value '01/01/2012' -Label 'Required' -Placeholder 'Select date...' -Required -AllowTextInput -Width '50%'
+    )
+  
+    $pglet_page.add($controls)
+
+    Start-Sleep -s 3
+
+    $controls = @(
+      DatePicker -Value '15/15/2012'
+    )
+  
+    $pglet_page.add($controls)    
+  # }
+  # catch {
+  #     Write-Trace $_
+  # }
+
+
+}
