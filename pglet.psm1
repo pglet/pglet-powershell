@@ -37,6 +37,7 @@ New-Alias -Name Progress -Value New-PgletProgress
 New-Alias -Name SearchBox -Value New-PgletSearchBox
 New-Alias -Name Slider -Value New-PgletSlider
 New-Alias -Name SpinButton -Value New-PgletSpinButton
+New-Alias -Name Spinner -Value New-PgletSpinner
 New-Alias -Name Stack -Value New-PgletStack
 New-Alias -Name Tab -Value New-PgletTab
 New-Alias -Name Tabs -Value New-PgletTabs
