@@ -1,4 +1,5 @@
-﻿using Pglet.PowerShell.Controls;
+﻿using Pglet.Controls;
+using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -26,7 +27,7 @@ namespace Pglet.PowerShell
         public string SubText { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string LargeHeader { get; set; }
+        public DialogType? Type { get; set; }
 
         [Parameter(Mandatory = false)]
         public SwitchParameter AutoDismiss { get; set; }
@@ -47,7 +48,6 @@ namespace Pglet.PowerShell
                 OnDismiss = OnDismiss,
                 Title = Title,
                 SubText = SubText,
-                LargeHeader = LargeHeader,
                 MaxWidth = MaxWidth
             };
 
@@ -71,6 +71,11 @@ namespace Pglet.PowerShell
             if (Blocking.IsPresent)
             {
                 ctl.Blocking = Blocking.ToBool();
+            }
+
+            if (Type.HasValue)
+            {
+                ctl.Type = Type.Value;
             }
 
             if (Controls != null)

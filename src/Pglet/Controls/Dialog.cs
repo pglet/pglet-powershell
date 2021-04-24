@@ -38,10 +38,10 @@ namespace Pglet.Controls
             set { SetAttr("subText", value); }
         }
 
-        public string LargeHeader
+        public DialogType Type
         {
-            get { return GetAttr("largeHeader"); }
-            set { SetAttr("largeHeader", value); }
+            get { return GetEnumAttr<DialogType>("type"); }
+            set { SetEnumAttr("type", value); }
         }
 
         public bool AutoDismiss
