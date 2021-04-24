@@ -1,46 +1,56 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow -Ticker 2000
+Connect-PgletApp -Name "pglet-dialog" -ScriptBlock {
+  $ErrorActionPreference = 'stop'
 
-Invoke-Pglet "clean page"
-Invoke-Pglet "set page padding=10 gap=10 horizontalAlign='start'"
+  $page = $pglet_page
 
-Invoke-Pglet "add
-button id=openBasic text='Open basic dialog'
-dialog id=dialogBasic blocking=false type=largeHeader title='Missing Subject' subText='Do you want to send this message without a subject?'
-  footer
-    button id=yes primary text=Yes
-    button id=no text=No
+  # Basic dialog
+  $basicDialog = Dialog -Type LargeHeader -Title "Missing subject" `
+    -SubText "Do you want to send this message without a subject?" -FooterControls @(
+      Button "Yes" -Primary
+      Button "No"
+    )
 
-button id=open text='Open dialog'
-dialog id=dialog blocking=true type=close title='Missing Subject' subText='Do you want to send this message without a subject?' width=600
-  choicegroup
-    option key=red
-    option key=green
-    option key=blue
-  footer
-    button id=yes primary text=Yes
-    button id=no text=No
-"
-
-<#
-  button id=openBasic text='Open basic dialog'
-  dialog id=dialogBasic blocking=false largeHeader=false close title='Missing Subject' subText='Do you want to send this message without a subject?' hidden
-    footer
-      button id=yes primary text=Yes
-      button id=no text=No
-#>
-
-while($true) {
-  $e = Wait-PgletEvent $pageID
-  if ($e.target -eq 'openBasic') {
-    Invoke-Pglet "set dialogBasic open=true"
-  } elseif ($e.target -eq 'open') {
-    Invoke-Pglet "set dialog open=true"
-  } elseif ($e.target -eq 'dialog:yes' -or $e.target -eq 'dialog:no') {
-    Invoke-Pglet "set dialog open=false"
-  } else {
-    $e
+  $openBasic = Button -Text 'Open basic dialog' -OnClick {
+    $basicDialog.open = $true
+    $basicDialog.update()
   }
+
+  # Dialog with the body
+  $dialog = Dialog -Type Close -Title "Color" `
+    -SubText "What is your favourite color?" -Controls @(
+      ChoiceGroup -Options @(
+        ChoiceGroupOption -Text "Red"
+        ChoiceGroupOption -Text "Green"
+        ChoiceGroupOption -Text "Blue"
+      )
+    )
+
+  $yesButton = Button "Yes" -Primary -OnClick {
+    $dialog.open = $false
+    $page.update()
+  }
+
+  $noButton = Button "No" -OnClick {
+    $dialog.open = $false
+    $page.update()
+  }
+
+  $dialog.FooterControls.add($yesButton)
+  $dialog.FooterControls.add($noButton)
+  $dialog.update()
+
+  $open = Button -Text 'Open dialog' -OnClick {
+    $dialog.open = $true
+    $page.update()
+  }  
+  
+  $page.add(
+    $openBasic,
+    $basicDialog,
+    $open,
+    $dialog
+  )
 }
