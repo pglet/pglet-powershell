@@ -12,16 +12,16 @@ namespace Pglet.PowerShell
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Value { get; set; }
+        public float? Value { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Min { get; set; }
+        public float? Min { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Max { get; set; }
+        public float? Max { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Step { get; set; }
+        public float? Step { get; set; }
 
         [Parameter(Mandatory = false)]
         public string ValueField { get; set; }
@@ -37,16 +37,32 @@ namespace Pglet.PowerShell
             var control = new PsSpinButton
             {
                 Label = Label,
-                Value = Value,
                 ValueField = ValueField,
-                Min = Min,
-                Max = Max,
-                Step = Step,
                 Icon = Icon,
                 OnChange = OnChange
             };
 
             SetControlProps(control);
+
+            if (Value.HasValue)
+            {
+                control.Value = Value.Value;
+            }
+
+            if (Min.HasValue)
+            {
+                control.Min = Min.Value;
+            }
+
+            if (Max.HasValue)
+            {
+                control.Max = Max.Value;
+            }
+
+            if (Step.HasValue)
+            {
+                control.Step = Step.Value;
+            }
 
             WriteObject(control);
         }

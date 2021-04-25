@@ -12,16 +12,16 @@ namespace Pglet.PowerShell
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Value { get; set; }
+        public float? Value { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Min { get; set; }
+        public float? Min { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Max { get; set; }
+        public float? Max { get; set; }
 
         [Parameter(Mandatory = false)]
-        public float Step { get; set; }
+        public float? Step { get; set; }
 
         [Parameter(Mandatory = false)]
         public string ValueField { get; set; }
@@ -43,12 +43,8 @@ namespace Pglet.PowerShell
             var control = new PsSlider
             {
                 Label = Label,
-                Value = Value,
                 ValueField = ValueField,
                 ValueFormat = ValueFormat,
-                Min = Min,
-                Max = Max,
-                Step = Step,
                 OnChange = OnChange
             };
 
@@ -62,6 +58,26 @@ namespace Pglet.PowerShell
             if (Vertical.IsPresent)
             {
                 control.Vertical = Vertical.ToBool();
+            }
+
+            if (Value.HasValue)
+            {
+                control.Value = Value.Value;
+            }
+
+            if (Min.HasValue)
+            {
+                control.Min = Min.Value;
+            }
+
+            if (Max.HasValue)
+            {
+                control.Max = Max.Value;
+            }
+
+            if (Step.HasValue)
+            {
+                control.Step = Step.Value;
             }
 
             WriteObject(control);
