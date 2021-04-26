@@ -103,10 +103,34 @@ namespace Pglet
 
         public async Task UpdateAsync()
         {
-            if (_page != null)
+            if (_page == null)
             {
-                await _page.UpdateAsync(this);
+                throw new Exception("Control must be added to the page first.");
             }
+
+            await _page.UpdateAsync(this);
+        }
+
+        public void Clean()
+        {
+            CleanAsync().GetAwaiter().GetResult();
+        }
+
+        public virtual async Task CleanAsync()
+        {
+            if (_page == null)
+            {
+                throw new Exception("Control must be added to the page first.");
+            }
+
+            PreviousChildren.Clear();
+
+            foreach (var child in GetChildren())
+            {
+                RemoveControlRecursively(_page.Index, child);
+            }
+
+            await _page.Connection.SendAsync($"clean {Uid}");
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -195,6 +219,16 @@ namespace Pglet
         internal int GetIntAttr(string name, int defValue = 0)
         {
             return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
+        }
+
+        protected void SetDateAttr(string name, DateTime? value)
+        {
+            SetAttr(name, value.HasValue ? value.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture) : null);
+        }
+
+        internal DateTime? GetDateAttr(string name)
+        {
+            return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
         }
 
         protected void SetBoolAttr(string name, bool value)
@@ -340,7 +374,7 @@ namespace Pglet
             PreviousChildren.AddRange(currentChildren);
         }
 
-        private void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
+        protected void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
         {
             // remove all children
             foreach (var child in control.GetChildren())

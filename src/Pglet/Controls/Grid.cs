@@ -46,6 +46,12 @@ namespace Pglet.Controls
             set { SetBoolAttr("headerVisible", value); }
         }
 
+        public bool PreserveSelection
+        {
+            get { return GetBoolAttr("preserveSelection"); }
+            set { SetBoolAttr("preserveSelection", value); }
+        }
+
         public int ShimmerLines
         {
             get { return GetIntAttr("shimmerLines"); }

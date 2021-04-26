@@ -38,6 +38,9 @@ namespace Pglet.Tests.Fx
                 }});
 
                 await Task.Delay(5000);
+
+                //throw new Exception("Error!!!");
+
                 Console.WriteLine("Session end");
 
             }, "index", noWindow: true);

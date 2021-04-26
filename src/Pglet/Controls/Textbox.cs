@@ -34,6 +34,30 @@
             set { SetAttr("description", value); }
         }
 
+        public string Prefix
+        {
+            get { return GetAttr("prefix"); }
+            set { SetAttr("prefix", value); }
+        }
+
+        public string Suffix
+        {
+            get { return GetAttr("suffix"); }
+            set { SetAttr("suffix", value); }
+        }
+
+        public string Icon
+        {
+            get { return GetAttr("icon"); }
+            set { SetAttr("icon", value); }
+        }
+
+        public string IconColor
+        {
+            get { return GetAttr("iconColor"); }
+            set { SetAttr("iconColor", value); }
+        }
+
         public TextBoxAlign Align
         {
             get { return GetEnumAttr<TextBoxAlign>("align"); }
@@ -56,6 +80,30 @@
         {
             get { return GetBoolAttr("required"); }
             set { SetBoolAttr("required", value); }
+        }
+
+        public bool ReadOnly
+        {
+            get { return GetBoolAttr("readOnly"); }
+            set { SetBoolAttr("readOnly", value); }
+        }
+
+        public bool AutoAdjustHeight
+        {
+            get { return GetBoolAttr("autoAdjustHeight"); }
+            set { SetBoolAttr("autoAdjustHeight", value); }
+        }
+
+        public bool Underlined
+        {
+            get { return GetBoolAttr("underlined"); }
+            set { SetBoolAttr("underlined", value); }
+        }
+
+        public bool Borderless
+        {
+            get { return GetBoolAttr("borderless"); }
+            set { SetBoolAttr("borderless", value); }
         }
 
         public EventHandler OnChange

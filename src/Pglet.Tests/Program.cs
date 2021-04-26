@@ -19,7 +19,7 @@ namespace Pglet.Tests
         private static async Task TestControls()
         {
             var page = await PgletClient.ConnectPage("index", noWindow: true);
-            await page.Connection.SendAsync("clean page");
+            await page.CleanAsync();
 
             page.Title = "Example 1";
             page.HorizontalAlign = Align.Start;
@@ -178,6 +178,7 @@ namespace Pglet.Tests
 
             var grid = new Grid
             {
+                PreserveSelection = true,
                 SelectionMode = GridSelectionMode.Multiple,
                 OnSelect = (e) =>
                 {

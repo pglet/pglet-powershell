@@ -30,9 +30,6 @@ namespace Pglet.PowerShell
         public ScriptBlock OnClear { get; set; }
 
         [Parameter(Mandatory = false)]
-        public ScriptBlock OnEscape { get; set; }
-
-        [Parameter(Mandatory = false)]
         public ScriptBlock OnChange { get; set; }
 
         protected override void ProcessRecord()
@@ -45,7 +42,6 @@ namespace Pglet.PowerShell
                 IconColor = IconColor,
                 OnSearch = OnSearch,
                 OnClear = OnClear,
-                OnEscape = OnEscape,
                 OnChange = OnChange
             };
 

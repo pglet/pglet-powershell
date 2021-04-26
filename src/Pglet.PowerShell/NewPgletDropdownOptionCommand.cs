@@ -7,10 +7,10 @@ namespace Pglet.PowerShell
     [OutputType(typeof(DropdownOption))]
     public class NewPgletDropdownOptionCommand : NewControlCmdletBase
     {
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 0)]
         public string Key { get; set; }
 
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 1)]
         public string Text { get; set; }
 
         protected override void ProcessRecord()

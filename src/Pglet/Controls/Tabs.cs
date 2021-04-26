@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Pglet.Controls
 {
@@ -34,6 +35,12 @@ namespace Pglet.Controls
         protected override IEnumerable<Control> GetChildren()
         {
             return _tabs;
+        }
+
+        public override async Task CleanAsync()
+        {
+            await base.CleanAsync();
+            _tabs.Clear();
         }
     }
 }

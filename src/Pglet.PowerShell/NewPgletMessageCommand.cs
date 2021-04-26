@@ -8,6 +8,9 @@ namespace Pglet.PowerShell
     [OutputType(typeof(PsMessage))]
     public class NewPgletMessageCommand : NewControlCmdletBase
     {
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Value { get; set; }
+
         [Parameter(Mandatory = false)]
         public MessageButton[] Buttons { get; set; }
 
@@ -16,9 +19,6 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false)]
         public MessageType? Type { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public string Value { get; set; }
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Multiline { get; set; }

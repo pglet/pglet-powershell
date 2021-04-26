@@ -14,6 +14,7 @@ New-Alias -Name Checkbox -Value New-PgletCheckbox
 New-Alias -Name ChoiceGroup -Value New-PgletChoiceGroup
 New-Alias -Name ChoiceGroupOption -Value New-PgletChoiceGroupOption
 New-Alias -Name Dialog -Value New-PgletDialog
+New-Alias -Name DatePicker -Value New-PgletDatePicker
 New-Alias -Name Dropdown -Value New-PgletDropdown
 New-Alias -Name DropdownOption -Value New-PgletDropdownOption
 New-Alias -Name GridColumn -Value New-PgletGridColumn
@@ -21,7 +22,7 @@ New-Alias -Name Grid -Value New-PgletGrid
 New-Alias -Name Icon -Value New-PgletIcon
 New-Alias -Name Image -Value New-PgletImage
 New-Alias -Name LineChart -Value New-PgletLineChart
-New-Alias -Name LineChartData -Value New-PgletLineChartPoint
+New-Alias -Name LineChartData -Value New-PgletLineChartData
 New-Alias -Name LineChartDataPoint -Value New-PgletLineChartDataPoint
 New-Alias -Name Link -Value New-PgletLink
 New-Alias -Name MenuItem -Value New-PgletMenuItem
@@ -36,6 +37,7 @@ New-Alias -Name Progress -Value New-PgletProgress
 New-Alias -Name SearchBox -Value New-PgletSearchBox
 New-Alias -Name Slider -Value New-PgletSlider
 New-Alias -Name SpinButton -Value New-PgletSpinButton
+New-Alias -Name Spinner -Value New-PgletSpinner
 New-Alias -Name Stack -Value New-PgletStack
 New-Alias -Name Tab -Value New-PgletTab
 New-Alias -Name Tabs -Value New-PgletTabs

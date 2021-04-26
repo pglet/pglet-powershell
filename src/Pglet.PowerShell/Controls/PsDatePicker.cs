@@ -5,33 +5,9 @@ using System.Management.Automation;
 
 namespace Pglet.PowerShell.Controls
 {
-    public class PsSearchBox : SearchBox, IPsEventControl
+    public class PsDatePicker : DatePicker, IPsEventControl
     {
         readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
-        public new ScriptBlock OnSearch
-        {
-            get
-            {
-                return GetEventHandlerScript("search");
-            }
-            set
-            {
-                _psEvents["search"] = value;
-            }
-        }
-
-        public new ScriptBlock OnClear
-        {
-            get
-            {
-                return GetEventHandlerScript("clear");
-            }
-            set
-            {
-                _psEvents["clear"] = value;
-            }
-        }
 
         public new ScriptBlock OnChange
         {
@@ -42,7 +18,6 @@ namespace Pglet.PowerShell.Controls
             set
             {
                 _psEvents["change"] = value;
-                SetBoolAttr("onchange", value != null);
             }
         }
 

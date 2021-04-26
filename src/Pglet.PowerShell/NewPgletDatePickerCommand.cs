@@ -1,18 +1,19 @@
 ﻿using Pglet.Controls;
 using Pglet.PowerShell.Controls;
+using System;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {
-    [Cmdlet(VerbsCommon.New, "PgletTextBox")]
-    [OutputType(typeof(PsTextBox))]
-    public class NewPgletTextBoxCommand : NewControlCmdletBase
+    [Cmdlet(VerbsCommon.New, "PgletDatePicker")]
+    [OutputType(typeof(PsDatePicker))]
+    public class NewPgletDatePickerCommand : NewControlCmdletBase
     {
         [Parameter(Mandatory = false, Position = 0)]
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
-        public string Value { get; set; }
+        public DateTime? Value { get; set; }
 
         [Parameter(Mandatory = false)]
         public string Placeholder { get; set; }
@@ -39,19 +40,10 @@ namespace Pglet.PowerShell
         public TextBoxAlign? Align { get; set; }
 
         [Parameter(Mandatory = false)]
-        public SwitchParameter Multiline { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public SwitchParameter Password { get; set; }
+        public SwitchParameter AllowTextInput { get; set; }
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Required { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public SwitchParameter ReadOnly { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public SwitchParameter AutoAdjustHeight { get; set; }
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Underlined { get; set; }
@@ -64,50 +56,24 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsTextBox
+            var control = new PsDatePicker
             {
                 Label = Label,
                 Value = Value,
                 Placeholder = Placeholder,
-                ErrorMessage = ErrorMessage,
-                Description = Description,
-                Prefix = Prefix,
-                Suffix = Suffix,
-                Icon = Icon,
-                IconColor = IconColor,
                 OnChange = OnChange
             };
 
             SetControlProps(control);
 
-            if (Align.HasValue)
+            if (AllowTextInput.IsPresent)
             {
-                control.Align = Align.Value;
-            }
-
-            if (Multiline.IsPresent)
-            {
-                control.Multiline = Multiline.ToBool();
-            }
-
-            if (Password.IsPresent)
-            {
-                control.Password = Password.ToBool();
+                control.AllowTextInput = AllowTextInput.ToBool();
             }
 
             if (Required.IsPresent)
             {
                 control.Required = Required.ToBool();
-            }
-
-            if (ReadOnly.IsPresent)
-            {
-                control.ReadOnly = ReadOnly.ToBool();
-            }
-
-            if (AutoAdjustHeight.IsPresent)
-            {
-                control.AutoAdjustHeight = AutoAdjustHeight.ToBool();
             }
 
             if (Underlined.IsPresent)

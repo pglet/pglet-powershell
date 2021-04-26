@@ -34,6 +34,11 @@ namespace Pglet
             return _index.ContainsKey(id) ? _index[id] : null;
         }
 
+        internal Dictionary<string, Control> Index
+        {
+            get { return _index; }
+        }
+
         protected override IEnumerable<Control> GetChildren()
         {
             return _controls;
@@ -215,32 +220,31 @@ namespace Pglet
             RemoveAtAsync(index).GetAwaiter().GetResult();
         }
 
-        public void Clean(bool force = false)
+        public override async Task CleanAsync()
         {
-            CleanAsync(force).GetAwaiter().GetResult();
-        }
+            PreviousChildren.Clear();
 
-        public async Task CleanAsync(bool force = false)
-        {
-            if (force)
+            foreach (var child in GetChildren())
             {
-                _controls.Clear();
-                EventHandlers.Clear();
-                PreviousChildren.Clear();
-                _index.Clear();
-                _index[Id] = this;
-                await _conn.SendAsync("clean page");
+                RemoveControlRecursively(_index, child);
             }
-            else
-            {
-                _controls.Clear();
-                await UpdateAsync();
-            }
+
+            await _conn.SendAsync($"clean {Uid}");
         }
 
         public async Task CloseAsync()
         {
             await _conn.SendAsync("close");
+        }
+
+        public void Error(string message)
+        {
+            ErrorAsync(message).GetAwaiter().GetResult();
+        }
+
+        public async Task ErrorAsync(string message)
+        {
+            await _conn.SendAsync($"error \"{message.Encode()}\"");
         }
 
         public void Close()
