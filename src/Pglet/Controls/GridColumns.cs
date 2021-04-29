@@ -8,7 +8,7 @@ namespace Pglet.Controls
 
         protected override string ControlName => "columns";
 
-        public IList<GridColumn> Items
+        public IList<GridColumn> Columns
         {
             get { return _columns; }
             set { _columns = value; }

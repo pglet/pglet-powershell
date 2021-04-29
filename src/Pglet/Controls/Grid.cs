@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Pglet.Controls
@@ -13,8 +15,8 @@ namespace Pglet.Controls
 
         public IList<GridColumn> Columns
         {
-            get { return _columns.Items; }
-            set { _columns.Items = value; }
+            get { return _columns.Columns; }
+            set { _columns.Columns = value; }
         }
 
         public IList<object> Items
@@ -87,6 +89,33 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
+            if (_columns.Columns.Count == 0 && _items.Items.Count > 0)
+            {
+                // auto-generate columns
+                _columns.Columns = GridHelper.GenerateColumns(_items.Items[0]);
+            }
+
+            var fetchPropNames = new List<string>();
+            foreach(var column in _columns.Columns)
+            {
+                if (column.TemplateControls.Count == 0)
+                {
+                    fetchPropNames.Add(column.FieldName);
+                }
+                else
+                {
+                    fetchPropNames = null;
+                    break;
+                }
+            }
+
+            foreach (var column in _columns.Columns)
+            {
+                column.FieldName = GridHelper.EncodeReservedProperty(column.FieldName);
+            }
+
+            _items.FetchPropNames = fetchPropNames;
+
             return new Control[] { _columns, _items };
         }
 

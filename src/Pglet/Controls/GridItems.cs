@@ -9,6 +9,13 @@ namespace Pglet.Controls
 
         Dictionary<object, GridItem> _map = new Dictionary<object, GridItem>();
 
+        IEnumerable<string> _fetchPropNames = null;
+        internal IEnumerable<string> FetchPropNames
+        {
+            get { return _fetchPropNames; }
+            set { _fetchPropNames = value; }
+        }
+
         IList<object> _items = new List<object>();
         public IList<object> Items
         {
@@ -31,7 +38,7 @@ namespace Pglet.Controls
                     item = new GridItem(obj);
                     _map[obj] = item;
                 }
-                item.FetchAttrs();
+                item.FetchAttrs(_fetchPropNames);
                 items.Add(item);
             }
 

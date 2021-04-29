@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace Pglet.Controls
 {
@@ -30,14 +31,14 @@ namespace Pglet.Controls
         {
             base.SetAttr(name, value, false);
 
-            var prop = _obj.GetType().GetProperty(name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            var prop = _obj.GetType().GetProperty(GridHelper.DecodeReservedProperty(name), BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (prop != null)
             {
                 prop.SetValue(_obj, Convert.ChangeType(value, prop.PropertyType), null);
             }
         }
 
-        internal void FetchAttrs()
+        internal void FetchAttrs(IEnumerable<string> fetchPropNames)
         {
             var otype = _obj.GetType();
 
@@ -48,12 +49,16 @@ namespace Pglet.Controls
                 var hashtable = _obj as Hashtable;
                 foreach(var propName in hashtable.Keys)
                 {
-                    dict[propName.ToString()] = hashtable[propName];
+                    var sprop = propName.ToString();
+                    if (fetchPropNames == null || fetchPropNames.Contains(sprop))
+                    {
+                        dict[sprop] = hashtable[propName];
+                    }
                 }
             }
             else if (otype.Name == "PSObject")
             {
-                var props = otype.GetProperty("Properties").GetValue(_obj);
+                var props = GridHelper.GetPropertyValue(_obj, "Properties");
                 var objEnum = props.GetType().GetMethod("GetEnumerator").Invoke(props, null);
 
                 var moveNext = objEnum.GetType().GetMethod("MoveNext");
@@ -62,17 +67,30 @@ namespace Pglet.Controls
                 while ((bool)moveNext.Invoke(objEnum, null))
                 {
                     var member = current.GetValue(objEnum);
-                    var name = member.GetType().GetProperty("Name").GetValue(member) as string;
-                    var val = member.GetType().GetProperty("Value").GetValue(member);
-
-                    dict[name] = val;
+                    var name = GridHelper.GetPropertyValue(member, "Name") as string;
+                    if (fetchPropNames == null || fetchPropNames.Contains(name))
+                    {
+                        var val = GridHelper.GetPropertyValue(member, "Value");
+                        //Console.WriteLine($"{name} = {val}");
+                        dict[name] = val;
+                    }
                 }
             }
             else
             {
                 foreach (var prop in otype.GetProperties())
                 {
-                    dict[prop.Name] = prop.GetValue(_obj);
+                    var sprop = prop.Name;
+                    if (fetchPropNames == null || fetchPropNames.Contains(sprop))
+                    {
+                        object val = null;
+                        try
+                        {
+                            val = prop.GetValue(_obj);
+                        }
+                        catch { }
+                        dict[sprop] = val;
+                    }
                 }
             }
 
@@ -92,7 +110,7 @@ namespace Pglet.Controls
 
                     if (sval != origSval)
                     {
-                        base.SetAttr(propName, sval, dirty: true);
+                        base.SetAttr(GridHelper.EncodeReservedProperty(propName), sval, dirty: true);
                     }
                 }
             }
