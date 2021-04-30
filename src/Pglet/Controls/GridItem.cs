@@ -38,7 +38,7 @@ namespace Pglet.Controls
             }
         }
 
-        internal void FetchAttrs(IEnumerable<string> fetchPropNames)
+        internal void FetchAttrs(IEnumerable<string> fetchPropNames, string keyFieldName)
         {
             var otype = _obj.GetType();
 
@@ -114,6 +114,10 @@ namespace Pglet.Controls
 
                     if (sval != origSval)
                     {
+                        if (String.Equals(keyFieldName, propName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            this.Id = sval;
+                        }
                         base.SetAttr(GridHelper.EncodeReservedProperty(propName), sval, dirty: true);
                     }
                 }

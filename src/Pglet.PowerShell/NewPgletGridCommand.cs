@@ -35,10 +35,14 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false)]
         public int? ShimmerLines { get; set; }
 
+        [Parameter(Mandatory = false)]
+        public string KeyFieldName { get; set; }
+
         protected override void ProcessRecord()
         {
             var ctl = new PsGrid
             {
+                KeyFieldName = KeyFieldName,
                 OnSelect = OnSelect,
                 OnItemInvoke = OnItemInvoke
             };

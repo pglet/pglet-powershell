@@ -60,6 +60,8 @@ namespace Pglet.Controls
             set { SetIntAttr("shimmerLines", value); }
         }
 
+        public string KeyFieldName { get; set; }
+
         EventHandler _onSelectHandler;
         public EventHandler OnSelect
         {
@@ -114,7 +116,13 @@ namespace Pglet.Controls
                 column.FieldName = GridHelper.EncodeReservedProperty(column.FieldName);
             }
 
+            if (fetchPropNames != null && !String.IsNullOrEmpty(KeyFieldName) && !fetchPropNames.Contains(KeyFieldName, StringComparer.OrdinalIgnoreCase))
+            {
+                fetchPropNames.Add(KeyFieldName);
+            }
+
             _items.FetchPropNames = fetchPropNames;
+            _items.KeyFieldName = KeyFieldName;
 
             return new Control[] { _columns, _items };
         }

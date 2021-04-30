@@ -18,7 +18,7 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
 
         $cmd.value = ''
         $command_panel.disabled = $true
-        $results.controls.insert(0, (Text $cmd_text -BgColor '#eee' -Padding 10))
+        $results.controls.insert(0, (Text $cmd_text -BgColor 'neutralLight' -Padding 10))
         $results.controls.insert(1, (Spinner))
 
         $page.update()
