@@ -8,18 +8,57 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
     $page.Title = "PowerShell Remote Console"
     $page.HorizontalAlign = 'stretch'
 
-    $cmd = TextBox -Width '100%'
+    $cmd = TextBox -Placeholder "Type PowerShell command and click Run or press ENTER..." -Width '100%'
+
+    $run_on_click = {
+        $cmd_text = $cmd.value
+        if ([string]::IsNullOrWhitespace($cmd_text)) {
+            return
+        }
+
+        $cmd.value = ''
+        $command_panel.disabled = $true
+        $results.controls.insert(0, (Text $cmd_text -BgColor '#eee' -Padding 10))
+        $results.controls.insert(1, (Spinner))
+
+        $page.update()
+
+        try {
+            $result = Invoke-Expression $cmd_text
+
+            if ($result -is [System.Array]) {
+                $result_control = Grid -Compact -Items $result
+            } else {
+                $result_control = Text -Value "$result" -Pre -Padding 10
+            }
+        } catch {
+            $result_control = Text -Value "$_" -Pre -Padding 10 -Color 'red'
+        }
+
+        $command_panel.disabled = $false
+        $results.controls.removeAt(1)
+        $results.controls.insert(1, $result_control)
+        $page.update()
+    }
+
+    $command_panel = Stack -Horizontal -OnSubmit $run_on_click -Controls @(
+        $cmd
+        Button -Text "Run" -Primary -Icon 'Play' -OnClick $run_on_click
+    )
+    
+    $results = Stack
 
     $view = @(
-        Stack -Horizontal -Controls @(
-            $cmd
-            Button -Text "Run" -OnClick {
-                Write-Trace "$($cmd.value)"
-                $result = Invoke-Expression $cmd.value# | Out-String
-                #$page.add((Text -Pre $result))
-                $grid_results = Grid -Compact -Items $result
-                $page.add($grid_results)
-            }
+        $command_panel
+        Stack -Controls @(
+            Stack -Horizontal -VerticalAlign Center -Controls @(
+                Text 'Results' -Size large
+                Button -Icon 'Clear' -Title 'Clear results' -OnClick {
+                    $results.controls.clear()
+                    $results.update()
+                }
+            )
+            $results
         )
     )
 
