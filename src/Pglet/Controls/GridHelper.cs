@@ -63,7 +63,8 @@ namespace Pglet.Controls
             }
             else if (otype.Name == "PSObject")
             {
-                // GetPropertyValue(_obj, "Properties.Item|id.Value")
+                //var typeNames = (Collection<string>)GetPropertyValue(obj, "TypeNames");
+                //Console.WriteLine("TypeNames: {0}", typeNames);
 
                 IEnumerable<string> propNames = null;
 
@@ -72,6 +73,8 @@ namespace Pglet.Controls
                 {
                     propNames = (Collection<string>)GetPropertyValue(propSet, "ReferencedPropertyNames");
                 }
+
+                //Console.WriteLine("ReferencedPropertyNames: {0}", propNames);
 
                 var props = GetPropertyValue(obj, "Properties");
                 var objEnum = props.GetType().GetMethod("GetEnumerator").Invoke(props, null);

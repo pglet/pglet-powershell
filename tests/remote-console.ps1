@@ -29,7 +29,7 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
             if ($result -is [System.Array]) {
                 $result_control = Grid -Compact -Items $result
             } else {
-                $result_control = Text -Value "$result" -Pre -Padding 10
+                $result_control = Text -Value ($result | Out-String) -Pre -Padding 10
             }
         } catch {
             $result_control = Text -Value "$_" -Pre -Padding 10 -Color 'red'
@@ -40,12 +40,11 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
         $results.controls.insert(1, $result_control)
         $page.update()
     }
-
+    
     $command_panel = Stack -Horizontal -OnSubmit $run_on_click -Controls @(
         $cmd
         Button -Text "Run" -Primary -Icon 'Play' -OnClick $run_on_click
     )
-    
     $results = Stack
 
     $view = @(

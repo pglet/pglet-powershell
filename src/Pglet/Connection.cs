@@ -12,7 +12,7 @@ namespace Pglet
     public class Connection
     {
         private const int CONNECTION_TIMEOUT = 5000;
-        private const int MAX_WRITE_BUFFER = 65535;
+        private const int MAX_WRITE_BUFFER = 1024 * 1024;
         private const string ERROR_RESULT = "error";
 
         string _pipeId;
