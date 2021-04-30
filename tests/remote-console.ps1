@@ -5,9 +5,6 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
     $ErrorActionPreference = 'stop'
 
     $page = $PGLET_PAGE
-
-    Write-Trace "$($page.Url)"
-    
     $page.Title = "PowerShell Remote Console"
     $page.HorizontalAlign = 'stretch'
 

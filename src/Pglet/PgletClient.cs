@@ -56,7 +56,8 @@ namespace Pglet
         }
 
         public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, Func<Connection, string, Page> createPage = null, CancellationToken ? cancellationToken = null)
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0,
+            Func<Connection, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken ? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
             var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
@@ -87,6 +88,7 @@ namespace Pglet
                             if (pageUrl == null)
                             {
                                 pageUrl = line;
+                                pageCreated?.Invoke(pageUrl);
                             }
                             else
                             {
@@ -275,6 +277,11 @@ namespace Pglet
             Unpack(packagePath, pgletBinDir);
             File.Delete(packagePath);
 
+            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+            {
+                ExecuteProcess("chmod", $"+x {pgletExe}");
+            }
+
             Debug.WriteLine("OK");
 
             return pgletExe;
@@ -325,7 +332,7 @@ namespace Pglet
 
                 if (proc.ExitCode != 0)
                 {
-                    throw new Exception($"Pglet process exited with code {proc.ExitCode}");
+                    throw new Exception($"{fileName} process exited with code {proc.ExitCode}");
                 }
 
                 return line;

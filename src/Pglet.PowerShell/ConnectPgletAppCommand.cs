@@ -37,6 +37,11 @@ namespace Pglet.PowerShell
         {
             var pgletModulePath = this.MyInvocation.MyCommand.Module.Path.Replace(".psm1", ".psd1");
 
+            void pageCreated(string pageUrl)
+            {
+                Host.UI.WriteLine(pageUrl);
+            }
+
             PgletClient.ServeApp((page) =>
             {
                 return Task.Run(() =>
@@ -68,7 +73,7 @@ namespace Pglet.PowerShell
             },
             cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                 server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0,
-                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl)).Wait();
+                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl), pageCreated: pageCreated).Wait();
         }
 
         protected override void StopProcessing()
