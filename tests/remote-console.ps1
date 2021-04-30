@@ -2,11 +2,12 @@ Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
 Connect-PgletApp -Name "remote-console" -ScriptBlock {
-    # This code is called for every new user session
-
     $ErrorActionPreference = 'stop'
 
     $page = $PGLET_PAGE
+
+    Write-Trace "$($page.Url)"
+    
     $page.Title = "PowerShell Remote Console"
     $page.HorizontalAlign = 'stretch'
 
