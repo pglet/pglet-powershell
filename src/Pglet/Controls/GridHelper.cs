@@ -55,7 +55,8 @@ namespace Pglet.Controls
                         FieldName = sname,
                         Name = sname,
                         Resizable = true,
-                        Sortable = val != null && IsNumber(val.GetType()) ? "number" : "string"
+                        Sortable = val != null && IsNumber(val.GetType()) ? "number" : "string",
+                        MaxWidth = 100
                     });
 
                     dict[propName.ToString()] = hashtable[propName];
@@ -95,7 +96,8 @@ namespace Pglet.Controls
                             FieldName = name,
                             Name = name,
                             Resizable = true,
-                            Sortable = IsNumber(Type.GetType(typeName)) ? "number" : "string"
+                            Sortable = IsNumber(Type.GetType(typeName)) ? "number" : "string",
+                            MaxWidth = 100
                         });
                     }
                 }
@@ -109,7 +111,8 @@ namespace Pglet.Controls
                         FieldName = prop.Name,
                         Name = prop.Name,
                         Resizable = true,
-                        Sortable = IsNumber(prop.PropertyType) ? "number" : "string"
+                        Sortable = IsNumber(prop.PropertyType) ? "number" : "string",
+                        MaxWidth = 100
                     });
                 }
             }

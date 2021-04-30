@@ -45,6 +45,8 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
         $cmd
         Button -Text "Run" -Primary -Icon 'Play' -OnClick $run_on_click
     )
+
+    # results container
     $results = Stack
 
     $view = @(

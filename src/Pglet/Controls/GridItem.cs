@@ -70,8 +70,12 @@ namespace Pglet.Controls
                     var name = GridHelper.GetPropertyValue(member, "Name") as string;
                     if (fetchPropNames == null || fetchPropNames.Contains(name))
                     {
-                        var val = GridHelper.GetPropertyValue(member, "Value");
-                        //Console.WriteLine($"{name} = {val}");
+                        object val = null;
+                        try
+                        {
+                            val = GridHelper.GetPropertyValue(member, "Value");
+                        }
+                        catch { }
                         dict[name] = val;
                     }
                 }
