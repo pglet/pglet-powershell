@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -238,11 +239,6 @@ namespace Pglet
             var pgletBinDir = Path.Combine(pgletHomeDir, "bin");
             pgletExe = Path.Combine(pgletBinDir, pgletExe);
 
-            if (!Directory.Exists(pgletBinDir))
-            {
-                Directory.CreateDirectory(pgletBinDir);
-            }
-
             var ver = PGLET_VERSION;
             var fileName = $"pglet-{ver}-windows-amd64.zip";
             if (RuntimeInfo.IsLinux)
@@ -274,6 +270,13 @@ namespace Pglet
             var packagePath = Path.Combine(tempDir, fileName);
             await (new WebClient()).DownloadFileTaskAsync(new Uri(pgletUri), packagePath);
 
+            if (Directory.Exists(pgletBinDir))
+            {
+                Directory.Delete(pgletBinDir, true);
+            }
+
+            Directory.CreateDirectory(pgletBinDir);
+
             Unpack(packagePath, pgletBinDir);
             File.Delete(packagePath);
 
@@ -289,18 +292,27 @@ namespace Pglet
 
         private static void Unpack(string archivePath, string destDirectory)
         {
-            using (Stream stream = File.OpenRead(archivePath))
-            using (var reader = ReaderFactory.Open(stream))
+            if (RuntimeInfo.IsWindows)
             {
-                while (reader.MoveToNextEntry())
+                // unpack zip
+                ZipFile.ExtractToDirectory(archivePath, destDirectory);
+            }
+            else
+            {
+                // unpack tar
+                using (Stream stream = File.OpenRead(archivePath))
+                using (var reader = ReaderFactory.Open(stream))
                 {
-                    if (!reader.Entry.IsDirectory)
+                    while (reader.MoveToNextEntry())
                     {
-                        reader.WriteEntryToDirectory(destDirectory, new ExtractionOptions()
+                        if (!reader.Entry.IsDirectory)
                         {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
+                            reader.WriteEntryToDirectory(destDirectory, new ExtractionOptions()
+                            {
+                                ExtractFullPath = true,
+                                Overwrite = true
+                            });
+                        }
                     }
                 }
             }
