@@ -15,7 +15,10 @@ Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
         
     $signinButton = Button -Text "Sign in" -OnClick {
         Write-Trace "Click!"
-        $page.Connection.Send("set page signin='*' signinAllowDismiss=true")
+        Write-Trace "ssss$($page.signin)"
+        $page.signin = "*"
+        $page.signinAllowDismiss = $true
+        $page.update()
     }
     
     $page.add($signinButton)

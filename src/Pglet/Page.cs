@@ -98,6 +98,24 @@ namespace Pglet
             set { SetAttr("hash", value); }
         }
 
+        public string Signin
+        {
+            get { return GetAttr("signin"); }
+            set { SetAttr("signin", value); }
+        }
+
+        public bool SigninAllowDismiss
+        {
+            get { return GetBoolAttr("signinAllowDismiss"); }
+            set { SetBoolAttr("signinAllowDismiss", value); }
+        }
+
+        public bool SigninGroups
+        {
+            get { return GetBoolAttr("signinGroups"); }
+            set { SetBoolAttr("signinGroups", value); }
+        }
+
         public string UserId
         {
             get { return GetAttr("userId"); }
