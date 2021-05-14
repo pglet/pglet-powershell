@@ -164,6 +164,12 @@ namespace Pglet
             set { SetEventHandler("dismissSignin", value); }
         }
 
+        public EventHandler OnSignout
+        {
+            get { return GetEventHandler("signout"); }
+            set { SetEventHandler("signout", value); }
+        }
+
         public EventHandler OnHashChange
         {
             get { return GetEventHandler("hashChange"); }

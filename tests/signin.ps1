@@ -4,22 +4,51 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
     $page = $PGLET_PAGE
 
-    $page.onSignin = {
-        Write-Trace "Signed in!"
-        Write-Trace $page.userLogin
-    }
-
     $page.onDismissSignin = {
         Write-Trace "Signin cancelled"
-    }    
+    }
+
+    $currentUser = Text
         
     $signinButton = Button -Text "Sign in" -OnClick {
-        Write-Trace "Click!"
-        Write-Trace "ssss$($page.signin)"
+        Write-Trace "Display signin dialog"
         $page.signin = "*"
+        $page.signinGroups = $true
         $page.signinAllowDismiss = $true
         $page.update()
     }
+
+    $signoutButton = Button -Text "Sign out" -OnClick {
+        $page.connection.send("signout")
+    }
+
+    $page.onSignin = {
+        Write-Trace "Signed in!"
+        updateCurrentUser
+        $page.update()
+    }
+
+    $page.onSignout = {
+        Write-Trace "Signed out!"
+        updateCurrentUser
+        $page.update()
+    }
+
+    function updateCurrentUser() {
+        if ($page.userName) {
+            # signed in
+            $currentUser.value = "Welcome back, $($page.userName)"
+            $signoutButton.Visible = $true
+            $signinButton.Visible = $false
+        } else {
+            # anonymous
+            $currentUser.value = "Not logged in"
+            $signinButton.Visible = $true
+            $signoutButton.Visible = $false`
+        }
+    }
+
+    updateCurrentUser
     
-    $page.add($signinButton)
+    $page.add($currentUser, $signinButton, $signoutButton)
 }

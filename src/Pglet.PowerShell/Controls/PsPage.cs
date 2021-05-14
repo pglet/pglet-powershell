@@ -48,6 +48,18 @@ namespace Pglet.PowerShell.Controls
             }
         }
 
+        public new ScriptBlock OnSignout
+        {
+            get
+            {
+                return GetEventHandlerScript("signout");
+            }
+            set
+            {
+                _psEvents["signout"] = value;
+            }
+        }
+
         public new ScriptBlock OnHashChange
         {
             get
