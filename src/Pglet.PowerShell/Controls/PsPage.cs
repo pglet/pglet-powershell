@@ -24,6 +24,30 @@ namespace Pglet.PowerShell.Controls
             }
         }
 
+        public new ScriptBlock OnSignin
+        {
+            get
+            {
+                return GetEventHandlerScript("signin");
+            }
+            set
+            {
+                _psEvents["signin"] = value;
+            }
+        }
+
+        public new ScriptBlock OnDismissSignin
+        {
+            get
+            {
+                return GetEventHandlerScript("dismissSignin");
+            }
+            set
+            {
+                _psEvents["dismissSignin"] = value;
+            }
+        }
+
         public new ScriptBlock OnHashChange
         {
             get

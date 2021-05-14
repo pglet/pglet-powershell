@@ -11,8 +11,8 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestDiffs();
-            //await TestApp();
-            await TestControls();
+            await TestApp();
+            //await TestControls();
             //await TestPage();
         }
 
@@ -324,8 +324,9 @@ stack horizontal
                 await page.AddAsync(txt, new Button
                 {
                     Text = "Test!",
-                    OnClick = (e) =>
+                    OnClick = async (e) =>
                     {
+                        await page.CleanAsync();
                         Console.WriteLine(txt.Value);
                     }
                 });
