@@ -5,7 +5,7 @@ using System.Threading;
 namespace Pglet.PowerShell
 {
     [Cmdlet(VerbsLifecycle.Wait, "PgletEvent")]
-    [OutputType(typeof(Event))]
+    [OutputType(typeof(ControlEvent))]
     public class WaitPgletEventCommand : PSCmdlet
     {
         readonly CancellationTokenSource _cancellationSource = new();
@@ -26,7 +26,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            var e = page.Connection.WaitEvent(_cancellationSource.Token);
+            var e = page.WaitEvent(_cancellationSource.Token);
             WriteObject(e);
         }
 

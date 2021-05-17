@@ -11,8 +11,8 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server.")]
-        public SwitchParameter Web { get; set; }
+        [Parameter(Mandatory = false, HelpMessage = "Run the page on a local instance of Pglet server.")]
+        public SwitchParameter Local { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
         public SwitchParameter NoWindow { get; set; }
@@ -26,10 +26,13 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
         public int? Ticker { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "The list of users and groups allowed to access this page.")]
+        public string Permissions { get; set; }
+
         protected override void ProcessRecord()
         {
-            var page = PgletClient.ConnectPage(name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0,
+            var page = PgletClient.ConnectPage(name: Name, local: Local.ToBool(), noWindow: NoWindow.ToBool(),
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0, permissions: Permissions,
                 createPage: (conn, pageUrl) => new PsPage(conn, pageUrl)).GetAwaiter().GetResult();
 
             SessionState.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));

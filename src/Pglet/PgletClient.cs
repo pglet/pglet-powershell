@@ -20,11 +20,12 @@ namespace Pglet
         private static string _pgletExe;
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public static async Task<Page> ConnectPage(string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
+        public static async Task<Page> ConnectPage(string name = null, bool local = false,
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, string permissions = null,
+            Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var args = ParseArgs("page", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
+            var args = ParseArgs("page", name: name, local: local, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker, permissions: permissions);
 
             string result = ExecuteProcess(await GetPgletPath(), args);
 
@@ -56,12 +57,12 @@ namespace Pglet
             }
         }
 
-        public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0,
+        public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool local = false,
+            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, string permissions = null,
             Func<Connection, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken ? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var args = ParseArgs("app", name: name, web: web, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker);
+            var args = ParseArgs("app", name: name, local: local, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker, permissions: permissions);
 
             using (var proc = new Process
             {
@@ -142,8 +143,8 @@ namespace Pglet
             }
         }
 
-        private static string ParseArgs(string action, string name = null, bool web = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = false, int ticker = 0)
+        private static string ParseArgs(string action, string name = null, bool local = false,
+            string server = null, string token = null, bool noWindow = false, bool allEvents = false, int ticker = 0, string permissions = null)
         {
             var args = new List<string>
             {
@@ -155,7 +156,7 @@ namespace Pglet
                 args.Add($"\"{name}\"");
             }
 
-            if (web)
+            if (!local)
             {
                 args.Add("--web");
             }
@@ -186,6 +187,12 @@ namespace Pglet
             {
                 args.Add("--token");
                 args.Add($"\"{token}\"");
+            }
+
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                args.Add("--permissions");
+                args.Add($"\"{permissions}\"");
             }
 
             if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
