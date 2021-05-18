@@ -3,6 +3,7 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 
 Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
     $page = $PGLET_PAGE
+    $page.theme = 'dark'
 
     $page.onDismissSignin = {
         Write-Trace "Signin cancelled"
@@ -14,7 +15,7 @@ Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
         Write-Trace "Display signin dialog"
 
         try {
-            $success = Show-PgletSignin -AuthProviders "github" -AuthGroups -AllowDismiss
+            $success = Show-PgletSignin -AuthProviders "azure,github,google" -AuthGroups -AllowDismiss
             if ($success) {
                 Write-Trace "Signed in!"
                 updateCurrentUser
@@ -26,7 +27,7 @@ Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
     }
 
     $signoutButton = Button -Primary -Text "Sign out" -OnClick {
-        $page.connection.send("signout")
+        $page.signout()
     }
 
     $page.onSignout = {
@@ -70,10 +71,6 @@ Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
     }
 
     updateCurrentUser
-
-    $page.ThemePrimaryColor = '#cc73ff'
-    $page.ThemeTextColor = '#e1e4e8'
-    $page.ThemeBackgroundColor = '#24292e'
     
     $page.add($currentUser, $signinButton, $signoutButton, $checkAnon, $checkAnyAuth, $checkGitHubTeams, $checkGoogleLogin)
 }
