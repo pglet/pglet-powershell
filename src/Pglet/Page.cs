@@ -320,9 +320,9 @@ namespace Pglet
             await _conn.SendAsync("signout");
         }
 
-        public bool CanAccess(string permissions)
+        public bool CanAccess(string usersAndGroups)
         {
-            return CanAccessAsync(permissions).GetAwaiter().GetResult();
+            return CanAccessAsync(usersAndGroups).GetAwaiter().GetResult();
         }
 
         public async Task<bool> CanAccessAsync(string permissions)
