@@ -126,31 +126,26 @@ namespace Pglet
         public string UserId
         {
             get { return GetAttr("userId"); }
-            set { SetAttr("userId", value); }
         }
 
         public string UserLogin
         {
             get { return GetAttr("userLogin"); }
-            set { SetAttr("userLogin", value); }
         }
 
         public string UserName
         {
             get { return GetAttr("userName"); }
-            set { SetAttr("userName", value); }
         }
 
         public string UserEmail
         {
             get { return GetAttr("userEmail"); }
-            set { SetAttr("userEmail", value); }
         }
 
         public string UserClientIP
         {
             get { return GetAttr("userClientIP"); }
-            set { SetAttr("userClientIP", value); }
         }
 
         public EventHandler OnClose
