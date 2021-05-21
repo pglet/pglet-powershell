@@ -11,7 +11,7 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, Position = 0, HelpMessage = "The name of Pglet page.")]
         public string Name { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Run the page on a local instance of Pglet server.")]
+        [Parameter(Mandatory = false, HelpMessage = "Run the page on the local instance of Pglet server.")]
         public SwitchParameter Local { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]

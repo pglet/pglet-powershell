@@ -156,9 +156,9 @@ namespace Pglet
                 args.Add($"\"{name}\"");
             }
 
-            if (!local)
+            if (local)
             {
-                args.Add("--web");
+                args.Add("--local");
             }
 
             if (noWindow)

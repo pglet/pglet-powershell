@@ -18,7 +18,7 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = true, HelpMessage = "A handler script block for a new user session.")]
         public ScriptBlock ScriptBlock { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Run the app on a local instance of Pglet server.")]
+        [Parameter(Mandatory = false, HelpMessage = "Run the app on the local instance of Pglet server.")]
         public SwitchParameter Local { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
