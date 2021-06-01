@@ -19,6 +19,7 @@ New-Alias -Name Dropdown -Value New-PgletDropdown
 New-Alias -Name DropdownOption -Value New-PgletDropdownOption
 New-Alias -Name GridColumn -Value New-PgletGridColumn
 New-Alias -Name Grid -Value New-PgletGrid
+New-Alias -Name Html -Value New-PgletHtml
 New-Alias -Name Icon -Value New-PgletIcon
 New-Alias -Name Image -Value New-PgletImage
 New-Alias -Name LineChart -Value New-PgletLineChart

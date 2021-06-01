@@ -3,6 +3,7 @@ using Pglet.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -74,6 +75,12 @@ namespace Pglet
             set { SetIntAttr("gap", value); }
         }
 
+        public string Theme
+        {
+            get { return GetAttr("theme"); }
+            set { SetAttr("theme", value); }
+        }
+
         public string ThemePrimaryColor
         {
             get { return GetAttr("themePrimaryColor"); }
@@ -119,31 +126,26 @@ namespace Pglet
         public string UserId
         {
             get { return GetAttr("userId"); }
-            set { SetAttr("userId", value); }
         }
 
         public string UserLogin
         {
             get { return GetAttr("userLogin"); }
-            set { SetAttr("userLogin", value); }
         }
 
         public string UserName
         {
             get { return GetAttr("userName"); }
-            set { SetAttr("userName", value); }
         }
 
         public string UserEmail
         {
             get { return GetAttr("userEmail"); }
-            set { SetAttr("userEmail", value); }
         }
 
         public string UserClientIP
         {
             get { return GetAttr("userClientIP"); }
-            set { SetAttr("userClientIP", value); }
         }
 
         public EventHandler OnClose
@@ -261,6 +263,73 @@ namespace Pglet
             }
         }
 
+        public ControlEvent WaitEvent()
+        {
+            return WaitEvent(CancellationToken.None);
+        }
+
+        public ControlEvent WaitEvent(CancellationToken cancellationToken)
+        {
+            var e = _conn.WaitEvent(cancellationToken);
+
+            return new ControlEvent
+            {
+                Target = e.Target,
+                Name = e.Name,
+                Data = e.Data,
+                Control = _index[e.Target],
+                Page = this
+            };
+        }
+
+        public bool ShowSignin(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
+        {
+            return ShowSigninAsync(authProviders, withGroups, allowDismiss, cancellationToken).GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> ShowSigninAsync(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
+        {
+            this.Signin = authProviders;
+            this.SigninGroups = withGroups;
+            this.SigninAllowDismiss = allowDismiss;
+            await UpdateAsync();
+
+            // wait for events
+            while(!cancellationToken.IsCancellationRequested)
+            {
+                var e = WaitEvent(cancellationToken);
+                if (e.Control == this && e.Name.Equals("signin", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                else if (e.Control == this && e.Name.Equals("dismissSignin", StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        public void Signout()
+        {
+            SignoutAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task SignoutAsync()
+        {
+            await _conn.SendAsync("signout");
+        }
+
+        public bool CanAccess(string usersAndGroups)
+        {
+            return CanAccessAsync(usersAndGroups).GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> CanAccessAsync(string permissions)
+        {
+            return (await _conn.SendAsync($"canAccess \"{permissions.Encode()}\"")).Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
         public Task RemoveAsync(params Control[] controls)
         {
             foreach(var control in controls)
@@ -298,11 +367,6 @@ namespace Pglet
             await _conn.SendAsync($"clean {Uid}");
         }
 
-        public async Task CloseAsync()
-        {
-            await _conn.SendAsync("close");
-        }
-
         public void Error(string message)
         {
             ErrorAsync(message).GetAwaiter().GetResult();
@@ -311,6 +375,11 @@ namespace Pglet
         public async Task ErrorAsync(string message)
         {
             await _conn.SendAsync($"error \"{message.Encode()}\"");
+        }
+
+        public async Task CloseAsync()
+        {
+            await _conn.SendAsync("close");
         }
 
         public void Close()

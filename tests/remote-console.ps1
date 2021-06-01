@@ -1,11 +1,13 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp -Name "remote-console" -ScriptBlock {
+Connect-PgletApp -Name "remote-console" -Local -ScriptBlock {
     $ErrorActionPreference = 'stop'
 
     $page = $PGLET_PAGE
     $page.Title = "PowerShell Remote Console"
+    #$page.Theme = 'dark'
+    #$page.themePrimaryColor = '#8b95f7'
     $page.HorizontalAlign = 'stretch'
 
     # Textbox with a command entered
@@ -21,7 +23,7 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
         # disable textbox and Run button, add spinner while the command is evaluating
         $cmd.value = ''
         $command_panel.disabled = $true
-        $results.controls.insert(0, (Text $cmd_text -BgColor 'neutralLight' -Padding 10))
+        $results.controls.insert(0, (Text $cmd_text -BgColor 'neutralLight' -Padding 5))
         $results.controls.insert(1, (Spinner))
         $page.update()
 
@@ -34,10 +36,10 @@ Connect-PgletApp -Name "remote-console" -ScriptBlock {
             if ($result -is [System.Array]) {
                 $result_control = Grid -Compact -Items $result
             } else {
-                $result_control = Text -Value ($result | Out-String) -Pre -Padding 10
+                $result_control = Text -Value ($result | Out-String) -Pre -Padding 5
             }
         } catch {
-            $result_control = Text -Value "$_" -Pre -Padding 10 -Color 'red'
+            $result_control = Text -Value "$_" -Pre -Padding 10 -Color 'Red10'
         }
 
         # re-enable controls and replace spinner with the results

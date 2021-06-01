@@ -1,8 +1,9 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
+Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
     $page = $PGLET_PAGE
+    $page.theme = 'dark'
 
     $page.onDismissSignin = {
         Write-Trace "Signin cancelled"
@@ -10,22 +11,23 @@ Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
 
     $currentUser = Text
         
-    $signinButton = Button -Text "Sign in" -OnClick {
+    $signinButton = Button -Primary -Text "Sign in" -OnClick {
         Write-Trace "Display signin dialog"
-        $page.signin = "*"
-        $page.signinGroups = $true
-        $page.signinAllowDismiss = $true
-        $page.update()
+
+        try {
+            $success = Show-PgletSignin -AuthProviders "azure,github,google" -AuthGroups -AllowDismiss
+            if ($success) {
+                Write-Trace "Signed in!"
+                updateCurrentUser
+                $page.update()
+            }
+        } catch {
+            Write-Trace "$_"
+        }        
     }
 
-    $signoutButton = Button -Text "Sign out" -OnClick {
-        $page.connection.send("signout")
-    }
-
-    $page.onSignin = {
-        Write-Trace "Signed in!"
-        updateCurrentUser
-        $page.update()
+    $signoutButton = Button -Primary -Text "Sign out" -OnClick {
+        $page.signout()
     }
 
     $page.onSignout = {
@@ -33,6 +35,26 @@ Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
         updateCurrentUser
         $page.update()
     }
+
+    $checkAnon = Button -Text "Check anonymous access" -OnClick {
+        $result = $page.canAccess("")
+        Write-Trace $result
+    }    
+
+    $checkAnyAuth = Button -Text "Check any login" -OnClick {
+        $result = $page.canAccess("*")
+        Write-Trace $result
+    }
+
+    $checkGitHubTeams = Button -Text "Check GitHub permissions" -OnClick {
+        $result = $page.canAccess("github:pglet/core developers")
+        Write-Trace $result
+    }
+
+    $checkGoogleLogin = Button -Text "Check Google login" -OnClick {
+        $result = $page.canAccess("google:*@appveyor.com")
+        Write-Trace $result
+    }    
 
     function updateCurrentUser() {
         if ($page.userName) {
@@ -50,5 +72,5 @@ Connect-PgletApp "signin-test" -NoWindow -ScriptBlock {
 
     updateCurrentUser
     
-    $page.add($currentUser, $signinButton, $signoutButton)
+    $page.add($currentUser, $signinButton, $signoutButton, $checkAnon, $checkAnyAuth, $checkGitHubTeams, $checkGoogleLogin)
 }

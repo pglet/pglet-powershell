@@ -31,7 +31,7 @@ $userName = $env:UserName
 $compName = $env:ComputerName
 $totalRam = (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum / 1024 / 1024
 
-$page = Connect-PgletPage -Name "ps-monitor"
+$page = Connect-PgletPage -Local -Name "ps-monitor" -Permissions "*"
 $page.title = 'Task Manager'
 $page.padding = '10px'
 $page.update()

@@ -1,10 +1,10 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletPage -Name "index" -NoWindow
+Connect-PgletPage -Name "index" -Local -NoWindow
 
 Invoke-Pglet "clean page"
-Invoke-Pglet "set page horizontalAlign='center'"
+Invoke-Pglet "set page horizontalAlign='center' ThemePrimaryColor = '#e180ff' ThemeTextColor = '#e1e4e8' ThemeBackgroundColor = '#24292e'"
 
 Invoke-Pglet "add
 stack width='50%'

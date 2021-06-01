@@ -18,8 +18,8 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = true, HelpMessage = "A handler script block for a new user session.")]
         public ScriptBlock ScriptBlock { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Makes the page available as public at pglet.io service or a self-hosted Pglet server.")]
-        public SwitchParameter Web { get; set; }
+        [Parameter(Mandatory = false, HelpMessage = "Run the app on the local instance of Pglet server.")]
+        public SwitchParameter Local { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
         public SwitchParameter NoWindow { get; set; }
@@ -29,6 +29,9 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false, HelpMessage = "Authentication token for pglet.io service or a self-hosted Pglet server.")]
         public string Token { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "The list of users and groups allowed to access this app.")]
+        public string Permissions { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
         public int? Ticker { get; set; }
@@ -56,7 +59,7 @@ namespace Pglet.PowerShell
                             {
                                 ps.Runspace = runspace;
                                 runspace.Open();
-                                runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
+                                runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.AllScope));
                                 ps.AddScript($"Import-Module '{pgletModulePath}'");
                                 ps.AddScript(ScriptBlock.ToString());
                                 ps.AddScript("\nSwitch-PgletEvents");
@@ -71,8 +74,8 @@ namespace Pglet.PowerShell
                     }
                 });
             },
-            cancellationToken: _cancellationSource.Token, name: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0,
+            cancellationToken: _cancellationSource.Token, name: Name, local: Local.ToBool(), noWindow: NoWindow.ToBool(),
+                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0, permissions: Permissions,
                 createPage: (conn, pageUrl) => new PsPage(conn, pageUrl), pageCreated: pageCreated).Wait();
         }
 
