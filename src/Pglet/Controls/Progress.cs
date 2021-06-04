@@ -4,10 +4,10 @@
     {
         protected override string ControlName => "progress";
 
-        public int Value
+        public int? Value
         {
-            get { return GetIntAttr("value"); }
-            set { SetIntAttr("value", value); }
+            get { return GetNullableIntAttr("value"); }
+            set { SetNullableIntAttr("value", value); }
         }
 
         public string Label

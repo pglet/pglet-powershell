@@ -28,13 +28,9 @@ namespace Pglet.PowerShell
         {
             var chart = new PieChart
             {
+                InnerRadius = InnerRadius,
                 InnerValue = InnerValue
             };
-
-            if (InnerRadius.HasValue)
-            {
-                chart.InnerRadius = InnerRadius.Value;
-            }
 
             if (Points != null)
             {

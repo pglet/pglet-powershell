@@ -54,10 +54,10 @@ namespace Pglet.Controls
             set { SetBoolAttr("preserveSelection", value); }
         }
 
-        public int ShimmerLines
+        public int? ShimmerLines
         {
-            get { return GetIntAttr("shimmerLines"); }
-            set { SetIntAttr("shimmerLines", value); }
+            get { return GetNullableIntAttr("shimmerLines"); }
+            set { SetNullableIntAttr("shimmerLines", value); }
         }
 
         public string KeyFieldName { get; set; }
