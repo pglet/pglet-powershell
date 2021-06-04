@@ -42,6 +42,7 @@ namespace Pglet.PowerShell
         {
             var ctl = new PsGrid
             {
+                ShimmerLines = ShimmerLines,
                 KeyFieldName = KeyFieldName,
                 OnSelect = OnSelect,
                 OnItemInvoke = OnItemInvoke
@@ -52,11 +53,6 @@ namespace Pglet.PowerShell
             if (SelectionMode.HasValue)
             {
                 ctl.SelectionMode = SelectionMode.Value;
-            }
-
-            if (ShimmerLines.HasValue)
-            {
-                ctl.ShimmerLines = ShimmerLines.Value;
             }
 
             if (Compact.IsPresent)

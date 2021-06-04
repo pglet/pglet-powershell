@@ -211,6 +211,16 @@ namespace Pglet
             return default;
         }
 
+        protected void SetNullableIntAttr(string name, int? value)
+        {
+            SetAttr(name, value.HasValue ? value.Value.ToString() : "");
+        }
+
+        internal int? GetNullableIntAttr(string name)
+        {
+            return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
+        }
+
         protected void SetIntAttr(string name, int value)
         {
             SetAttr(name, value.ToString().ToLowerInvariant());
@@ -249,11 +259,17 @@ namespace Pglet
                 origValue = _attrs[name].Value;
             }
 
-            if (value == null && origValue != null)
+            if (String.IsNullOrEmpty(value) && origValue == null)
             {
-                _attrs.Remove(name);
+                return;
             }
-            else if (value != null && value != origValue)
+
+            if (value == null)
+            {
+                value = "";
+            }
+
+            if (value != origValue)
             {
                 _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
             }

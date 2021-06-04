@@ -21,15 +21,11 @@ namespace Pglet.PowerShell
             var control = new Progress
             {
                 Label = Label,
-                Description = Description
+                Description = Description,
+                Value = Value
             };
 
             SetControlProps(control);
-
-            if (Value.HasValue)
-            {
-                control.Value = Value.Value;
-            }
 
             WriteObject(control);
         }

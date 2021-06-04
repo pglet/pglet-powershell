@@ -33,10 +33,10 @@ namespace Pglet.Controls
             set { SetAttr("innerValue", value); _innerValue = value; }
         }
 
-        public int InnerRadius
+        public int? InnerRadius
         {
-            get { return GetIntAttr("innerRadius"); }
-            set { SetIntAttr("innerRadius", value); }
+            get { return GetNullableIntAttr("innerRadius"); }
+            set { SetNullableIntAttr("innerRadius", value); }
         }
 
         protected override IEnumerable<Control> GetChildren()
