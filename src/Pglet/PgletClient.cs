@@ -15,7 +15,7 @@ namespace Pglet
 {
     public static class PgletClient
     {
-        public const string PGLET_VERSION = "0.4.5";
+        public const string PGLET_VERSION = "0.4.6";
 
         private static string _pgletExe;
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
