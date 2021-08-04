@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp -Name "pglet-progress" -Local -ScriptBlock {
+Connect-PgletApp -Name "pglet-progress" -ScriptBlock {
   $ErrorActionPreference = 'stop'
 
   $page = $pglet_page
