@@ -4,13 +4,12 @@ using System.Text;
 
 namespace Pglet.Protocol
 {
-    public class RegisterHostClientPayload
+    public class RegisterHostClientResponsePayload
     {
         public string HostClientID { get; set; }
+        public string SessionID { get; set; }
         public string PageName { get; set; }
-        public bool IsApp { get; set; }
-        public string AuthToken { get; set; }
-        public string Permissions { get; set; }
+        public string Error { get; set; }
     }
 
 }

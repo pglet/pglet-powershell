@@ -16,11 +16,10 @@ namespace Pglet
             string server = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
-            _ws = new ReconnectingWebSocket(GetWebSocketUrl(server ?? HOSTED_SERVICE_URL), (message) =>
-            {
-                return Task.CompletedTask;
-            });
+            _ws = new ReconnectingWebSocket(GetWebSocketUrl(server ?? HOSTED_SERVICE_URL));
             await _ws.Connect(cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
+            var conn = new ConnectionWS(_ws);
+            var resp = await conn.RegisterHostClient(name, false, token, permissions);
             return null;
         }
 
@@ -28,10 +27,7 @@ namespace Pglet
             string server = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
-            _ws = new ReconnectingWebSocket(GetWebSocketUrl(server ?? HOSTED_SERVICE_URL), (message) =>
-            {
-                return Task.CompletedTask;
-            });
+            _ws = new ReconnectingWebSocket(GetWebSocketUrl(server ?? HOSTED_SERVICE_URL));
             await _ws.Connect(cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
         }
 

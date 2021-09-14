@@ -22,7 +22,8 @@ namespace Pglet.Tests
         private static async Task TestWSClient()
         {
             PgletClient2 pgc = new PgletClient2();
-            var page = await pgc.ConnectPage(server: "http://localhost:5000");
+            var page = await pgc.ConnectPage("page-1", server: "http://localhost:5000");
+            //await Task.Delay(5000);
         }
 
         private static void TestJson()
@@ -31,7 +32,7 @@ namespace Pglet.Tests
             {
                 Id = "",
                 Action = "registerHostClient",
-                Payload = new Pglet.Protocol.RegisterHostClientPayload
+                Payload = new Pglet.Protocol.RegisterHostClientRequestPayload
                 {
                     PageName = "test-page",
                     IsApp = true
@@ -42,7 +43,7 @@ namespace Pglet.Tests
             Console.WriteLine(j);
 
             var obj = JsonUtility.Deserialize<Pglet.Protocol.Message>(j);
-            var payload = JsonUtility.Deserialize<Pglet.Protocol.RegisterHostClientPayload>(obj.Payload as JObject);
+            var payload = JsonUtility.Deserialize<Pglet.Protocol.RegisterHostClientRequestPayload>(obj.Payload as JObject);
         }
 
         private static async Task TestControls()

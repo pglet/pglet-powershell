@@ -18,10 +18,14 @@ namespace Pglet
         Func<byte[], Task> _onMessage;
         CancellationToken _cancellationToken;
 
-        public ReconnectingWebSocket(Uri uri, Func<byte[], Task> onMessage)
+        public Func<byte[], Task> OnMessage
+        {
+            set { _onMessage = value; }
+        }
+
+        public ReconnectingWebSocket(Uri uri)
         {
             _uri = uri;
-            _onMessage = onMessage;
         }
 
         public async Task Connect(CancellationToken cancellationToken)
