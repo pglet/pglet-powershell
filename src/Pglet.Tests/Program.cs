@@ -1,4 +1,5 @@
-﻿using Pglet.Controls;
+﻿using Newtonsoft.Json.Linq;
+using Pglet.Controls;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -10,10 +11,38 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
+            //TestJson();
+            await TestWSClient();
             //TestDiffs();
-            await TestApp();
+            //await TestApp();
             //await TestControls();
             //await TestPage();
+        }
+
+        private static async Task TestWSClient()
+        {
+            PgletClient2 pgc = new PgletClient2();
+            var page = await pgc.ConnectPage(server: "http://localhost:5000");
+        }
+
+        private static void TestJson()
+        {
+            var msg = new Pglet.Protocol.Message
+            {
+                Id = "",
+                Action = "registerHostClient",
+                Payload = new Pglet.Protocol.RegisterHostClientPayload
+                {
+                    PageName = "test-page",
+                    IsApp = true
+                }
+            };
+
+            var j = JsonUtility.Serialize(msg);
+            Console.WriteLine(j);
+
+            var obj = JsonUtility.Deserialize<Pglet.Protocol.Message>(j);
+            var payload = JsonUtility.Deserialize<Pglet.Protocol.RegisterHostClientPayload>(obj.Payload as JObject);
         }
 
         private static async Task TestControls()
