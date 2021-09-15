@@ -67,6 +67,8 @@ namespace Pglet
                 {
                     var ms = new MemoryStream();
 
+                    //Console.WriteLine("WS before read");
+
                     WebSocketReceiveResult result;
                     do
                     {
@@ -88,6 +90,10 @@ namespace Pglet
                         await _onMessage(ms.ToArray());
                     }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -125,6 +131,10 @@ namespace Pglet
                         await _ws.SendAsync(new ArraySegment<byte>(message, offset, count), WebSocketMessageType.Binary, lastMessage, _cancellationToken);
                     }
                 }
+                catch(OperationCanceledException)
+                {
+                    throw;
+                }
                 catch
                 {
                     // TODO
@@ -136,6 +146,7 @@ namespace Pglet
 
         public async Task Close()
         {
+            //Console.WriteLine("WS close");
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
             _ws.Dispose();

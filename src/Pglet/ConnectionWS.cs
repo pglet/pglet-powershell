@@ -15,10 +15,16 @@ namespace Pglet
         ReconnectingWebSocket _ws;
         ConcurrentDictionary<string, TaskCompletionSource<JObject>> _wsCallbacks = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
         Func<PageEventPayload, Task> _onEvent;
+        Func<PageSessionCreatedPayload, Task> _onSessionCreated;
 
         public Func<PageEventPayload, Task> OnEvent
         {
             set { _onEvent = value; }
+        }
+
+        public Func<PageSessionCreatedPayload, Task> OnSessionCreated
+        {
+            set { _onSessionCreated = value; }
         }
 
         public ConnectionWS(ReconnectingWebSocket ws)
@@ -45,13 +51,15 @@ namespace Pglet
                     tcs.SetResult(m.Payload as JObject);
                 }
             }
-            else if (m.Action == Actions.PageEventToHost)
+            else if (m.Action == Actions.PageEventToHost && _onEvent != null)
             {
                 // page event
-                if (_onEvent != null)
-                {
-                    await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject));
-                }
+                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject));
+            }
+            else if (m.Action == Actions.SessionCreated && _onSessionCreated != null)
+            {
+                // new session started
+                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject));
             }
             else
             {
@@ -76,6 +84,19 @@ namespace Pglet
 
             var respPayload = await SendMessageWithResult(Actions.RegisterHostClient, payload, cancellationToken);
             return JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
+        }
+
+        public async Task<PageCommandResponsePayload> SendCommand(string pageName, string sessionId, Command command, CancellationToken cancellationToken)
+        {
+            var payload = new PageCommandRequestPayload
+            {
+                PageName = pageName,
+                SessionID = sessionId,
+                Command = command
+            };
+
+            var respPayload = await SendMessageWithResult(Actions.PageCommandFromHost, payload, cancellationToken);
+            return JsonUtility.Deserialize<PageCommandResponsePayload>(respPayload);
         }
 
         public async Task<PageCommandsBatchResponsePayload> SendCommands(string pageName, string sessionId, List<Command> commands, CancellationToken cancellationToken)

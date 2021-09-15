@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Pglet.Protocol
+﻿namespace Pglet.Protocol
 {
     public class RegisterHostClientRequestPayload
     {
@@ -12,5 +8,4 @@ namespace Pglet.Protocol
         public string AuthToken { get; set; }
         public string Permissions { get; set; }
     }
-
 }

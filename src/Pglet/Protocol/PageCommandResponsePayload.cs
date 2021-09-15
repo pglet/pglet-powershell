@@ -2,9 +2,9 @@
 
 namespace Pglet.Protocol
 {
-    public class PageCommandsBatchResponsePayload
+    public class PageCommandResponsePayload
     {
-        public List<string> Results { get; set; }
+        public string Result { get; set; }
         public string Error { get; set; }
     }
 }

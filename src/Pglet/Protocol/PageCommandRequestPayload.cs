@@ -2,10 +2,10 @@
 
 namespace Pglet.Protocol
 {
-    public class PageCommandsBatchRequestPayload
+    public class PageCommandRequestPayload
     {
         public string PageName { get; set; }
         public string SessionID { get; set; }
-        public List<Command> Commands { get; set; }
+        public Command Command { get; set; }
     }
 }
