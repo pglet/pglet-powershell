@@ -78,11 +78,11 @@ namespace Pglet
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO
                 // re-connection logic
-                throw;
+                throw ex;
             }
         }
 

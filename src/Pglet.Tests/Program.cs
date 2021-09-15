@@ -22,8 +22,8 @@ namespace Pglet.Tests
         private static async Task TestWSClient()
         {
             PgletClient2 pgc = new PgletClient2();
-            var page = await pgc.ConnectPage("page-1", server: "http://localhost:5000");
-            //await Task.Delay(5000);
+            var page = await pgc.ConnectPage("page-1", server: "http://localhost:3000");
+            await Task.Delay(10000);
         }
 
         private static void TestJson()

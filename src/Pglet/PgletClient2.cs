@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pglet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -12,14 +13,46 @@ namespace Pglet
 
         ReconnectingWebSocket _ws;
 
-        public async Task<Page> ConnectPage(string name = null,
+        public async Task<Page> ConnectPage(string pageName = null,
             string server = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             _ws = new ReconnectingWebSocket(GetWebSocketUrl(server ?? HOSTED_SERVICE_URL));
             await _ws.Connect(cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
             var conn = new ConnectionWS(_ws);
-            var resp = await conn.RegisterHostClient(name, false, token, permissions);
+
+            conn.OnEvent = (payload) =>
+            {
+                Console.WriteLine("Event received: " + JsonUtility.Serialize(payload));
+                return Task.CompletedTask;
+            };
+
+            var resp = await conn.RegisterHostClient(pageName, false, token, permissions, CancellationToken.None);
+
+            var commands = new List<Command>
+            {
+                new Command
+                {
+                    Name = "clean",
+                    Values = new List<string> { "page" }
+                }
+            };
+            var resp1 = await conn.SendCommands(resp.PageName, resp.SessionID, commands, CancellationToken.None);
+            commands.Clear();
+
+            for (int i = 0; i < 500; i++)
+            {
+                commands.Add(new Command
+                {
+                    Name = "add",
+                    Values = new List<string> { "button" },
+                    Attrs = new Dictionary<string, string>
+                    {
+                        { "text", $"Button {i}" }
+                    }
+                });
+            }
+            var resp2 = await conn.SendCommands(resp.PageName, resp.SessionID, commands, CancellationToken.None);
             return null;
         }
 
