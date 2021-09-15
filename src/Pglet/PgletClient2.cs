@@ -48,7 +48,8 @@ namespace Pglet
                     Values = new List<string> { "button" },
                     Attrs = new Dictionary<string, string>
                     {
-                        { "text", $"Button {i}" }
+                        { "text", $"Button {i}" },
+                        { "primary", "true" },
                     }
                 });
             }

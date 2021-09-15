@@ -113,7 +113,7 @@ namespace Pglet
 
             var j = JsonUtility.Serialize(msg);
             var jb = Encoding.UTF8.GetBytes(j);
-            await _ws.SendMessage(jb);
+            await _ws.SendMessage(jb, cancellationToken);
 
             if (messageId != null)
             {
