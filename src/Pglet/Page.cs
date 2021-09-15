@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Pglet.Controls;
+using Pglet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,19 +11,18 @@ namespace Pglet
 {
     public class Page : Control
     {
-        string _url;
+        readonly ConnectionWS _conn;
+        readonly string _pageName;
+        readonly string _sessionId;
         List<Control> _controls = new List<Control>();
         Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
-        private Connection _conn;
 
-        public Connection Connection
+        ControlEvent _lastEvent;
+        AutoResetEvent _resetEvent = new AutoResetEvent(false);
+
+        public ConnectionWS Connection
         {
             get { return _conn; }
-        }
-
-        public string Url
-        {
-            get { return _url; }
         }
 
         public List<Control> Controls
@@ -180,18 +180,18 @@ namespace Pglet
 
         protected override string ControlName => "page";
 
-        public Page(Connection conn, string url)
+        public Page(ConnectionWS conn, string pageName, string sessionId)
         {
             Uid = Id = "page";
             _conn = conn;
-            _conn.OnEvent = OnEvent;
-            _url = url;
+            _pageName = pageName;
+            _sessionId = sessionId;
             _index[Id] = this;
         }
 
         internal async Task LoadHash()
         {
-            Hash = await _conn.SendAsync("get page hash");
+            Hash = await SendCommand("get", "page", "hash");
         }
 
         public void Add(params Control[] controls)
@@ -234,7 +234,7 @@ namespace Pglet
         public async Task UpdateAsync(params Control[] controls)
         {
             var addedControls = new List<Control>();
-            var commands = new List<string>();
+            var commands = new List<Command>();
 
             foreach(var control in controls)
             {
@@ -247,11 +247,11 @@ namespace Pglet
             }
 
             // execute commands
-            var ids = await Connection.SendBatchAsync(commands);
+            var ids = (await _conn.SendCommands(_pageName, _sessionId, commands, CancellationToken.None)).Results;
 
             // update new controls
             int n = 0;
-            foreach(var id in ids.Split('\n').SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
+            foreach(var id in ids.SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
             {
                 addedControls[n].Uid = id;
                 addedControls[n].Page = this;
@@ -270,16 +270,15 @@ namespace Pglet
 
         public ControlEvent WaitEvent(CancellationToken cancellationToken)
         {
-            var e = _conn.WaitEvent(cancellationToken);
+            _resetEvent.Reset();
 
-            return new ControlEvent
+            int n = WaitHandle.WaitAny(new[] { _resetEvent, cancellationToken.WaitHandle });
+            if (n == 1)
             {
-                Target = e.Target,
-                Name = e.Name,
-                Data = e.Data,
-                Control = _index[e.Target],
-                Page = this
-            };
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            return _lastEvent;
         }
 
         public bool ShowSignin(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
@@ -317,7 +316,7 @@ namespace Pglet
 
         public async Task SignoutAsync()
         {
-            await _conn.SendAsync("signout");
+            await SendCommand("signout");
         }
 
         public bool CanAccess(string usersAndGroups)
@@ -327,7 +326,7 @@ namespace Pglet
 
         public async Task<bool> CanAccessAsync(string permissions)
         {
-            return (await _conn.SendAsync($"canAccess \"{permissions.Encode()}\"")).Equals("true", StringComparison.OrdinalIgnoreCase);
+            return (await SendCommand("canAccess", permissions)).Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         public Task RemoveAsync(params Control[] controls)
@@ -364,7 +363,7 @@ namespace Pglet
                 RemoveControlRecursively(_index, child);
             }
 
-            await _conn.SendAsync($"clean {Uid}");
+            await SendCommand("clean", Uid);
         }
 
         public void Error(string message)
@@ -374,12 +373,12 @@ namespace Pglet
 
         public async Task ErrorAsync(string message)
         {
-            await _conn.SendAsync($"error \"{message.Encode()}\"");
+            await SendCommand("error", message);
         }
 
         public async Task CloseAsync()
         {
-            await _conn.SendAsync("close");
+            await SendCommand("close");
         }
 
         public void Close()
@@ -387,7 +386,7 @@ namespace Pglet
             CloseAsync().GetAwaiter().GetResult();
         }
 
-        private void OnEvent(Event e)
+        public void OnEvent(Event e)
         {
             //Console.WriteLine($"Event: {e.Target} - {e.Name} - {e.Data}");
 
@@ -426,6 +425,22 @@ namespace Pglet
                     var t = Task.Run(() => controlHandlers[e.Name](ce));
                 }
             }
+
+            _lastEvent = new ControlEvent
+            {
+                Target = e.Target,
+                Name = e.Name,
+                Data = e.Data,
+                Control = _index[e.Target],
+                Page = this
+            };
+
+            _resetEvent.Set();
+        }
+
+        public async Task<string> SendCommand(string name, params string[] values)
+        {
+            return (await _conn.SendCommand(_pageName, _sessionId, new Protocol.Command { Name = name, Values = values.ToList() }, CancellationToken.None)).Result;
         }
     }
 }

@@ -18,9 +18,6 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = true, HelpMessage = "A handler script block for a new user session.")]
         public ScriptBlock ScriptBlock { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Run the app on the local instance of Pglet server.")]
-        public SwitchParameter Local { get; set; }
-
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
         public SwitchParameter NoWindow { get; set; }
 
@@ -33,9 +30,6 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, HelpMessage = "The list of users and groups allowed to access this app.")]
         public string Permissions { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
-        public int? Ticker { get; set; }
-
         protected override void ProcessRecord()
         {
             var pgletModulePath = this.MyInvocation.MyCommand.Module.Path.Replace(".psm1", ".psd1");
@@ -45,7 +39,7 @@ namespace Pglet.PowerShell
                 Host.UI.WriteLine(pageUrl);
             }
 
-            PgletClient.ServeApp((page) =>
+            new PgletClient2().ServeApp((page) =>
             {
                 return Task.Run(() =>
                 {
@@ -74,9 +68,9 @@ namespace Pglet.PowerShell
                     }
                 });
             },
-            cancellationToken: _cancellationSource.Token, name: Name, local: Local.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0, permissions: Permissions,
-                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl), pageCreated: pageCreated).Wait();
+            cancellationToken: _cancellationSource.Token, pageName: Name, noWindow: NoWindow.ToBool(),
+                serverUrl: Server, token: Token, permissions: Permissions,
+                createPage: (conn, pageName, sessionId) => new PsPage(conn, pageName, sessionId), pageCreated: pageCreated).Wait();
         }
 
         protected override void StopProcessing()

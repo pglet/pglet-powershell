@@ -21,7 +21,7 @@ namespace Pglet
 
         public async Task<Page> ConnectPage(string pageName = null,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
-            Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
+            Func<ConnectionWS, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             await ConnectInternal(pageName, false, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
@@ -55,7 +55,7 @@ namespace Pglet
 
         public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
-            Func<Connection, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
+            Func<ConnectionWS, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
             await ConnectInternal(pageName, true, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 

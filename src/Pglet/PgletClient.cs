@@ -39,15 +39,15 @@ namespace Pglet
                 var conn = new Connection(pipeId);
                 await conn.OpenAsync(ct);
 
-                Page page;
-                if (createPage != null)
-                {
-                    page = createPage(conn, pageUrl);
-                }
-                else
-                {
-                    page = new Page(conn, pageUrl);
-                }
+                Page page = null;
+                //if (createPage != null)
+                //{
+                //    page = createPage(conn, pageUrl);
+                //}
+                //else
+                //{
+                //    page = new Page(conn, pageUrl);
+                //}
                 await page.LoadHash();
                 return page;
             }
@@ -115,15 +115,15 @@ namespace Pglet
                             var conn = new Connection(line);
                             await conn.OpenAsync(ct);
 
-                            Page page;
-                            if (createPage != null)
-                            {
-                                page = createPage(conn, pageUrl);
-                            }
-                            else
-                            {
-                                page = new Page(conn, pageUrl);
-                            }
+                            Page page = null;
+                            //if (createPage != null)
+                            //{
+                            //    page = createPage(conn, pageUrl);
+                            //}
+                            //else
+                            //{
+                            //    page = new Page(conn, pageUrl);
+                            //}
                             await page.LoadHash();
                             var h = sessionHandler(page).ContinueWith(async t =>
                             {

@@ -28,7 +28,7 @@ namespace Pglet.Tests.Fx
                     Console.WriteLine("Hash changed: " + e.Data);
                 };
 
-                Console.WriteLine($"Session started: {page.Connection.PipeId}");
+                //Console.WriteLine($"Session started: {page.Connection.PipeId}");
                 Console.WriteLine($"Hash: {page.Hash}");
 
                 var txt = new TextBox();
