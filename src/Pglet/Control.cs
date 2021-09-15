@@ -421,13 +421,7 @@ namespace Pglet
             var cmd = GetCommandAttrs(update: false);
             cmd.Indent = indent;
             cmd.Values.Add(ControlName);
-
-            // main command
-            var parts = new List<string>
-            {
-                // control name
-                indent + ControlName
-            };
+            commands.Add(cmd);
 
             if (addedControls != null)
             {
@@ -440,7 +434,7 @@ namespace Pglet
                 foreach(var control in children)
                 {
                     var childCmds = control.GetCommands(indent: indent + 2, index: index, addedControls: addedControls);
-                    cmd.Commands.AddRange(childCmds);
+                    commands.AddRange(childCmds);
                 }
             }
 

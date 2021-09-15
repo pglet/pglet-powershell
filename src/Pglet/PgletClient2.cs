@@ -11,6 +11,7 @@ namespace Pglet
     public class PgletClient2
     {
         public const string HOSTED_SERVICE_URL = "https://console.pglet.io";
+        public const string ZERO_SESSION = "0";
 
         ReconnectingWebSocket _ws;
         ConnectionWS _conn;
@@ -25,32 +26,18 @@ namespace Pglet
         {
             await ConnectInternal(pageName, false, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
-            var commands = new List<Command>
+            Page page;
+            if (createPage != null)
             {
-                new Command
-                {
-                    Name = "clean",
-                    Values = new List<string> { "page" }
-                }
-            };
-            var resp1 = await _conn.SendCommands(_pageName, "0", commands, CancellationToken.None);
-            commands.Clear();
-
-            for (int i = 0; i < 10; i++)
-            {
-                commands.Add(new Command
-                {
-                    Name = "add",
-                    Values = new List<string> { "button" },
-                    Attrs = new Dictionary<string, string>
-                    {
-                        { "text", $"Button {i}" },
-                        { "primary", "true" },
-                    }
-                });
+                page = createPage(_conn, _pageName, ZERO_SESSION);
             }
-            var resp2 = await _conn.SendCommands(_pageName, "0", commands, CancellationToken.None);
-            return null;
+            else
+            {
+                page = new Page(_conn, _pageName, ZERO_SESSION);
+            }
+            await page.LoadHash();
+            _sessions[ZERO_SESSION] = page;
+            return page;
         }
 
         public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null,

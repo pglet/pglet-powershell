@@ -12,26 +12,65 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestJson();
-            await TestWSClient();
+            await TestPage2();
             //TestDiffs();
             //await TestApp();
             //await TestControls();
             //await TestPage();
         }
 
-        private static async Task TestWSClient()
+        private static async Task TestPage2()
         {
             var cts = new CancellationTokenSource();
 
             PgletClient2 pgc = new PgletClient2();
 
             var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token);
+            await page.CleanAsync();
 
-            //pgc.ServeApp((page) =>
-            //{
-            //    Console.WriteLine("Session!");
-            //    return Task.CompletedTask;
-            //}, "app-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token).Wait();
+            var submitBtn = new Button { Text = "Click me!", Primary = true };
+            var cancelBtn = new Button { Text = "Cancel" };
+
+            var mainStack = new Stack
+            {
+                Controls =
+                {
+                    new TextBox(),
+                    new Stack
+                    {
+                        Horizontal = true,
+                        Controls =
+                        {
+                            submitBtn,
+                            cancelBtn
+                        }
+                    }
+                }
+            };
+
+            await page.AddAsync(mainStack);
+
+            await Task.Delay(5000);
+
+            submitBtn.Text = "Send something!";
+            mainStack.Controls.Add(new Text { Value = "Oh, well..." });
+            mainStack.Controls.RemoveAt(0);
+            await page.UpdateAsync();
+
+            //Console.ReadLine();
+            await Task.Delay(20000);
+        }
+
+        private static async Task TestApp2()
+        {
+            var cts = new CancellationTokenSource();
+
+            PgletClient2 pgc = new PgletClient2();
+            pgc.ServeApp((page) =>
+            {
+                Console.WriteLine("Session!");
+                return Task.CompletedTask;
+            }, "app-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token).Wait();
 
             //Console.ReadLine();
             await Task.Delay(20000);
