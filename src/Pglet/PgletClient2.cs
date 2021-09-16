@@ -26,15 +26,7 @@ namespace Pglet
         {
             await ConnectInternal(pageName, false, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
-            Page page;
-            if (createPage != null)
-            {
-                page = createPage(_conn, _pageName, ZERO_SESSION);
-            }
-            else
-            {
-                page = new Page(_conn, _pageName, ZERO_SESSION);
-            }
+            Page page = createPage != null ? createPage(_conn, _pageName, ZERO_SESSION) : new Page(_conn, _pageName, ZERO_SESSION);
             await page.LoadHash();
             _sessions[ZERO_SESSION] = page;
             return page;
@@ -47,6 +39,23 @@ namespace Pglet
             await ConnectInternal(pageName, true, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
             pageCreated?.Invoke(_pageUrl);
+
+            // new session handler
+            _conn.OnSessionCreated = async (payload) =>
+            {
+                Console.WriteLine("Session created: " + JsonUtility.Serialize(payload));
+                Page page = createPage != null ? createPage(_conn, _pageName, payload.SessionID) : new Page(_conn, _pageName, payload.SessionID);
+                await page.LoadHash();
+                _sessions[payload.SessionID] = page;
+
+                var h = sessionHandler(page).ContinueWith(async t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
+                    }
+                });
+            };
 
             var tcs = new TaskCompletionSource<bool>();
             if (cancellationToken.HasValue)
@@ -64,21 +73,7 @@ namespace Pglet
             _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl ?? HOSTED_SERVICE_URL));
             await _ws.Connect(cancellationToken);
             _conn = new ConnectionWS(_ws);
-
-            _conn.OnEvent = (payload) =>
-            {
-                Console.WriteLine("Event received: " + JsonUtility.Serialize(payload));
-                return Task.CompletedTask;
-            };
-
-            if (isApp)
-            {
-                _conn.OnSessionCreated = (payload) =>
-                {
-                    Console.WriteLine("Session created: " + JsonUtility.Serialize(payload));
-                    return Task.CompletedTask;
-                };
-            }
+            _conn.OnEvent = OnPageEvent;
 
             var resp = await _conn.RegisterHostClient(pageName, isApp, token, permissions, cancellationToken);
             _hostClientId = resp.HostClientID;
@@ -86,10 +81,25 @@ namespace Pglet
             _pageUrl = GetPageUrl(serverUrl, _pageName).ToString();
         }
 
-        //private Task OnSessionCreated(PageSessionCreatedPayload payload)
-        //{
+        private Task OnPageEvent(PageEventPayload payload)
+        {
+            //Console.WriteLine("Event received: " + JsonUtility.Serialize(payload));
+            if (_sessions.TryGetValue(payload.SessionID, out Page page))
+            {
+                page.OnEvent(new Event
+                {
+                    Target = payload.EventTarget,
+                    Name = payload.EventName,
+                    Data = payload.EventData
+                });
 
-        //}
+                if (payload.EventTarget == "page" && payload.EventName == "close")
+                {
+                    _sessions.TryRemove(payload.SessionID, out Page _);
+                }
+            }
+            return Task.CompletedTask;
+        }
 
         private Uri GetPageUrl(string serverUrl, string pageName)
         {

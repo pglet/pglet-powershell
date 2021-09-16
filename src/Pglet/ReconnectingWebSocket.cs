@@ -74,6 +74,8 @@ namespace Pglet
                     {
                         result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationToken);
 
+                        //Console.WriteLine("WS read");
+
                         if (result.MessageType != WebSocketMessageType.Close)
                         {
                             await ms.WriteAsync(buffer, 0, result.Count);
@@ -87,7 +89,7 @@ namespace Pglet
 
                     if (_onMessage != null)
                     {
-                        await _onMessage(ms.ToArray());
+                        var t = _onMessage(ms.ToArray());
                     }
                 }
             }

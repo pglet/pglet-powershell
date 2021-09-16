@@ -38,6 +38,8 @@ namespace Pglet
             var j = Encoding.UTF8.GetString(message);
             var m = JsonUtility.Deserialize<Message>(j);
 
+            //Console.WriteLine($"OnMessage: {m.Payload}");
+
             if (m.Payload == null)
             {
                 throw new Exception("Invalid message received by a WebSocket");
@@ -54,12 +56,12 @@ namespace Pglet
             else if (m.Action == Actions.PageEventToHost && _onEvent != null)
             {
                 // page event
-                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject));
+                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
             }
             else if (m.Action == Actions.SessionCreated && _onSessionCreated != null)
             {
                 // new session started
-                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject));
+                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
             }
             else
             {

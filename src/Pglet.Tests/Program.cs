@@ -12,7 +12,8 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestJson();
-            await TestPage2();
+            //await TestPage2();
+            await TestApp2();
             //TestDiffs();
             //await TestApp();
             //await TestControls();
@@ -28,8 +29,10 @@ namespace Pglet.Tests
             var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
-            var submitBtn = new Button { Text = "Click me!", Primary = true };
-            var cancelBtn = new Button { Text = "Cancel" };
+            var txtName = new TextBox();
+
+            var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
+            var cancelBtn = new Button { Text = "Cancel", OnClick = (e) => { Console.WriteLine("click cancel"); } };
 
             var mainStack = new Stack
             {
@@ -55,10 +58,12 @@ namespace Pglet.Tests
             submitBtn.Text = "Send something!";
             mainStack.Controls.Add(new Text { Value = "Oh, well..." });
             mainStack.Controls.RemoveAt(0);
+
+            mainStack.Controls.Insert(0, txtName);
             await page.UpdateAsync();
 
             //Console.ReadLine();
-            await Task.Delay(20000);
+            await Task.Delay(200000);
         }
 
         private static async Task TestApp2()
@@ -66,14 +71,15 @@ namespace Pglet.Tests
             var cts = new CancellationTokenSource();
 
             PgletClient2 pgc = new PgletClient2();
-            pgc.ServeApp((page) =>
+            pgc.ServeApp(async (page) =>
             {
-                Console.WriteLine("Session!");
-                return Task.CompletedTask;
+                var txtName = new TextBox();
+                var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
+                await page.AddAsync(txtName, submitBtn);
             }, "app-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token).Wait();
 
             //Console.ReadLine();
-            await Task.Delay(20000);
+            await Task.Delay(200000);
         }
 
         private static void TestJson()
