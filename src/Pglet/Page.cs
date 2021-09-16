@@ -383,14 +383,12 @@ namespace Pglet
             await SendCommand("error", message);
         }
 
-        public async Task CloseAsync()
-        {
-            await SendCommand("close");
-        }
-
         public void Close()
         {
-            CloseAsync().GetAwaiter().GetResult();
+            if (_sessionId == PgletClient.ZERO_SESSION)
+            {
+                _conn.Close();
+            }
         }
 
         public void OnEvent(Event e)

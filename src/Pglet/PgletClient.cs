@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Pglet
 {
-    public class PgletClient
+    public class PgletClient : IDisposable
     {
         public const string HOSTED_SERVICE_URL = "https://console.pglet.io";
         public const string ZERO_SESSION = "0";
@@ -24,7 +24,8 @@ namespace Pglet
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
-            await ConnectInternal(pageName, false, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
+            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
+            await ConnectInternal(pageName, false, serverUrl, token, permissions, ct);
 
             Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
             await page.LoadHash();
@@ -36,7 +37,8 @@ namespace Pglet
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
-            await ConnectInternal(pageName, true, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
+            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
+            await ConnectInternal(pageName, true, serverUrl, token, permissions, ct);
 
             pageCreated?.Invoke(_pageUrl);
 
@@ -57,15 +59,11 @@ namespace Pglet
                 });
             };
 
-            var tcs = new TaskCompletionSource<bool>();
-            if (cancellationToken.HasValue)
-            {
-                using CancellationTokenRegistration ctr = cancellationToken.Value.Register(() => {
-                    tcs.SetCanceled();
-                });
-            }
-
-            await tcs.Task;
+            var semaphore = new SemaphoreSlim(0);
+            using CancellationTokenRegistration ctr = ct.Register(() => {
+                semaphore.Release();
+            });
+            await semaphore.WaitAsync();
         }
 
         private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, CancellationToken cancellationToken)
@@ -95,6 +93,7 @@ namespace Pglet
 
                 if (payload.EventTarget == "page" && payload.EventName == "close")
                 {
+                    //Console.WriteLine("Session is closing: " + payload.SessionID);
                     _sessions.TryRemove(payload.SessionID, out Page _);
                 }
             }
@@ -114,6 +113,14 @@ namespace Pglet
             wssUri.Scheme = wssUri.Scheme == "https" ? "wss" : "ws";
             wssUri.Path = "/ws";
             return wssUri.Uri;
+        }
+
+        public void Dispose()
+        {
+            if (_conn != null)
+            {
+                _conn.Close();
+            }
         }
     }
 }

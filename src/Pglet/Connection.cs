@@ -174,5 +174,13 @@ namespace Pglet
                 return null;
             }
         }
+
+        public void Close()
+        {
+            if (_ws != null)
+            {
+                _ = _ws.Close();
+            }
+        }
     }
 }
