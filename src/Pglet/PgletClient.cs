@@ -14,7 +14,7 @@ namespace Pglet
         public const string ZERO_SESSION = "0";
 
         ReconnectingWebSocket _ws;
-        ConnectionWS _conn;
+        Connection _conn;
         string _hostClientId;
         string _pageName;
         string _pageUrl;
@@ -22,11 +22,11 @@ namespace Pglet
 
         public async Task<Page> ConnectPage(string pageName = null,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
-            Func<ConnectionWS, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
+            Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             await ConnectInternal(pageName, false, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
-            Page page = createPage != null ? createPage(_conn, _pageName, ZERO_SESSION) : new Page(_conn, _pageName, ZERO_SESSION);
+            Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
             await page.LoadHash();
             _sessions[ZERO_SESSION] = page;
             return page;
@@ -34,7 +34,7 @@ namespace Pglet
 
         public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
-            Func<ConnectionWS, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
+            Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
             await ConnectInternal(pageName, true, serverUrl, token, permissions, cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None);
 
@@ -44,7 +44,7 @@ namespace Pglet
             _conn.OnSessionCreated = async (payload) =>
             {
                 Console.WriteLine("Session created: " + JsonUtility.Serialize(payload));
-                Page page = createPage != null ? createPage(_conn, _pageName, payload.SessionID) : new Page(_conn, _pageName, payload.SessionID);
+                Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, payload.SessionID) : new Page(_conn, _pageUrl, _pageName, payload.SessionID);
                 await page.LoadHash();
                 _sessions[payload.SessionID] = page;
 
@@ -70,9 +70,9 @@ namespace Pglet
 
         private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, CancellationToken cancellationToken)
         {
-            _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl ?? HOSTED_SERVICE_URL));
+            _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl));
             await _ws.Connect(cancellationToken);
-            _conn = new ConnectionWS(_ws);
+            _conn = new Connection(_ws);
             _conn.OnEvent = OnPageEvent;
 
             var resp = await _conn.RegisterHostClient(pageName, isApp, token, permissions, cancellationToken);
@@ -103,14 +103,14 @@ namespace Pglet
 
         private Uri GetPageUrl(string serverUrl, string pageName)
         {
-            var pageUri = new UriBuilder(serverUrl);
+            var pageUri = new UriBuilder(serverUrl ?? HOSTED_SERVICE_URL);
             pageUri.Path = "/" + pageName;
             return pageUri.Uri;
         }
 
         private Uri GetWebSocketUrl(string serverUrl)
         {
-            var wssUri = new UriBuilder(serverUrl);
+            var wssUri = new UriBuilder(serverUrl ?? HOSTED_SERVICE_URL);
             wssUri.Scheme = wssUri.Scheme == "https" ? "wss" : "ws";
             wssUri.Path = "/ws";
             return wssUri.Uri;

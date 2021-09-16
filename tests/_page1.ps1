@@ -1,9 +1,10 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-$page = Connect-PgletPage -Local "index" -Permissions "*" -NoWindow
+$page = Connect-PgletPage -Server "http://localhost:3000" -Permissions "*" -NoWindow
+$page.Clean()
 
-Invoke-Pglet "clean page"
+Write-Host $page.Url
 
 Write-Trace "This is trace!"
 

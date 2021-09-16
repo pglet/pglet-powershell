@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Pglet
 {
-    public class ConnectionWS
+    public class Connection
     {
         ReconnectingWebSocket _ws;
         ConcurrentDictionary<string, TaskCompletionSource<JObject>> _wsCallbacks = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
@@ -27,7 +27,7 @@ namespace Pglet
             set { _onSessionCreated = value; }
         }
 
-        public ConnectionWS(ReconnectingWebSocket ws)
+        public Connection(ReconnectingWebSocket ws)
         {
             _ws = ws;
             _ws.OnMessage = OnMessage;
@@ -85,7 +85,12 @@ namespace Pglet
             };
 
             var respPayload = await SendMessageWithResult(Actions.RegisterHostClient, payload, cancellationToken);
-            return JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
+            var result = JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
         }
 
         public async Task<PageCommandResponsePayload> SendCommand(string pageName, string sessionId, Command command, CancellationToken cancellationToken)
@@ -98,7 +103,12 @@ namespace Pglet
             };
 
             var respPayload = await SendMessageWithResult(Actions.PageCommandFromHost, payload, cancellationToken);
-            return JsonUtility.Deserialize<PageCommandResponsePayload>(respPayload);
+            var result = JsonUtility.Deserialize<PageCommandResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
         }
 
         public async Task<PageCommandsBatchResponsePayload> SendCommands(string pageName, string sessionId, List<Command> commands, CancellationToken cancellationToken)
@@ -111,7 +121,12 @@ namespace Pglet
             };
 
             var respPayload = await SendMessageWithResult(Actions.PageCommandsBatchFromHost, payload, cancellationToken);
-            return JsonUtility.Deserialize<PageCommandsBatchResponsePayload>(respPayload);
+            var result = JsonUtility.Deserialize<PageCommandsBatchResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
         }
 
         private Task<JObject> SendMessage(string actionName, object payload, CancellationToken cancellationToken)

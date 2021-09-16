@@ -43,7 +43,7 @@ namespace Pglet.Tests.Fx
 
                 Console.WriteLine("Session end");
 
-            }, "index", noWindow: true);
+            }, "page-aaa", noWindow: true);
         }
     }
 }

@@ -11,7 +11,8 @@ namespace Pglet
 {
     public class Page : Control
     {
-        readonly ConnectionWS _conn;
+        readonly Connection _conn;
+        readonly string _pageUrl;
         readonly string _pageName;
         readonly string _sessionId;
         List<Control> _controls = new List<Control>();
@@ -20,7 +21,7 @@ namespace Pglet
         ControlEvent _lastEvent;
         AutoResetEvent _resetEvent = new AutoResetEvent(false);
 
-        public ConnectionWS Connection
+        public Connection Connection
         {
             get { return _conn; }
         }
@@ -43,6 +44,11 @@ namespace Pglet
         protected override IEnumerable<Control> GetChildren()
         {
             return _controls;
+        }
+
+        public string Url
+        {
+            get { return _pageUrl; }
         }
 
         public string Title
@@ -180,10 +186,11 @@ namespace Pglet
 
         protected override string ControlName => "page";
 
-        public Page(ConnectionWS conn, string pageName, string sessionId)
+        public Page(Connection conn, string pageUrl, string pageName, string sessionId)
         {
             Uid = Id = "page";
             _conn = conn;
+            _pageUrl = pageUrl;
             _pageName = pageName;
             _sessionId = sessionId;
             _index[Id] = this;
