@@ -39,7 +39,7 @@ namespace Pglet.PowerShell
                 Host.UI.WriteLine(pageUrl);
             }
 
-            new PgletClient2().ServeApp((page) =>
+            new PgletClient().ServeApp((page) =>
             {
                 return Task.Run(() =>
                 {

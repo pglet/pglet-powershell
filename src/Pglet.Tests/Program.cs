@@ -24,7 +24,7 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient2 pgc = new PgletClient2();
+            PgletClient pgc = new PgletClient();
 
             var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token);
             await page.CleanAsync();
@@ -70,7 +70,7 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient2 pgc = new PgletClient2();
+            PgletClient pgc = new PgletClient();
             pgc.ServeApp(async (page) =>
             {
                 var txtName = new TextBox();
@@ -104,7 +104,7 @@ namespace Pglet.Tests
 
         private static async Task TestControls()
         {
-            var page = await PgletClient.ConnectPage("index", noWindow: true);
+            var page = await new PgletClient().ConnectPage("index", noWindow: true);
             await page.CleanAsync();
 
             page.Title = "Example 1";
@@ -354,7 +354,7 @@ namespace Pglet.Tests
 
         private static async Task TestApp()
         {
-            await PgletClient.ServeApp(async (page) =>
+            await new PgletClient().ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {
