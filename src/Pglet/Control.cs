@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -16,6 +17,8 @@ namespace Pglet
         }
 
         protected abstract string ControlName { get; }
+
+        protected ReaderWriterLockSlim _dataLock = new ReaderWriterLockSlim();
 
         private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
@@ -32,8 +35,14 @@ namespace Pglet
 
         public string Uid
         {
-            get { return _uid; }
-            internal set { _uid = value; }
+            get
+            {
+                return _uid;
+            }
+            internal set
+            {
+                _uid = value;
+            }
         }
 
         public string Id
@@ -82,11 +91,30 @@ namespace Pglet
         {
             get
             {
-                return _data;
+                var dlock = _dataLock;
+                dlock.EnterReadLock();
+                try
+                {
+                    return _data;
+                }
+                finally
+                {
+                    dlock.ExitReadLock();
+                }
             }
             set
             {
-                _data = value;
+                var dlock = _dataLock;
+                dlock.EnterWriteLock();
+                try
+                {
+                    _data = value;
+                }
+                finally
+                {
+                    dlock.ExitWriteLock();
+                }
+                
                 if (value != null)
                 {
                     SetAttr("data", value.ToString());
@@ -124,14 +152,23 @@ namespace Pglet
                 throw new Exception("Control must be added to the page first.");
             }
 
-            PreviousChildren.Clear();
-
-            foreach (var child in GetChildren())
+            var dlock = _dataLock;
+            dlock.EnterWriteLock();
+            try
             {
-                RemoveControlRecursively(_page.Index, child);
-            }
+                PreviousChildren.Clear();
 
-            await _page.SendCommand("clean", Uid);
+                foreach (var child in GetChildren())
+                {
+                    RemoveControlRecursively(_page.Index, child);
+                }
+
+                await _page.SendCommand("clean", Uid);
+            }
+            finally
+            {
+                dlock.ExitWriteLock();
+            }
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -184,32 +221,41 @@ namespace Pglet
 
         protected T GetEnumAttr<T>(string name) where T : struct
         {
-            if (_attrs.ContainsKey(name))
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
             {
-                if (Enum.TryParse(_attrs[name].Value, out T result))
+                if (_attrs.ContainsKey(name))
                 {
-                    return result;
-                }
-                else
-                {
-                    var strValue = _attrs[name].Value;
-                    foreach (var field in typeof(T).GetFields())
+                    if (Enum.TryParse(_attrs[name].Value, out T result))
                     {
-                        if (Attribute.GetCustomAttribute(field,
-                        typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
+                        return result;
+                    }
+                    else
+                    {
+                        var strValue = _attrs[name].Value;
+                        foreach (var field in typeof(T).GetFields())
                         {
-                            if (attribute.Description.Equals(strValue, StringComparison.OrdinalIgnoreCase))
-                                return (T)field.GetValue(null);
-                        }
-                        else
-                        {
-                            if (field.Name.Equals(strValue, StringComparison.OrdinalIgnoreCase))
-                                return (T)field.GetValue(null);
+                            if (Attribute.GetCustomAttribute(field,
+                            typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
+                            {
+                                if (attribute.Description.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                    return (T)field.GetValue(null);
+                            }
+                            else
+                            {
+                                if (field.Name.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                    return (T)field.GetValue(null);
+                            }
                         }
                     }
                 }
+                return default;
             }
-            return default;
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         protected void SetNullableIntAttr(string name, int? value)
@@ -219,7 +265,16 @@ namespace Pglet
 
         internal int? GetNullableIntAttr(string name)
         {
-            return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
+            {
+                return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
+            }
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         protected void SetIntAttr(string name, int value)
@@ -229,7 +284,16 @@ namespace Pglet
 
         internal int GetIntAttr(string name, int defValue = 0)
         {
-            return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
+            {
+                return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
+            }
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         protected void SetDateAttr(string name, DateTime? value)
@@ -239,7 +303,16 @@ namespace Pglet
 
         internal DateTime? GetDateAttr(string name)
         {
-            return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
+            {
+                return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
+            }
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         protected void SetBoolAttr(string name, bool value)
@@ -249,68 +322,113 @@ namespace Pglet
 
         internal bool GetBoolAttr(string name, bool defValue = false)
         {
-            return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
+            {
+                return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
+            }
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         internal virtual void SetAttr(string name, string value, bool dirty = true)
         {
-            string origValue = null;
-            if (_attrs.ContainsKey(name))
+            var dlock = _dataLock;
+            dlock.EnterWriteLock();
+            try
             {
-                origValue = _attrs[name].Value;
-            }
+                string origValue = null;
+                if (_attrs.ContainsKey(name))
+                {
+                    origValue = _attrs[name].Value;
+                }
 
-            if (String.IsNullOrEmpty(value) && origValue == null)
-            {
-                return;
-            }
+                if (String.IsNullOrEmpty(value) && origValue == null)
+                {
+                    return;
+                }
 
-            if (value == null)
-            {
-                value = "";
-            }
+                if (value == null)
+                {
+                    value = "";
+                }
 
-            if (value != origValue)
+                if (value != origValue)
+                {
+                    _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
+                }
+            }
+            finally
             {
-                _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
+                dlock.ExitWriteLock();
             }
         }
 
         protected string GetAttr(string name)
         {
-            return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
+            {
+                return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+            }
+            finally
+            {
+                dlock.ExitReadLock();
+            }
         }
 
         internal void SetAttr<T>(string name, T value, bool dirty = true) where T : notnull
         {
-            if (value != null)
+            var dlock = _dataLock;
+            dlock.EnterWriteLock();
+            try
             {
-                _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
+                if (value != null)
+                {
+                    _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
+                }
+            }
+            finally
+            {
+                dlock.ExitWriteLock();
             }
         }
 
         protected T GetAttr<T>(string name) where T :  notnull
         {
-            var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
-            if (sval == null)
+            var dlock = _dataLock;
+            dlock.EnterReadLock();
+            try
             {
-                return default(T);
+                var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+                if (sval == null)
+                {
+                    return default(T);
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    return int.TryParse(sval, out int result) ? (T)(object)result : (T)(object)0;
+                }
+                else if (typeof(T) == typeof(long))
+                {
+                    return long.TryParse(sval, out long result) ? (T)(object)result : (T)(object)0;
+                }
+                else if (typeof(T) == typeof(float))
+                {
+                    return float.TryParse(sval, out float result) ? (T)(object)result : (T)(object)0;
+                }
+                else
+                {
+                    return (T)(object)sval;
+                }
             }
-            else if (typeof(T) == typeof(int))
+            finally
             {
-                return int.TryParse(sval, out int result) ? (T)(object)result: (T)(object)0;
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                return long.TryParse(sval, out long result) ? (T)(object)result : (T)(object)0;
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                return float.TryParse(sval, out float result) ? (T)(object)result : (T)(object)0;
-            }
-            else
-            {
-                return (T)(object)sval;
+                dlock.ExitReadLock();
             }
         }
 
@@ -407,7 +525,7 @@ namespace Pglet
             index.Remove(control.Uid);
         }
 
-        internal List<Command> GetCommands(int indent = 0, Dictionary<string, Control> index = null, IList<Control> addedControls = null)
+        private List<Command> GetCommands(int indent = 0, Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
             // remove control from index
             if (_uid != null && index != null)
@@ -444,7 +562,7 @@ namespace Pglet
             return commands;
         }
 
-        protected Command GetCommandAttrs(bool update = false)
+        private Command GetCommandAttrs(bool update = false)
         {
             var command = new Command();
 
