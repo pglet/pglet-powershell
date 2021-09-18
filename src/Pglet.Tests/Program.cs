@@ -12,12 +12,41 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestJson();
-            //await TestPage2();
-            await TestApp2();
+            await TestPage2();
+            //await TestApp2();
             //TestDiffs();
             //await TestApp();
             //await TestControls();
             //await TestPage();
+        }
+
+        private static async Task TestPage1()
+        {
+            var cts = new CancellationTokenSource();
+
+            PgletClient pgc = new PgletClient();
+
+            var page = await pgc.ConnectPage("page-2", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
+            await page.CleanAsync();
+
+            var mainStack = new Stack
+            {
+                Controls =
+                {
+                    new Text { Value = "Line 1" }
+                }
+            };
+
+            await page.AddAsync(mainStack);
+
+            mainStack.Controls.Add(new Text { Value = "Line 2" });
+            //mainStack.Controls.RemoveAt(0);
+            mainStack.Controls.Insert(0, new Text { Value = "Line 0" });
+
+            await page.UpdateAsync();
+
+            ////Console.ReadLine();
+            await Task.Delay(200000);
         }
 
         private static async Task TestPage2()
@@ -26,7 +55,7 @@ namespace Pglet.Tests
 
             PgletClient pgc = new PgletClient();
 
-            var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token);
+            var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
             var txtName = new TextBox();
@@ -62,7 +91,7 @@ namespace Pglet.Tests
             mainStack.Controls.Insert(0, txtName);
             await page.UpdateAsync();
 
-            //Console.ReadLine();
+            ////Console.ReadLine();
             await Task.Delay(200000);
         }
 
@@ -76,7 +105,7 @@ namespace Pglet.Tests
                 var txtName = new TextBox();
                 var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
                 await page.AddAsync(txtName, submitBtn);
-            }, "app-1", serverUrl: "http://localhost:3000", cancellationToken: cts.Token).Wait();
+            }, "app-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token).Wait();
 
             //Console.ReadLine();
             await Task.Delay(200000);
