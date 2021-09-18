@@ -27,9 +27,9 @@ namespace Pglet.Controls
             _obj = obj;
         }
 
-        internal override void SetAttr(string name, string value, bool dirty = true)
+        internal override void SetAttrInternal(string name, string value, bool dirty = true)
         {
-            base.SetAttr(name, value, false);
+            base.SetAttrInternal(name, value, false);
 
             var prop = _obj.GetType().GetProperty(GridHelper.DecodeReservedProperty(name), BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (prop != null)
@@ -116,7 +116,7 @@ namespace Pglet.Controls
                     {
                         if (String.Equals(keyFieldName, propName, StringComparison.OrdinalIgnoreCase))
                         {
-                            this.Id = sval;
+                            this._id = sval;
                         }
                         base.SetAttr(GridHelper.EncodeReservedProperty(propName), sval, dirty: true);
                     }

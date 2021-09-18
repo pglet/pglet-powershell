@@ -18,11 +18,12 @@ namespace Pglet
 
         protected abstract string ControlName { get; }
 
-        protected AsyncReaderWriterLock _dataLock = new AsyncReaderWriterLock();
+        protected AsyncReaderWriterLock _dataLock;
 
         readonly private Dictionary<string, AttrValue> _attrs = new(StringComparer.OrdinalIgnoreCase);
         readonly private Dictionary<string, EventHandler> _eventHandlers = new(StringComparer.OrdinalIgnoreCase);
         readonly protected List<Control> _previousChildren = new(); // hash codes of previous children
+        protected string _id;
         private string _uid;
         private Page _page;
         private object _data;
@@ -35,19 +36,73 @@ namespace Pglet
 
         public string Uid
         {
-            get { return _uid; }
-            internal set { _uid = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _uid;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
         }
 
-        internal virtual void SetDataLock(AsyncReaderWriterLock dataLock)
+        internal string UniqueId
         {
-            _dataLock = dataLock;
+            get { return _uid; }
+            set { _uid = value; }
+        }
+
+        internal void SetDataLock(AsyncReaderWriterLock dataLock)
+        {
+            if (_dataLock != dataLock)
+            {
+                _dataLock = dataLock;
+                SetChildDataLocks(dataLock);
+            }
+        }
+
+        internal virtual void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+        }
+
+        public Control()
+        {
+            SetDataLock(new AsyncReaderWriterLock());
         }
 
         public string Id
         {
-            get { return GetAttr("id"); }
-            set { SetAttr("id", value); }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _id;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _id = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         public string Width
@@ -108,15 +163,11 @@ namespace Pglet
                 try
                 {
                     _data = value;
+                    SetAttrInternal("data", value.ToString());
                 }
                 finally
                 {
                     dlock.ReleaseWriterLock();
-                }
-                
-                if (value != null)
-                {
-                    SetAttr("data", value.ToString());
                 }
             }
         }
@@ -162,7 +213,7 @@ namespace Pglet
                     RemoveControlRecursively(_page.Index, child);
                 }
 
-                await _page.SendCommand("clean", Uid);
+                await _page.SendCommand("clean", _uid);
             }
             finally
             {
@@ -328,36 +379,41 @@ namespace Pglet
             }
         }
 
-        internal virtual void SetAttr(string name, string value, bool dirty = true)
+        internal void SetAttr(string name, string value, bool dirty = true)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();
             try
             {
-                string origValue = null;
-                if (_attrs.ContainsKey(name))
-                {
-                    origValue = _attrs[name].Value;
-                }
-
-                if (String.IsNullOrEmpty(value) && origValue == null)
-                {
-                    return;
-                }
-
-                if (value == null)
-                {
-                    value = "";
-                }
-
-                if (value != origValue)
-                {
-                    _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
-                }
+                SetAttrInternal(name, value, dirty);
             }
             finally
             {
                 dlock.ReleaseWriterLock();
+            }
+        }
+
+        internal virtual void SetAttrInternal(string name, string value, bool dirty = true)
+        {
+            string origValue = null;
+            if (_attrs.ContainsKey(name))
+            {
+                origValue = _attrs[name].Value;
+            }
+
+            if (String.IsNullOrEmpty(value) && origValue == null)
+            {
+                return;
+            }
+
+            if (value == null)
+            {
+                value = "";
+            }
+
+            if (value != origValue)
+            {
+                _attrs[name] = new AttrValue { Value = value, IsDirty = dirty };
             }
         }
 
@@ -477,7 +533,7 @@ namespace Pglet
                 {
                     var deletedControl = previousHashes[previousInts[item.StartA + m]];
                     RemoveControlRecursively(index, deletedControl);
-                    deletedIds.Add(deletedControl.Uid);
+                    deletedIds.Add(deletedControl.UniqueId);
                 }
                 if (deletedIds.Count > 0)
                 {
@@ -488,7 +544,7 @@ namespace Pglet
                 while (n < item.StartB + item.insertedB)
                 {
                     var addCmd = new Command { Name = "add" };
-                    addCmd.Attrs["to"] = this.Uid;
+                    addCmd.Attrs["to"] = this.UniqueId;
                     addCmd.Attrs["at"] = n.ToString();
                     addCmd.Commands = currentHashes[currentInts[n]].GetCommands(index: index, addedControls: addedControls);
                     commands.Add(addCmd);
@@ -516,7 +572,7 @@ namespace Pglet
             }
 
             // remove control itself
-            index.Remove(control.Uid);
+            index.Remove(control.UniqueId);
         }
 
         private List<Command> GetCommands(int indent = 0, Dictionary<string, Control> index = null, IList<Control> addedControls = null)
@@ -578,9 +634,9 @@ namespace Pglet
                 _attrs[attrName].IsDirty = false;
             }
 
-            if (!update && Id != null)
+            if (!update && _id != null)
             {
-                command.Attrs["id"] = Id;
+                command.Attrs["id"] = _id;
             }
             else if (update && command.Attrs.Count > 0)
             {

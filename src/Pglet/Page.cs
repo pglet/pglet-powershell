@@ -45,6 +45,11 @@ namespace Pglet
             }
         }
 
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _controls.SetDataLock(dataLock);
+        }
+
         internal Dictionary<string, Control> Index
         {
             get { return _index; }
@@ -52,7 +57,7 @@ namespace Pglet
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetEnumeratorInternal();
+            return _controls.GetControls();
         }
 
         public string Url
@@ -195,25 +200,14 @@ namespace Pglet
 
         protected override string ControlName => "page";
 
-        internal override void SetDataLock(AsyncReaderWriterLock dataLock)
+        public Page(Connection conn, string pageUrl, string pageName, string sessionId) : base()
         {
-            base.SetDataLock(dataLock);
-            _controls.SetDataLock(dataLock);
-        }
-
-        public Page()
-        {
-            SetDataLock(_dataLock);
-        }
-
-        public Page(Connection conn, string pageUrl, string pageName, string sessionId) : this()
-        {
-            Uid = Id = "page";
+            UniqueId = _id = "page";
             _conn = conn;
             _pageUrl = pageUrl;
             _pageName = pageName;
             _sessionId = sessionId;
-            _index[Id] = this;
+            _index[UniqueId] = this;
         }
 
         internal async Task LoadHash()
@@ -284,7 +278,7 @@ namespace Pglet
                 int n = 0;
                 foreach (var id in ids.SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
                 {
-                    addedControls[n].Uid = id;
+                    addedControls[n].UniqueId = id;
                     addedControls[n].Page = this;
 
                     // add to index
@@ -403,7 +397,7 @@ namespace Pglet
                     RemoveControlRecursively(_index, child);
                 }
 
-                await SendCommand("clean", Uid);
+                await SendCommand("clean", UniqueId);
             }
             finally
             {
@@ -436,17 +430,26 @@ namespace Pglet
             // update control properties
             if (e.Target == "page" && e.Name == "change")
             {
-                var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
-                foreach (var props in allProps)
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
                 {
-                    var id = props["i"];
-                    if (_index.ContainsKey(id))
+                    var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
+                    foreach (var props in allProps)
                     {
-                        foreach (var key in props.Keys.Where(k => k != "i"))
+                        var id = props["i"];
+                        if (_index.ContainsKey(id))
                         {
-                            _index[id].SetAttr(key, props[key], dirty: false);
+                            foreach (var key in props.Keys.Where(k => k != "i"))
+                            {
+                                _index[id].SetAttrInternal(key, props[key], dirty: false);
+                            }
                         }
                     }
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
                 }
             }
             // call event handlers

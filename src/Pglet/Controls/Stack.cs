@@ -9,9 +9,8 @@ namespace Pglet.Controls
 
         ControlCollection _controls = new();
 
-        internal override void SetDataLock(AsyncReaderWriterLock dataLock)
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
         {
-            base.SetDataLock(dataLock);
             _controls.SetDataLock(dataLock);
         }
 
@@ -147,7 +146,7 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetEnumeratorInternal();
+            return _controls.GetControls();
         }
 
         public override async Task CleanAsync()

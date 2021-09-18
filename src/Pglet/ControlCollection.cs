@@ -13,6 +13,10 @@ namespace Pglet
         internal void SetDataLock(AsyncReaderWriterLock dataLock)
         {
             _dataLock = dataLock;
+            foreach(var control in _list)
+            {
+                control.SetDataLock(dataLock);
+            }
         }
 
         public Control this[int index] {
@@ -35,6 +39,7 @@ namespace Pglet
                 dlock.AcquireWriterLock();
                 try
                 {
+                    value.SetDataLock(_dataLock);
                     _list[index] = value;
                 }
                 finally
@@ -69,6 +74,7 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
+                item.SetDataLock(_dataLock);
                 _list.Add(item);
             }
             finally
@@ -83,7 +89,11 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
-                _list.AddRange(items);
+                foreach(var item in items)
+                {
+                    item.SetDataLock(_dataLock);
+                    _list.Add(item);
+                }
             }
             finally
             {
@@ -97,6 +107,10 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
+                foreach (var item in _list)
+                {
+                    item.SetDataLock(new AsyncReaderWriterLock());
+                }
                 _list.Clear();
             }
             finally
@@ -133,7 +147,7 @@ namespace Pglet
             }
         }
 
-        internal IEnumerable<Control> GetEnumeratorInternal()
+        internal IEnumerable<Control> GetControls()
         {
             return _list;
         }
@@ -186,6 +200,7 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
+                item.SetDataLock(_dataLock);
                 _list.Insert(index, item);
             }
             finally
@@ -200,7 +215,12 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
-                _list.InsertRange(index, items);
+                int i = index;
+                foreach(var item in items)
+                {
+                    item.SetDataLock(_dataLock);
+                    _list.Insert(i++, item);
+                }
             }
             finally
             {
@@ -214,6 +234,7 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
+                item.SetDataLock(new AsyncReaderWriterLock());
                 return _list.Remove(item);
             }
             finally
@@ -228,6 +249,7 @@ namespace Pglet
             dlock.AcquireWriterLock();
             try
             {
+                _list[index].SetDataLock(new AsyncReaderWriterLock());
                 _list.RemoveAt(index);
             }
             finally
