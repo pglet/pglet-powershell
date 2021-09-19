@@ -107,7 +107,7 @@ namespace Pglet.Controls
         protected override IEnumerable<Control> GetChildren()
         {
             var controls = new List<Control>();
-            controls.AddRange(_controls.GetControls());
+            controls.AddRange(_controls.GetInternalList());
             controls.Add(_footer);
             return controls;
         }

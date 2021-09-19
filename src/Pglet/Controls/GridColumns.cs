@@ -46,7 +46,7 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _columns.GetControls();
+            return _columns.GetInternalList();
         }
     }
 }

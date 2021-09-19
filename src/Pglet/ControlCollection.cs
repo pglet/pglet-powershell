@@ -150,7 +150,7 @@ namespace Pglet
             }
         }
 
-        internal IEnumerable<Control> GetControls()
+        internal IList<T> GetInternalList()
         {
             return _list;
         }

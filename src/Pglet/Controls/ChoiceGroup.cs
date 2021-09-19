@@ -63,7 +63,7 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _options.GetControls();
+            return _options.GetInternalList();
         }
     }
 }

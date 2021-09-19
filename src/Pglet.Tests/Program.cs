@@ -12,11 +12,11 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestJson();
-            _ = TestPage2();
+            //_ = TestPage2();
             //await TestApp2();
             //TestDiffs();
             //await TestApp();
-            //await TestControls();
+            _ = TestControls();
             //await TestPage();
 
             Console.WriteLine("ENTER to exit...");
@@ -136,7 +136,7 @@ namespace Pglet.Tests
 
         private static async Task TestControls()
         {
-            var page = await new PgletClient().ConnectPage("index", noWindow: true);
+            Page page = await new PgletClient().ConnectPage("controls-1", serverUrl: "http://localhost:5000", noWindow: true);
             await page.CleanAsync();
 
             page.Title = "Example 1";
@@ -277,6 +277,7 @@ namespace Pglet.Tests
             // 2nd update
             await page.UpdateAsync();
 
+            
             // BarChart
             stack.Controls.Add(new BarChart
             {
@@ -289,7 +290,7 @@ namespace Pglet.Tests
             });
             await stack.UpdateAsync();
 
-
+            
             var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
             var p2 = new Person { FirstName = "Samantha", LastName = "Fox", Age = 43, Employee = false };
             var p3 = new Person { FirstName = "Alice", LastName = "Brown", Age = 25, Employee = true };
@@ -367,7 +368,7 @@ namespace Pglet.Tests
                 }
             };
 
-            page.Add(grid, btnAddRecord, btnShowRecords);
+            await page.AddAsync(grid, btnAddRecord, btnShowRecords);
 
             //await Task.Delay(5000);
             //testBtn.OnClick = null;
@@ -379,9 +380,7 @@ namespace Pglet.Tests
 
             // 3rd update
             //await page.Clean();
-
-            Console.WriteLine("Press ENTER to exit...");
-            Console.ReadLine();
+            
         }
 
         private static async Task TestApp()

@@ -124,7 +124,7 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _menuItems.GetControls();
+            return _menuItems.GetInternalList();
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Pglet
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetControls();
+            return _controls.GetInternalList();
         }
 
         public string Url
