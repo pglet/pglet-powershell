@@ -7,17 +7,42 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "stack";
 
-        ControlCollection _controls = new();
+        ControlCollection<Control> _controls = new();
 
         internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
         {
             _controls.SetDataLock(dataLock);
         }
 
-        public ControlCollection Controls
+        public ControlCollection<Control> Controls
         {
-            get { return _controls; }
-            set { _controls = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _controls;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _controls.SetDataLock(_dataLock);
+                    _controls = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         public bool Horizontal

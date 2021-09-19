@@ -13,7 +13,7 @@ namespace Pglet.Controls
         readonly GridItems _items = new();
         IList<object> _selectedItems = new List<object>();
 
-        public IList<GridColumn> Columns
+        public ControlCollection<GridColumn> Columns
         {
             get { return _columns.Columns; }
             set { _columns.Columns = value; }
@@ -27,7 +27,19 @@ namespace Pglet.Controls
 
         public IList<object> SelectedItems
         {
-            get { return _selectedItems; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _selectedItems;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
         }
 
         public GridSelectionMode SelectionMode
@@ -89,16 +101,22 @@ namespace Pglet.Controls
             set { SetEventHandler("itemInvoke", value); }
         }
 
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _columns.SetDataLock(dataLock);
+            _items.SetDataLock(dataLock);
+        }
+
         protected override IEnumerable<Control> GetChildren()
         {
-            if (_columns.Columns.Count == 0 && _items.Items.Count > 0)
+            if (_columns._columns.Count == 0 && _items.Items.Count > 0)
             {
                 // auto-generate columns
-                _columns.Columns = GridHelper.GenerateColumns(_items.Items[0]);
+                _columns._columns = GridHelper.GenerateColumns(_items.Items[0]);
             }
 
             var fetchPropNames = new List<string>();
-            foreach(var column in _columns.Columns)
+            foreach(var column in _columns._columns)
             {
                 if (column.TemplateControls.Count == 0)
                 {
@@ -111,7 +129,7 @@ namespace Pglet.Controls
                 }
             }
 
-            foreach (var column in _columns.Columns)
+            foreach (var column in _columns._columns)
             {
                 column.FieldName = GridHelper.EncodeReservedProperty(column.FieldName);
             }
@@ -129,8 +147,17 @@ namespace Pglet.Controls
 
         protected void OnSelectInternal(ControlEvent e)
         {
-            _selectedItems = e.Data.Split(' ').Where(id => id != "").Select(id => (this.Page.GetControl(id) as GridItem).Obj).ToList();
-            _onSelectHandler?.Invoke(e);
+            var dlock = _dataLock;
+            dlock.AcquireWriterLock();
+            try
+            {
+                _selectedItems = e.Data.Split(' ').Where(id => id != "").Select(id => (this.Page.GetControl(id) as GridItem).Obj).ToList();
+                _onSelectHandler?.Invoke(e);
+            }
+            finally
+            {
+                dlock.ReleaseWriterLock();
+            }
         }
     }
 }

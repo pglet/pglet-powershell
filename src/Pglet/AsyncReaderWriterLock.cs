@@ -113,5 +113,10 @@ namespace Pglet
             _writeSemaphore.Dispose();
             _readSemaphore.Dispose();
         }
+
+        public override string ToString()
+        {
+            return GetHashCode().ToString();
+        }
     }
 }

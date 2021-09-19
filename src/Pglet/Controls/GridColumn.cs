@@ -72,16 +72,46 @@ namespace Pglet.Controls
             set { SetEventHandler("click", value); }
         }
 
-        IList<Control> _templateControls = new List<Control>();
-        public IList<Control> TemplateControls
+        ControlCollection<Control> _templateControls = new();
+        public ControlCollection<Control> TemplateControls
         {
-            get { return _templateControls; }
-            set { _templateControls = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _templateControls;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _templateControls.SetDataLock(_dataLock);
+                    _templateControls = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
+        }
+
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _templateControls.SetDataLock(dataLock);
         }
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _templateControls;
+            return _templateControls.GetControls();
         }
     }
 }

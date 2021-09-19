@@ -8,7 +8,7 @@ namespace Pglet.Controls
 
         readonly BarChartData _data = new();
 
-        public IList<BarChartDataPoint> Points
+        public ControlCollection<BarChartDataPoint> Points
         {
             get { return _data.Points; }
             set { _data.Points = value; }
@@ -24,6 +24,11 @@ namespace Pglet.Controls
         {
             get { return GetBoolAttr("tooltips"); }
             set { SetBoolAttr("tooltips", value); }
+        }
+
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _data.SetDataLock(dataLock);
         }
 
         protected override IEnumerable<Control> GetChildren()

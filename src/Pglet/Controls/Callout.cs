@@ -6,12 +6,37 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "callout";
 
-        IList<Control> _controls = new List<Control>();
+        ControlCollection<Control> _controls = new();
 
-        public IList<Control> Controls
+        public ControlCollection<Control> Controls
         {
-            get { return _controls; }
-            set { _controls = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _controls;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _controls.SetDataLock(_dataLock);
+                    _controls = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         public EventHandler OnDismiss
@@ -68,9 +93,14 @@ namespace Pglet.Controls
             set { SetBoolAttr("cover", value); }
         }
 
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _controls.SetDataLock(dataLock);
+        }
+
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls;
+            return _controls.GetControls();
         }
     }
 }

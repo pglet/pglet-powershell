@@ -6,11 +6,36 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "dropdown";
 
-        IList<DropdownOption> _options = new List<DropdownOption>();
-        public IList<DropdownOption> Options
+        ControlCollection<DropdownOption> _options = new();
+        public ControlCollection<DropdownOption> Options
         {
-            get { return _options; }
-            set { _options = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _options;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _options.SetDataLock(_dataLock);
+                    _options = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         public string Value
@@ -43,9 +68,14 @@ namespace Pglet.Controls
             set { SetEventHandler("change", value); }
         }
 
+        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
+        {
+            _options.SetDataLock(dataLock);
+        }
+
         protected override IEnumerable<Control> GetChildren()
         {
-            return _options;
+            return _options.GetControls();
         }
     }
 }

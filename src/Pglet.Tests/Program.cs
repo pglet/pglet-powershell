@@ -12,12 +12,15 @@ namespace Pglet.Tests
         static async Task Main(string[] args)
         {
             //TestJson();
-            await TestPage2();
+            _ = TestPage2();
             //await TestApp2();
             //TestDiffs();
             //await TestApp();
             //await TestControls();
             //await TestPage();
+
+            Console.WriteLine("ENTER to exit...");
+            Console.ReadLine();
         }
 
         private static async Task TestPage1()
@@ -91,8 +94,8 @@ namespace Pglet.Tests
             mainStack.Controls.Insert(0, txtName);
             await page.UpdateAsync();
 
-            ////Console.ReadLine();
-            await Task.Delay(200000);
+
+            //await Task.Delay(200000);
         }
 
         private static async Task TestApp2()

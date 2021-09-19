@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Pglet
 {
-    public class ControlCollection : IList<Control>
+    public class ControlCollection<T> : IList<T> where T: Control
     {
-        readonly List<Control> _list = new List<Control>();
+        readonly List<T> _list = new List<T>();
         protected AsyncReaderWriterLock _dataLock = new AsyncReaderWriterLock();
 
         internal void SetDataLock(AsyncReaderWriterLock dataLock)
@@ -22,14 +22,14 @@ namespace Pglet
             }
         }
 
-        public Control this[int index] {
+        public T this[int index] {
             get
             {
                 var dlock = _dataLock;
                 dlock.AcquireReaderLock();
                 try
                 {
-                    return _list[index];
+                    return (T)_list[index];
                 }
                 finally
                 {
@@ -71,7 +71,7 @@ namespace Pglet
 
         public bool IsReadOnly => false;
 
-        public void Add(Control item)
+        public void Add(T item)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();
@@ -86,7 +86,7 @@ namespace Pglet
             }
         }
 
-        public void AddRange(IEnumerable<Control> items)
+        public void AddRange(IEnumerable<T> items)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();
@@ -122,7 +122,7 @@ namespace Pglet
             }
         }
 
-        public bool Contains(Control item)
+        public bool Contains(T item)
         {
             var dlock = _dataLock;
             dlock.AcquireReaderLock();
@@ -136,7 +136,7 @@ namespace Pglet
             }
         }
 
-        public void CopyTo(Control[] array, int arrayIndex)
+        public void CopyTo(T[] array, int arrayIndex)
         {
             var dlock = _dataLock;
             dlock.AcquireReaderLock();
@@ -155,7 +155,7 @@ namespace Pglet
             return _list;
         }
 
-        public IEnumerator<Control> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
         {
             var dlock = _dataLock;
             dlock.AcquireReaderLock();
@@ -183,7 +183,7 @@ namespace Pglet
             }
         }
 
-        public int IndexOf(Control item)
+        public int IndexOf(T item)
         {
             var dlock = _dataLock;
             dlock.AcquireReaderLock();
@@ -197,7 +197,7 @@ namespace Pglet
             }
         }
 
-        public void Insert(int index, Control item)
+        public void Insert(int index, T item)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();
@@ -212,7 +212,7 @@ namespace Pglet
             }
         }
 
-        public void InsertRange(int index, IEnumerable<Control> items)
+        public void InsertRange(int index, IEnumerable<T> items)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();
@@ -231,7 +231,7 @@ namespace Pglet
             }
         }
 
-        public bool Remove(Control item)
+        public bool Remove(T item)
         {
             var dlock = _dataLock;
             dlock.AcquireWriterLock();

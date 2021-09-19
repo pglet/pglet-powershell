@@ -15,7 +15,7 @@ namespace Pglet
         readonly string _pageUrl;
         readonly string _pageName;
         readonly string _sessionId;
-        readonly ControlCollection _controls = new();
+        readonly ControlCollection<Control> _controls = new();
         readonly Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
 
         ControlEvent _lastEvent;
@@ -26,9 +26,21 @@ namespace Pglet
             get { return _conn; }
         }
 
-        public ControlCollection Controls
+        public ControlCollection<Control> Controls
         {
-            get { return _controls; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _controls;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
         }
 
         public Control GetControl(string id)

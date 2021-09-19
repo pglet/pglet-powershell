@@ -7,15 +7,67 @@
         object _x;
         public object X
         {
-            get { return _x; }
-            set { SetAttr("x", value); _x = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _x;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                SetAttr("x", value);
+
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _x = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         object _y;
         public object Y
         {
-            get { return _y; }
-            set { SetAttr("y", value); _y = value; }
+            get
+            {
+                var dlock = _dataLock;
+                dlock.AcquireReaderLock();
+                try
+                {
+                    return _y;
+                }
+                finally
+                {
+                    dlock.ReleaseReaderLock();
+                }
+            }
+            set
+            {
+                SetAttr("y", value);
+
+                var dlock = _dataLock;
+                dlock.AcquireWriterLock();
+                try
+                {
+                    _y = value;
+                }
+                finally
+                {
+                    dlock.ReleaseWriterLock();
+                }
+            }
         }
 
         public string Legend
