@@ -381,15 +381,9 @@ namespace Pglet
 
         internal void SetAttr(string name, string value, bool dirty = true)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 SetAttrInternal(name, value, dirty);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
@@ -419,32 +413,20 @@ namespace Pglet
 
         protected string GetAttr(string name)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
         internal void SetAttr<T>(string name, T value, bool dirty = true) where T : notnull
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 if (value != null)
                 {
                     _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
                 }
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 

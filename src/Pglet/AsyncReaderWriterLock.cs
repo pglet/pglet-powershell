@@ -24,12 +24,51 @@ namespace Pglet
         readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
         int _readerCount;
 
-        public void AcquireWriterLock(CancellationToken token = default)
+        public class WriterLock : IDisposable
+        {
+            AsyncReaderWriterLock _asyncLock;
+            public WriterLock(AsyncReaderWriterLock asyncLock)
+            {
+                _asyncLock = asyncLock;
+            }
+
+            public void Release()
+            {
+                _asyncLock.ReleaseWriterLock();
+            }
+
+            public void Dispose()
+            {
+                Release();
+            }
+        }
+
+        public class ReaderLock : IDisposable
+        {
+            AsyncReaderWriterLock _asyncLock;
+            public ReaderLock(AsyncReaderWriterLock asyncLock)
+            {
+                _asyncLock = asyncLock;
+            }
+
+            public void Release()
+            {
+                _asyncLock.ReleaseReaderLock();
+            }
+
+            public void Dispose()
+            {
+                Release();
+            }
+        }
+
+        public WriterLock AcquireWriterLock(CancellationToken token = default)
         {
             _writeSemaphore.Wait(token);
             try
             {
                 _readSemaphore.Wait(token);
+                return new WriterLock(this);
             }
             catch
             {
@@ -38,12 +77,13 @@ namespace Pglet
             }
         }
 
-        public async Task AcquireWriterLockAsync(CancellationToken token = default)
+        public async Task<WriterLock> AcquireWriterLockAsync(CancellationToken token = default)
         {
             await _writeSemaphore.WaitAsync(token).ConfigureAwait(false);
             try
             {
                 await _readSemaphore.WaitAsync(token).ConfigureAwait(false);
+                return new WriterLock(this);
             }
             catch
             {
@@ -58,7 +98,7 @@ namespace Pglet
             _writeSemaphore.Release();
         }
 
-        public void AcquireReaderLock(CancellationToken token = default)
+        public ReaderLock AcquireReaderLock(CancellationToken token = default)
         {
             _writeSemaphore.Wait(token);
 
@@ -77,9 +117,10 @@ namespace Pglet
             }
 
             _writeSemaphore.Release();
+            return new ReaderLock(this);
         }
 
-        public async Task AcquireReaderLockAsync(CancellationToken token = default)
+        public async Task<ReaderLock> AcquireReaderLockAsync(CancellationToken token = default)
         {
             await _writeSemaphore.WaitAsync(token).ConfigureAwait(false);
 
@@ -98,6 +139,7 @@ namespace Pglet
             }
 
             _writeSemaphore.Release();
+            return new ReaderLock(this);
         }
 
         public void ReleaseReaderLock()
