@@ -12,10 +12,13 @@ namespace Pglet
 
         internal void SetDataLock(AsyncReaderWriterLock dataLock)
         {
-            _dataLock = dataLock;
-            foreach(var control in _list)
+            if (_dataLock != dataLock)
             {
-                control.SetDataLock(dataLock);
+                _dataLock = dataLock;
+                foreach (var control in _list)
+                {
+                    control.SetDataLock(dataLock);
+                }
             }
         }
 
