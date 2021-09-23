@@ -12,29 +12,17 @@ namespace Pglet.Controls
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _points;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     _points.SetDataLock(_dataLock);
                     _points = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }

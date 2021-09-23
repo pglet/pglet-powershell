@@ -290,6 +290,7 @@ namespace Pglet.Tests
             });
             await stack.UpdateAsync();
 
+            return;
             
             var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
             var p2 = new Person { FirstName = "Samantha", LastName = "Fox", Age = 43, Employee = false };

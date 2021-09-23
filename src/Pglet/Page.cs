@@ -30,30 +30,18 @@ namespace Pglet
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _controls;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
         }
 
         public Control GetControl(string id)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _index.ContainsKey(id) ? _index[id] : null;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -398,9 +386,7 @@ namespace Pglet
 
         public override async Task CleanAsync()
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 _previousChildren.Clear();
 
@@ -410,10 +396,6 @@ namespace Pglet
                 }
 
                 await SendCommand("clean", UniqueId);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
@@ -442,9 +424,7 @@ namespace Pglet
             // update control properties
             if (e.Target == "page" && e.Name == "change")
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
                     foreach (var props in allProps)
@@ -458,10 +438,6 @@ namespace Pglet
                             }
                         }
                     }
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
             // call event handlers

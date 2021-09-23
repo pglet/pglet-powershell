@@ -11,29 +11,17 @@ namespace Pglet.Controls
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _controls;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     _controls.SetDataLock(_dataLock);
                     _controls = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }

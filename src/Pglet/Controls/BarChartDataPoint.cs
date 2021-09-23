@@ -9,30 +9,18 @@
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _x;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
                 SetAttr("x", value);
 
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     _x = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }
@@ -42,30 +30,18 @@
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _y;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
                 SetAttr("y", value);
 
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     _y = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }

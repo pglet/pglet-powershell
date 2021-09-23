@@ -25,29 +25,17 @@ namespace Pglet
         public T this[int index] {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
-                    return (T)_list[index];
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
+                    return _list[index];
                 }
             }
             set
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     value.SetDataLock(_dataLock);
                     _list[index] = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }
@@ -56,15 +44,9 @@ namespace Pglet
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _list.Count;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
         }
@@ -73,42 +55,28 @@ namespace Pglet
 
         public void Add(T item)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 item.SetDataLock(_dataLock);
                 _list.Add(item);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
         public void AddRange(IEnumerable<T> items)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
-                foreach(var item in items)
+                foreach (var item in items)
                 {
                     item.SetDataLock(_dataLock);
                     _list.Add(item);
                 }
             }
-            finally
-            {
-                dlock.ReleaseWriterLock();
-            }
         }
 
         public void Clear()
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 foreach (var item in _list)
                 {
@@ -116,37 +84,21 @@ namespace Pglet
                 }
                 _list.Clear();
             }
-            finally
-            {
-                dlock.ReleaseWriterLock();
-            }
         }
 
         public bool Contains(T item)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _list.Contains(item);
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 _list.CopyTo(array, arrayIndex);
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -157,107 +109,65 @@ namespace Pglet
 
         public IEnumerator<T> GetEnumerator()
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _list.GetEnumerator();
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _list.GetEnumerator();
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
         public int IndexOf(T item)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _list.IndexOf(item);
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
         public void Insert(int index, T item)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 item.SetDataLock(_dataLock);
                 _list.Insert(index, item);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
         public void InsertRange(int index, IEnumerable<T> items)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 int i = index;
-                foreach(var item in items)
+                foreach (var item in items)
                 {
                     item.SetDataLock(_dataLock);
                     _list.Insert(i++, item);
                 }
             }
-            finally
-            {
-                dlock.ReleaseWriterLock();
-            }
         }
 
         public bool Remove(T item)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 item.SetDataLock(new AsyncReaderWriterLock());
                 return _list.Remove(item);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
         public void RemoveAt(int index)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 _list[index].SetDataLock(new AsyncReaderWriterLock());
                 _list.RemoveAt(index);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
     }

@@ -38,15 +38,9 @@ namespace Pglet
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _uid;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
         }
@@ -79,28 +73,16 @@ namespace Pglet
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _id;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     _id = value;
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }
@@ -145,29 +127,17 @@ namespace Pglet
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
+                using (var lck = _dataLock.AcquireReaderLock())
                 {
                     return _data;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
                 }
             }
             set
             {
-                var dlock = _dataLock;
-                dlock.AcquireWriterLock();
-                try
+                using (var lck = _dataLock.AcquireWriterLock())
                 {
                     _data = value;
                     SetAttrInternal("data", value.ToString());
-                }
-                finally
-                {
-                    dlock.ReleaseWriterLock();
                 }
             }
         }
@@ -202,9 +172,7 @@ namespace Pglet
                 throw new Exception("Control must be added to the page first.");
             }
 
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
+            using (var lck = _dataLock.AcquireWriterLock())
             {
                 _previousChildren.Clear();
 
@@ -214,10 +182,6 @@ namespace Pglet
                 }
 
                 await _page.SendCommand("clean", _uid);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
             }
         }
 
@@ -266,9 +230,7 @@ namespace Pglet
 
         protected T GetEnumAttr<T>(string name) where T : struct
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 if (_attrs.ContainsKey(name))
                 {
@@ -297,10 +259,6 @@ namespace Pglet
                 }
                 return default;
             }
-            finally
-            {
-                dlock.ReleaseReaderLock();
-            }
         }
 
         protected void SetNullableIntAttr(string name, int? value)
@@ -310,15 +268,9 @@ namespace Pglet
 
         internal int? GetNullableIntAttr(string name)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -329,15 +281,9 @@ namespace Pglet
 
         internal int GetIntAttr(string name, int defValue = 0)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -348,15 +294,9 @@ namespace Pglet
 
         internal DateTime? GetDateAttr(string name)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -367,15 +307,9 @@ namespace Pglet
 
         internal bool GetBoolAttr(string name, bool defValue = false)
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
@@ -432,9 +366,7 @@ namespace Pglet
 
         protected T GetAttr<T>(string name) where T :  notnull
         {
-            var dlock = _dataLock;
-            dlock.AcquireReaderLock();
-            try
+            using (var lck = _dataLock.AcquireReaderLock())
             {
                 var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
                 if (sval == null)
@@ -457,10 +389,6 @@ namespace Pglet
                 {
                     return (T)(object)sval;
                 }
-            }
-            finally
-            {
-                dlock.ReleaseReaderLock();
             }
         }
 
