@@ -107,7 +107,10 @@ namespace Pglet
             set
             {
                 _data = value;
-                SetAttrInternal("data", value.ToString());
+                if (value != null)
+                {
+                    SetAttrInternal("data", value.ToString());
+                }
             }
         }
 
