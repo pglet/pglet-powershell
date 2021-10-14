@@ -7,29 +7,18 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "stack";
 
-        ControlCollection<Control> _controls = new();
+        IList<Control> _controls = new List<Control>();
 
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _controls.SetDataLock(dataLock);
-        }
 
-        public ControlCollection<Control> Controls
+        public IList<Control> Controls
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _controls;
-                }
+                return _controls;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _controls.SetDataLock(_dataLock);
-                    _controls = value;
-                }
+                _controls = value;
             }
         }
 
@@ -159,7 +148,7 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetInternalList();
+            return _controls;
         }
 
         public override async Task CleanAsync()

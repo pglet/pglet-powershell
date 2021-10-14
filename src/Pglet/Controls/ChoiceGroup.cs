@@ -6,23 +6,17 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "choicegroup";
 
-        ControlCollection<ChoiceGroupOption> _options = new();
-        public ControlCollection<ChoiceGroupOption> Options
+        IList<ChoiceGroupOption> _options = new List<ChoiceGroupOption>();
+
+        public IList<ChoiceGroupOption> Options
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _options;
-                }
+                return _options;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _options.SetDataLock(_dataLock);
-                    _options = value;
-                }
+                _options = value;
             }
         }
 
@@ -44,14 +38,9 @@ namespace Pglet.Controls
             set { SetEventHandler("change", value); }
         }
 
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _options.SetDataLock(dataLock);
-        }
-
         protected override IEnumerable<Control> GetChildren()
         {
-            return _options.GetInternalList();
+            return _options;
         }
     }
 }

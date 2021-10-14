@@ -18,8 +18,6 @@ namespace Pglet
 
         protected abstract string ControlName { get; }
 
-        protected AsyncReaderWriterLock _dataLock;
-
         readonly private Dictionary<string, AttrValue> _attrs = new(StringComparer.OrdinalIgnoreCase);
         readonly private Dictionary<string, EventHandler> _eventHandlers = new(StringComparer.OrdinalIgnoreCase);
         readonly protected List<Control> _previousChildren = new(); // hash codes of previous children
@@ -38,10 +36,7 @@ namespace Pglet
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _uid;
-                }
+                return _uid;
             }
         }
 
@@ -51,39 +46,19 @@ namespace Pglet
             set { _uid = value; }
         }
 
-        internal void SetDataLock(AsyncReaderWriterLock dataLock)
-        {
-            if (_dataLock != dataLock)
-            {
-                _dataLock = dataLock;
-                SetChildDataLocks(dataLock);
-            }
-        }
-
-        internal virtual void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-        }
-
         public Control()
         {
-            SetDataLock(new AsyncReaderWriterLock());
         }
 
         public string Id
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _id;
-                }
+                return _id;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _id = value;
-                }
+                _id = value;
             }
         }
 
@@ -127,18 +102,12 @@ namespace Pglet
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _data;
-                }
+                return _data;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _data = value;
-                    SetAttrInternal("data", value.ToString());
-                }
+                _data = value;
+                SetAttrInternal("data", value.ToString());
             }
         }
 
@@ -172,17 +141,14 @@ namespace Pglet
                 throw new Exception("Control must be added to the page first.");
             }
 
-            using (var lck = _dataLock.AcquireWriterLock())
+            _previousChildren.Clear();
+
+            foreach (var child in GetChildren())
             {
-                _previousChildren.Clear();
-
-                foreach (var child in GetChildren())
-                {
-                    RemoveControlRecursively(_page.Index, child);
-                }
-
-                await _page.SendCommand("clean", _uid);
+                RemoveControlRecursively(_page.Index, child);
             }
+
+            await _page.SendCommand("clean", _uid);
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -230,35 +196,32 @@ namespace Pglet
 
         protected T GetEnumAttr<T>(string name) where T : struct
         {
-            using (var lck = _dataLock.AcquireReaderLock())
+            if (_attrs.ContainsKey(name))
             {
-                if (_attrs.ContainsKey(name))
+                if (Enum.TryParse(_attrs[name].Value, out T result))
                 {
-                    if (Enum.TryParse(_attrs[name].Value, out T result))
+                    return result;
+                }
+                else
+                {
+                    var strValue = _attrs[name].Value;
+                    foreach (var field in typeof(T).GetFields())
                     {
-                        return result;
-                    }
-                    else
-                    {
-                        var strValue = _attrs[name].Value;
-                        foreach (var field in typeof(T).GetFields())
+                        if (Attribute.GetCustomAttribute(field,
+                        typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
                         {
-                            if (Attribute.GetCustomAttribute(field,
-                            typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
-                            {
-                                if (attribute.Description.Equals(strValue, StringComparison.OrdinalIgnoreCase))
-                                    return (T)field.GetValue(null);
-                            }
-                            else
-                            {
-                                if (field.Name.Equals(strValue, StringComparison.OrdinalIgnoreCase))
-                                    return (T)field.GetValue(null);
-                            }
+                            if (attribute.Description.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                return (T)field.GetValue(null);
+                        }
+                        else
+                        {
+                            if (field.Name.Equals(strValue, StringComparison.OrdinalIgnoreCase))
+                                return (T)field.GetValue(null);
                         }
                     }
                 }
-                return default;
             }
+            return default;
         }
 
         protected void SetNullableIntAttr(string name, int? value)
@@ -268,10 +231,8 @@ namespace Pglet
 
         internal int? GetNullableIntAttr(string name)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
-            }
+            return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
+
         }
 
         protected void SetIntAttr(string name, int value)
@@ -281,10 +242,8 @@ namespace Pglet
 
         internal int GetIntAttr(string name, int defValue = 0)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
-            }
+            return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
+
         }
 
         protected void SetDateAttr(string name, DateTime? value)
@@ -294,10 +253,8 @@ namespace Pglet
 
         internal DateTime? GetDateAttr(string name)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
-            }
+            return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
+
         }
 
         protected void SetBoolAttr(string name, bool value)
@@ -307,18 +264,14 @@ namespace Pglet
 
         internal bool GetBoolAttr(string name, bool defValue = false)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
-            }
+            return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
+
         }
 
         internal void SetAttr(string name, string value, bool dirty = true)
         {
-            using (var lck = _dataLock.AcquireWriterLock())
-            {
-                SetAttrInternal(name, value, dirty);
-            }
+            SetAttrInternal(name, value, dirty);
+
         }
 
         internal virtual void SetAttrInternal(string name, string value, bool dirty = true)
@@ -347,48 +300,40 @@ namespace Pglet
 
         protected string GetAttr(string name)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
-            }
+            return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+
         }
 
         internal void SetAttr<T>(string name, T value, bool dirty = true) where T : notnull
         {
-            using (var lck = _dataLock.AcquireWriterLock())
+            if (value != null)
             {
-                if (value != null)
-                {
-                    _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
-                }
+                _attrs[name] = new AttrValue { Value = value.ToString(), IsDirty = dirty };
             }
         }
 
         protected T GetAttr<T>(string name) where T :  notnull
         {
-            using (var lck = _dataLock.AcquireReaderLock())
+            var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+            if (sval == null)
             {
-                var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
-                if (sval == null)
-                {
-                    return default(T);
-                }
-                else if (typeof(T) == typeof(int))
-                {
-                    return int.TryParse(sval, out int result) ? (T)(object)result : (T)(object)0;
-                }
-                else if (typeof(T) == typeof(long))
-                {
-                    return long.TryParse(sval, out long result) ? (T)(object)result : (T)(object)0;
-                }
-                else if (typeof(T) == typeof(float))
-                {
-                    return float.TryParse(sval, out float result) ? (T)(object)result : (T)(object)0;
-                }
-                else
-                {
-                    return (T)(object)sval;
-                }
+                return default(T);
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                return int.TryParse(sval, out int result) ? (T)(object)result : (T)(object)0;
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                return long.TryParse(sval, out long result) ? (T)(object)result : (T)(object)0;
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                return float.TryParse(sval, out float result) ? (T)(object)result : (T)(object)0;
+            }
+            else
+            {
+                return (T)(object)sval;
             }
         }
 

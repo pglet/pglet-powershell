@@ -4,37 +4,25 @@ namespace Pglet.Controls
 {
     public class BarChartData : Control
     {
-        ControlCollection<BarChartDataPoint> _points = new();
+        IList<BarChartDataPoint> _points = new List<BarChartDataPoint>();
 
         protected override string ControlName => "data";
 
-        public ControlCollection<BarChartDataPoint> Points
+        public IList<BarChartDataPoint> Points
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _points;
-                }
+                return _points;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _points.SetDataLock(_dataLock);
-                    _points = value;
-                }
+                _points = value;
             }
-        }
-
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _points.SetDataLock(dataLock);
         }
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _points.GetInternalList();
+            return _points;
         }
     }
 }

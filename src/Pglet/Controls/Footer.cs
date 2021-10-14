@@ -6,34 +6,23 @@ namespace Pglet.Controls
     {
         protected override string ControlName => "footer";
 
-        ControlCollection<Control> _controls = new();
-        public ControlCollection<Control> Controls
+        IList<Control> _controls = new List<Control>();
+
+        public IList<Control> Controls
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _controls;
-                }
+                return _controls;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _controls.SetDataLock(_dataLock);
-                    _controls = value;
-                }
+                _controls = value;
             }
-        }
-
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _controls.SetDataLock(dataLock);
         }
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetInternalList();
+            return _controls;
         }
     }
 }

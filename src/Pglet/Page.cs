@@ -15,7 +15,7 @@ namespace Pglet
         readonly string _pageUrl;
         readonly string _pageName;
         readonly string _sessionId;
-        readonly ControlCollection<Control> _controls = new();
+        readonly List<Control> _controls = new List<Control>();
         readonly Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
 
         ControlEvent _lastEvent;
@@ -26,28 +26,17 @@ namespace Pglet
             get { return _conn; }
         }
 
-        public ControlCollection<Control> Controls
+        public IList<Control> Controls
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _controls;
-                }
+                return _controls;
             }
         }
 
         public Control GetControl(string id)
         {
-            using (var lck = _dataLock.AcquireReaderLock())
-            {
-                return _index.ContainsKey(id) ? _index[id] : null;
-            }
-        }
-
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _controls.SetDataLock(dataLock);
+            return _index.ContainsKey(id) ? _index[id] : null;
         }
 
         internal Dictionary<string, Control> Index
@@ -57,7 +46,7 @@ namespace Pglet
 
         protected override IEnumerable<Control> GetChildren()
         {
-            return _controls.GetInternalList();
+            return _controls;
         }
 
         public string Url
@@ -254,42 +243,33 @@ namespace Pglet
 
         public async Task UpdateAsync(params Control[] controls)
         {
-            var dlock = _dataLock;
-            await dlock.AcquireWriterLockAsync();
-            try
+            var addedControls = new List<Control>();
+            var commands = new List<Command>();
+
+            foreach (var control in controls)
             {
-                var addedControls = new List<Control>();
-                var commands = new List<Command>();
-
-                foreach (var control in controls)
-                {
-                    control.BuildUpdateCommands(_index, addedControls, commands);
-                }
-
-                if (commands.Count == 0)
-                {
-                    return;
-                }
-
-                // execute commands
-                var ids = (await _conn.SendCommands(_pageName, _sessionId, commands, CancellationToken.None)).Results;
-
-                // update new controls
-                int n = 0;
-                foreach (var id in ids.SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
-                {
-                    addedControls[n].UniqueId = id;
-                    addedControls[n].Page = this;
-
-                    // add to index
-                    _index[id] = addedControls[n];
-
-                    n++;
-                }
+                control.BuildUpdateCommands(_index, addedControls, commands);
             }
-            finally
+
+            if (commands.Count == 0)
             {
-                dlock.ReleaseWriterLock();
+                return;
+            }
+
+            // execute commands
+            var ids = (await _conn.SendCommands(_pageName, _sessionId, commands, CancellationToken.None)).Results;
+
+            // update new controls
+            int n = 0;
+            foreach (var id in ids.SelectMany(l => l.Split(' ')).Where(id => !String.IsNullOrEmpty(id)))
+            {
+                addedControls[n].UniqueId = id;
+                addedControls[n].Page = this;
+
+                // add to index
+                _index[id] = addedControls[n];
+
+                n++;
             }
         }
 
@@ -386,17 +366,14 @@ namespace Pglet
 
         public override async Task CleanAsync()
         {
-            using (var lck = _dataLock.AcquireWriterLock())
+            _previousChildren.Clear();
+
+            foreach (var child in GetChildren())
             {
-                _previousChildren.Clear();
-
-                foreach (var child in GetChildren())
-                {
-                    RemoveControlRecursively(_index, child);
-                }
-
-                await SendCommand("clean", UniqueId);
+                RemoveControlRecursively(_index, child);
             }
+
+            await SendCommand("clean", UniqueId);
         }
 
         public void Error(string message)
@@ -424,18 +401,15 @@ namespace Pglet
             // update control properties
             if (e.Target == "page" && e.Name == "change")
             {
-                using (var lck = _dataLock.AcquireWriterLock())
+                var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
+                foreach (var props in allProps)
                 {
-                    var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
-                    foreach (var props in allProps)
+                    var id = props["i"];
+                    if (_index.ContainsKey(id))
                     {
-                        var id = props["i"];
-                        if (_index.ContainsKey(id))
+                        foreach (var key in props.Keys.Where(k => k != "i"))
                         {
-                            foreach (var key in props.Keys.Where(k => k != "i"))
-                            {
-                                _index[id].SetAttrInternal(key, props[key], dirty: false);
-                            }
+                            _index[id].SetAttrInternal(key, props[key], dirty: false);
                         }
                     }
                 }

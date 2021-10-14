@@ -7,29 +7,23 @@ namespace Pglet.Controls
         protected override string ControlName => "dialog";
 
         Footer _footer = new Footer();
-        public ControlCollection<Control> FooterControls
+        public IList<Control> FooterControls
         {
             get { return _footer.Controls; }
             set { _footer.Controls = value; }
         }
 
-        ControlCollection<Control> _controls = new();
-        public ControlCollection<Control> Controls
+        IList<Control> _controls = new List<Control>();
+
+        public IList<Control> Controls
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _controls;
-                }
+                return _controls;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _controls.SetDataLock(_dataLock);
-                    _controls = value;
-                }
+                _controls = value;
             }
         }
 
@@ -87,15 +81,10 @@ namespace Pglet.Controls
             set { SetEventHandler("dismiss", value); }
         }
 
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _footer.SetDataLock(dataLock);
-        }
-
         protected override IEnumerable<Control> GetChildren()
         {
             var controls = new List<Control>();
-            controls.AddRange(_controls.GetInternalList());
+            controls.AddRange(_controls);
             controls.Add(_footer);
             return controls;
         }

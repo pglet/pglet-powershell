@@ -4,26 +4,19 @@ namespace Pglet.Controls
 {
     public class Button : Control
     {
-        ControlCollection<MenuItem> _menuItems = new();
+        IList<MenuItem> _menuItems = new List<MenuItem>();
 
         protected override string ControlName => "button";
 
-        public ControlCollection<MenuItem> MenuItems
+        public IList<MenuItem> MenuItems
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _menuItems;
-                }
+                return _menuItems;
             }
             set
             {
-                using (var lck = _dataLock.AcquireWriterLock())
-                {
-                    _menuItems.SetDataLock(_dataLock);
-                    _menuItems = value;
-                }
+                _menuItems = value;
             }
         }
 
@@ -105,14 +98,9 @@ namespace Pglet.Controls
             set { SetEventHandler("click", value); }
         }
 
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _menuItems.SetDataLock(dataLock);
-        }
-
         protected override IEnumerable<Control> GetChildren()
         {
-            return _menuItems.GetInternalList();
+            return _menuItems;
         }
     }
 }
