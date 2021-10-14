@@ -11,17 +11,43 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
             //TestJson();
             //_ = TestPage2();
             //await TestApp2();
             //TestDiffs();
-            //await TestApp();
+            _ = TestApp1(cts.Token);
             //_ = TestControls();
-            _ = TestGrid();
+            //_ = TestGrid();
             //await TestPage();
 
             Console.WriteLine("ENTER to exit...");
             Console.ReadLine();
+            cts.Cancel();
+            await Task.Delay(2000);
+        }
+
+        private static async Task TestApp1(CancellationToken cancellationToken)
+        {
+            using (var pgc = new PgletClient())
+            {
+                await pgc.ServeApp(async (page) =>
+                {
+                    Console.WriteLine("Session start");
+                    var mainStack = new Stack
+                    {
+                        Controls =
+                        {
+                            new Text { Value = page.SessionId }
+                        }
+                    };
+
+                    await page.AddAsync(mainStack);
+                    await Task.Delay(5000);
+                    Console.WriteLine("Session end");
+
+                }, "index3", serverUrl: "http://localhost:5000", cancellationToken: cancellationToken);
+            }
         }
 
         private static async Task TestPage1()

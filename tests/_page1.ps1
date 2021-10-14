@@ -53,6 +53,7 @@ try {
     
     #Switch-PgletEvents
 } finally {
+    Write-Host "Close pglet page!"
     Close-PgletPage
 }
 

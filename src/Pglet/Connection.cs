@@ -179,7 +179,7 @@ namespace Pglet
         {
             if (_ws != null)
             {
-                _ = _ws.Close();
+                _ws.Close().Wait();
             }
         }
     }

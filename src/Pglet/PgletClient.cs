@@ -115,12 +115,17 @@ namespace Pglet
             return wssUri.Uri;
         }
 
-        public void Dispose()
+        public void Close()
         {
             if (_conn != null)
             {
                 _conn.Close();
             }
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

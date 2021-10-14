@@ -26,6 +26,11 @@ namespace Pglet
             get { return _conn; }
         }
 
+        public string SessionId
+        {
+            get { return _sessionId; }
+        }
+
         public IList<Control> Controls
         {
             get

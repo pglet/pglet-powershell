@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -72,7 +69,7 @@ namespace Pglet
                     WebSocketReceiveResult result;
                     do
                     {
-                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationToken);
+                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
                         //Console.WriteLine("WS read");
 
@@ -82,7 +79,8 @@ namespace Pglet
                         }
                         else
                         {
-                            await Close();
+                            // connection closed
+                            return;
                         }
 
                     } while (!result.EndOfMessage);
@@ -148,9 +146,8 @@ namespace Pglet
 
         public async Task Close()
         {
-            //Console.WriteLine("WS close");
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
+            await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token).ConfigureAwait(false);
             _ws.Dispose();
 
             // call _onDisconnected
