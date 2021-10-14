@@ -27,10 +27,7 @@ namespace Pglet.Controls
 
         public IList<object> SelectedItems
         {
-            get
-            {
-                return _selectedItems;
-            }
+            get { return _selectedItems; }
         }
 
         public GridSelectionMode SelectionMode
@@ -94,14 +91,14 @@ namespace Pglet.Controls
 
         protected override IEnumerable<Control> GetChildren()
         {
-            if (_columns._columns.Count == 0 && _items.Items.Count > 0)
+            if (_columns.Columns.Count == 0 && _items.Items.Count > 0)
             {
                 // auto-generate columns
-                _columns._columns = GridHelper.GenerateColumns(_items.Items[0]);
+                _columns.Columns = GridHelper.GenerateColumns(_items.Items[0]);
             }
 
             var fetchPropNames = new List<string>();
-            foreach(var column in _columns._columns)
+            foreach (var column in _columns.Columns)
             {
                 if (column.TemplateControls.Count == 0)
                 {
@@ -114,7 +111,7 @@ namespace Pglet.Controls
                 }
             }
 
-            foreach (var column in _columns._columns)
+            foreach (var column in _columns.Columns)
             {
                 column.FieldName = GridHelper.EncodeReservedProperty(column.FieldName);
             }

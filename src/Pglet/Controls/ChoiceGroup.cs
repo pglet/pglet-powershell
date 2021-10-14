@@ -10,14 +10,8 @@ namespace Pglet.Controls
 
         public IList<ChoiceGroupOption> Options
         {
-            get
-            {
-                return _options;
-            }
-            set
-            {
-                _options = value;
-            }
+            get { return _options; }
+            set { _options = value; }
         }
 
         public string Label

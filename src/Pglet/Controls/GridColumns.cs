@@ -4,20 +4,14 @@ namespace Pglet.Controls
 {
     public class GridColumns : Control
     {
-        internal IList<GridColumn> _columns = new List<GridColumn>();
+        IList<GridColumn> _columns = new List<GridColumn>();
 
         protected override string ControlName => "columns";
 
         public IList<GridColumn> Columns
         {
-            get
-            {
-                return _columns;
-            }
-            set
-            {
-                _columns = value;
-            }
+            get { return _columns; }
+            set { _columns = value; }
         }
 
         protected override IEnumerable<Control> GetChildren()

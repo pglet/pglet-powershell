@@ -10,14 +10,8 @@ namespace Pglet.Controls
 
         public IList<Control> Controls
         {
-            get
-            {
-                return _controls;
-            }
-            set
-            {
-                _controls = value;
-            }
+            get { return _controls; }
+            set { _controls = value; }
         }
 
         public EventHandler OnDismiss

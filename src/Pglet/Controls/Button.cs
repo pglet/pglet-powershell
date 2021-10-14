@@ -10,14 +10,8 @@ namespace Pglet.Controls
 
         public IList<MenuItem> MenuItems
         {
-            get
-            {
-                return _menuItems;
-            }
-            set
-            {
-                _menuItems = value;
-            }
+            get { return _menuItems; }
+            set { _menuItems = value; }
         }
 
         public bool Primary

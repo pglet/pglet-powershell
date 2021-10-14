@@ -76,14 +76,8 @@ namespace Pglet.Controls
 
         public IList<Control> TemplateControls
         {
-            get
-            {
-                return _templateControls;
-            }
-            set
-            {
-                _templateControls = value;
-            }
+            get { return _templateControls; }
+            set { _templateControls = value; }
         }
 
         protected override IEnumerable<Control> GetChildren()

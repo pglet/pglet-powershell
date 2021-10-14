@@ -7,29 +7,15 @@
         object _x;
         public object X
         {
-            get
-            {
-                return _x;
-            }
-            set
-            {
-                SetAttr("x", value);
-                _x = value;
-            }
+            get { return _x; }
+            set { SetAttr("x", value); _x = value; }
         }
 
         object _y;
         public object Y
         {
-            get
-            {
-                return _y;
-            }
-            set
-            {
-                SetAttr("y", value);
-                _y = value;
-            }
+            get { return _y; }
+            set { SetAttr("y", value); _y = value; }
         }
 
         public string Legend
