@@ -10,14 +10,8 @@ namespace Pglet.Controls
 
         public IList<BarChartDataPoint> Points
         {
-            get
-            {
-                return _points;
-            }
-            set
-            {
-                _points = value;
-            }
+            get { return _points; }
+            set { _points = value; }
         }
 
         protected override IEnumerable<Control> GetChildren()
