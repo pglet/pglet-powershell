@@ -34,9 +34,9 @@ namespace Pglet.Controls
             return name;
         }
 
-        internal static ControlCollection<GridColumn> GenerateColumns(object obj)
+        internal static IList<GridColumn> GenerateColumns(object obj)
         {
-            var columns = new ControlCollection<GridColumn>();
+            var columns = new List<GridColumn>();
 
             var otype = obj.GetType();
 

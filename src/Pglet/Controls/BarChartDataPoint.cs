@@ -9,19 +9,12 @@
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _x;
-                }
+                return _x;
             }
             set
             {
                 SetAttr("x", value);
-
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    _x = value;
-                }
+                _x = value;
             }
         }
 
@@ -30,19 +23,12 @@
         {
             get
             {
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    return _y;
-                }
+                return _y;
             }
             set
             {
                 SetAttr("y", value);
-
-                using (var lck = _dataLock.AcquireReaderLock())
-                {
-                    _y = value;
-                }
+                _y = value;
             }
         }
 

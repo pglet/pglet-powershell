@@ -7,7 +7,7 @@ namespace Pglet.Controls
         protected override string ControlName => "panel";
 
         Footer _footer = new Footer();
-        public ControlCollection<Control> FooterControls
+        public IList<Control> FooterControls
         {
             get { return _footer.Controls; }
             set { _footer.Controls = value; }

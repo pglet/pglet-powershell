@@ -13,7 +13,7 @@ namespace Pglet.Controls
         readonly GridItems _items = new();
         IList<object> _selectedItems = new List<object>();
 
-        public ControlCollection<GridColumn> Columns
+        public IList<GridColumn> Columns
         {
             get { return _columns.Columns; }
             set { _columns.Columns = value; }
@@ -29,16 +29,7 @@ namespace Pglet.Controls
         {
             get
             {
-                var dlock = _dataLock;
-                dlock.AcquireReaderLock();
-                try
-                {
-                    return _selectedItems;
-                }
-                finally
-                {
-                    dlock.ReleaseReaderLock();
-                }
+                return _selectedItems;
             }
         }
 
@@ -101,12 +92,6 @@ namespace Pglet.Controls
             set { SetEventHandler("itemInvoke", value); }
         }
 
-        internal override void SetChildDataLocks(AsyncReaderWriterLock dataLock)
-        {
-            _columns.SetDataLock(dataLock);
-            _items.SetDataLock(dataLock);
-        }
-
         protected override IEnumerable<Control> GetChildren()
         {
             if (_columns._columns.Count == 0 && _items.Items.Count > 0)
@@ -147,17 +132,8 @@ namespace Pglet.Controls
 
         protected void OnSelectInternal(ControlEvent e)
         {
-            var dlock = _dataLock;
-            dlock.AcquireWriterLock();
-            try
-            {
-                _selectedItems = e.Data.Split(' ').Where(id => id != "").Select(id => (this.Page.GetControl(id) as GridItem).Obj).ToList();
-                _onSelectHandler?.Invoke(e);
-            }
-            finally
-            {
-                dlock.ReleaseWriterLock();
-            }
+            _selectedItems = e.Data.Split(' ').Where(id => id != "").Select(id => (this.Page.GetControl(id) as GridItem).Obj).ToList();
+            _onSelectHandler?.Invoke(e);
         }
     }
 }
