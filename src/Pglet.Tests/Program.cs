@@ -16,7 +16,8 @@ namespace Pglet.Tests
             //await TestApp2();
             //TestDiffs();
             //await TestApp();
-            _ = TestControls();
+            //_ = TestControls();
+            _ = TestGrid();
             //await TestPage();
 
             Console.WriteLine("ENTER to exit...");

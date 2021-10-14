@@ -476,7 +476,7 @@ namespace Pglet
                 return command;
             }
 
-            foreach(string attrName in _attrs.Keys.OrderBy(k => k))
+            foreach(string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
             {
                 var dirty = _attrs[attrName].IsDirty;
                 if ((update && !dirty) || attrName == "id")
