@@ -71,13 +71,11 @@ namespace Pglet
             }
         }
 
-        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
+        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string hostClientId, string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
         {
-            // TODO
-            // send hostClientID on WS reconnect
-
             var payload = new RegisterHostClientRequestPayload
             {
+                HostClientID = hostClientId,
                 PageName = String.IsNullOrEmpty(pageName) ? "*" : pageName,
                 IsApp = isApp,
                 AuthToken = authToken,
@@ -179,7 +177,7 @@ namespace Pglet
         {
             if (_ws != null)
             {
-                _ws.Close().Wait();
+                _ws.CloseAsync().Wait();
             }
         }
     }

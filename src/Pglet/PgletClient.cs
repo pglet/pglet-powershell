@@ -73,7 +73,12 @@ namespace Pglet
             _conn = new Connection(_ws);
             _conn.OnEvent = OnPageEvent;
 
-            var resp = await _conn.RegisterHostClient(pageName, isApp, token, permissions, cancellationToken);
+            _ws.OnReconnected = async () =>
+            {
+                await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
+            };
+
+            var resp = await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
             _hostClientId = resp.HostClientID;
             _pageName = resp.PageName;
             _pageUrl = GetPageUrl(serverUrl, _pageName).ToString();

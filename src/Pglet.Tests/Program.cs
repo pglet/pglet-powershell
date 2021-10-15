@@ -11,6 +11,9 @@ namespace Pglet.Tests
     {
         static async Task Main(string[] args)
         {
+            var consoleTracer = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleTracer);
+
             CancellationTokenSource cts = new CancellationTokenSource();
             //TestJson();
             //_ = TestPage2();
@@ -34,16 +37,25 @@ namespace Pglet.Tests
                 await pgc.ServeApp(async (page) =>
                 {
                     Console.WriteLine("Session start");
-                    var mainStack = new Stack
-                    {
-                        Controls =
-                        {
-                            new Text { Value = page.SessionId }
-                        }
-                    };
+                    //var mainStack = new Stack
+                    //{
+                    //    Controls =
+                    //    {
+                    //        new Text { Value = page.SessionId }
+                    //    }
+                    //};
 
-                    await page.AddAsync(mainStack);
-                    await Task.Delay(5000);
+                    //await page.AddAsync(mainStack);
+
+                    //for(int i = 0; i < 10; i++)
+                    //{
+                    //    await page.AddAsync(new Text { Value = i.ToString() });
+                    //}
+
+                    var txtName = new TextBox();
+                    var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
+                    await page.AddAsync(txtName, submitBtn);
+
                     Console.WriteLine("Session end");
 
                 }, "index3", serverUrl: "http://localhost:5000", cancellationToken: cancellationToken);
