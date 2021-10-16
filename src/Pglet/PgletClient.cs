@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,7 @@ namespace Pglet
             Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            await ConnectInternal(pageName, false, serverUrl, token, permissions, ct);
+            await ConnectInternal(pageName, false, serverUrl, token, permissions, noWindow, ct);
 
             Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
             await page.LoadHash();
@@ -38,7 +40,7 @@ namespace Pglet
             Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            await ConnectInternal(pageName, true, serverUrl, token, permissions, ct);
+            await ConnectInternal(pageName, true, serverUrl, token, permissions, noWindow, ct);
 
             pageCreated?.Invoke(_pageUrl);
 
@@ -66,7 +68,7 @@ namespace Pglet
             await semaphore.WaitAsync();
         }
 
-        private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, CancellationToken cancellationToken)
+        private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, bool noWindow, CancellationToken cancellationToken)
         {
             _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl));
             await _ws.Connect(cancellationToken);
@@ -82,6 +84,11 @@ namespace Pglet
             _hostClientId = resp.HostClientID;
             _pageName = resp.PageName;
             _pageUrl = GetPageUrl(serverUrl, _pageName).ToString();
+
+            if (!noWindow)
+            {
+                OpenBrowser(_pageUrl);
+            }
         }
 
         private Task OnPageEvent(PageEventPayload payload)
@@ -118,6 +125,20 @@ namespace Pglet
             wssUri.Scheme = wssUri.Scheme == "https" ? "wss" : "ws";
             wssUri.Path = "/ws";
             return wssUri.Uri;
+        }
+
+        private void OpenBrowser(string url)
+        {
+            string procVer = "/proc/version";
+            bool wsl = (RuntimeInfo.IsLinux && File.Exists(procVer) && File.ReadAllText(procVer).ToLowerInvariant().Contains("microsoft"));
+            if (RuntimeInfo.IsWindows || wsl)
+            {
+                Process.Start("explorer.exe", url);
+            }
+            else if (RuntimeInfo.IsMac)
+            {
+                Process.Start("open", url);
+            }
         }
 
         public void Close()
