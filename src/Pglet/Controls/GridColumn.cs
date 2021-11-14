@@ -73,6 +73,7 @@ namespace Pglet.Controls
         }
 
         IList<Control> _templateControls = new List<Control>();
+
         public IList<Control> TemplateControls
         {
             get { return _templateControls; }

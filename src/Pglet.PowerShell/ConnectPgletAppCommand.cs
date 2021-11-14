@@ -18,9 +18,6 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = true, HelpMessage = "A handler script block for a new user session.")]
         public ScriptBlock ScriptBlock { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Run the app on the local instance of Pglet server.")]
-        public SwitchParameter Local { get; set; }
-
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
         public SwitchParameter NoWindow { get; set; }
 
@@ -33,9 +30,6 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = false, HelpMessage = "The list of users and groups allowed to access this app.")]
         public string Permissions { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Interval in milliseconds between 'tick' events; disabled if not specified.")]
-        public int? Ticker { get; set; }
-
         protected override void ProcessRecord()
         {
             var pgletModulePath = this.MyInvocation.MyCommand.Module.Path.Replace(".psm1", ".psd1");
@@ -45,38 +39,41 @@ namespace Pglet.PowerShell
                 Host.UI.WriteLine(pageUrl);
             }
 
-            PgletClient.ServeApp((page) =>
+            using (PgletClient pgc = new PgletClient())
             {
-                return Task.Run(() =>
+                pgc.ServeApp((page) =>
                 {
-                    using (var runspace = RunspaceFactory.CreateRunspace())
+                    return Task.Run(() =>
                     {
-                        using (var ps = System.Management.Automation.PowerShell.Create())
+                        using (var runspace = RunspaceFactory.CreateRunspace())
                         {
-                            using CancellationTokenRegistration ctr = _cancellationSource.Token.Register(() => ps.Stop());
+                            using (var ps = System.Management.Automation.PowerShell.Create())
+                            {
+                                using CancellationTokenRegistration ctr = _cancellationSource.Token.Register(() => ps.Stop());
 
-                            try
-                            {
-                                ps.Runspace = runspace;
-                                runspace.Open();
-                                runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.AllScope));
-                                ps.AddScript($"Import-Module '{pgletModulePath}'");
-                                ps.AddScript(ScriptBlock.ToString());
-                                ps.AddScript("\nSwitch-PgletEvents");
-                                ps.Invoke();
-                            }
-                            catch (RuntimeException ex)
-                            {
-                                Host.UI.WriteErrorLine(ex.ErrorRecord.ToString() + "\n" + ex.ErrorRecord.InvocationInfo.PositionMessage);
-                                throw;
+                                try
+                                {
+                                    ps.Runspace = runspace;
+                                    runspace.Open();
+                                    runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.AllScope));
+                                    ps.AddScript($"Import-Module '{pgletModulePath}'");
+                                    ps.AddScript(ScriptBlock.ToString());
+                                    ps.AddScript("\nSwitch-PgletEvents");
+                                    ps.Invoke();
+                                }
+                                catch (RuntimeException ex)
+                                {
+                                    Host.UI.WriteErrorLine(ex.ErrorRecord.ToString() + "\n" + ex.ErrorRecord.InvocationInfo.PositionMessage);
+                                    throw;
+                                }
                             }
                         }
-                    }
-                });
-            },
-            cancellationToken: _cancellationSource.Token, name: Name, local: Local.ToBool(), noWindow: NoWindow.ToBool(),
-                server: Server, token: Token, ticker: Ticker.HasValue ? Ticker.Value : 0, permissions: Permissions,
-                createPage: (conn, pageUrl) => new PsPage(conn, pageUrl), pageCreated: pageCreated).Wait();
+                    });
+                },
+                cancellationToken: _cancellationSource.Token, pageName: Name, noWindow: NoWindow.ToBool(),
+                    serverUrl: Server, token: Token, permissions: Permissions,
+                    createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId), pageCreated: pageCreated).Wait();
+            }
         }
 
         protected override void StopProcessing()

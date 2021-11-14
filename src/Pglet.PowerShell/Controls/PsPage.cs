@@ -8,7 +8,7 @@ namespace Pglet.PowerShell.Controls
     {
         readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
 
-        public PsPage(Connection conn, string pageUrl) : base(conn, pageUrl)
+        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId) : base(conn, pageUrl, pageName, sessionId)
         {
         }
 

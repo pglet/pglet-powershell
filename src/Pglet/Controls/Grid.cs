@@ -98,7 +98,7 @@ namespace Pglet.Controls
             }
 
             var fetchPropNames = new List<string>();
-            foreach(var column in _columns.Columns)
+            foreach (var column in _columns.Columns)
             {
                 if (column.TemplateControls.Count == 0)
                 {

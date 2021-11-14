@@ -7,6 +7,7 @@ namespace Pglet.Controls
         protected override string ControlName => "footer";
 
         IList<Control> _controls = new List<Control>();
+
         public IList<Control> Controls
         {
             get { return _controls; }

@@ -30,37 +30,22 @@ namespace Pglet.PowerShell
 
             while(!_cancellationSource.IsCancellationRequested)
             {
-                var e = page.Connection.WaitEvent(_cancellationSource.Token);
+                var e = page.WaitEvent(_cancellationSource.Token);
 
-                var ctl = page.GetControl(e.Target);
-                if (ctl == null)
-                {
-                    continue;
-                }
-
-                IPsEventControl eventCtl = ctl as IPsEventControl;
+                IPsEventControl eventCtl = e.Control as IPsEventControl;
                 if (eventCtl == null)
                 {
                     continue;
                 }
 
-                var ce = new ControlEvent
-                {
-                    Target = e.Target,
-                    Name = e.Name,
-                    Data = e.Data,
-                    Control = page.GetControl(e.Target),
-                    Page = page
-                };
-
-                var handlerScript = eventCtl.GetEventHandlerScript(ce);
+                var handlerScript = eventCtl.GetEventHandlerScript(e);
                 if (handlerScript == null)
                 {
                     continue;
                 }
 
                 var script = $"$e = $args[0]\n{handlerScript}";
-                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, ce);
+                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
 
                 foreach (var obj in results)
                 {

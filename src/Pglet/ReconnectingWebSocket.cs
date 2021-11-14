@@ -1,0 +1,252 @@
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+
+namespace Pglet
+{
+    public class ReconnectingWebSocket
+    {
+        private const int RECEIVE_BUFFER_SIZE = 1024;
+        private const int SEND_BUFFER_SIZE = 1024;
+        private const int RECONNECT_DELAY_MS = 1000;
+        private const int MAX_RECONNECT_DELAY_MS = 60000;
+
+
+        private readonly Channel<byte[]> _sendQueue = Channel.CreateBounded<byte[]>(10);
+
+        ClientWebSocket _ws;
+        Uri _uri;
+        Func<byte[], Task> _onMessage;
+        Func<Task> _onReconnected;
+
+        CancellationToken _cancellationToken;
+        CancellationTokenSource _loopsCts;
+        CancellationTokenSource _linkedCts;
+        CancellationTokenRegistration _reconnectCtr;
+
+        public Func<byte[], Task> OnMessage
+        {
+            set { _onMessage = value; }
+        }
+
+        public Func<Task> OnReconnected
+        {
+            set { _onReconnected = value; }
+        }
+
+        public ReconnectingWebSocket(Uri uri)
+        {
+            _uri = uri;
+        }
+
+        public Task Connect(CancellationToken cancellationToken)
+        {
+            Trace.WriteLine("ReconnectingWebSocket: Connect()");
+            _cancellationToken = cancellationToken;
+            return ConnectInternal();
+        }
+
+        private async Task ConnectInternal()
+        {
+            Trace.WriteLine("ReconnectingWebSocket: ConnectInternal()");
+            _ws = new ClientWebSocket();
+            await _ws.ConnectAsync(_uri, _cancellationToken);
+            StartReadWriteLoops();
+        }
+
+        private void StartReadWriteLoops()
+        {
+            Trace.WriteLine("ReconnectingWebSocket: StartReadWriteLoops()");
+
+            if (_loopsCts != null)
+            {
+                _loopsCts.Dispose();
+                _reconnectCtr.Dispose();
+            }
+            _loopsCts = new CancellationTokenSource();
+            _reconnectCtr = _loopsCts.Token.Register(async () =>
+            {
+                Trace.WriteLine("ReconnectingWebSocket: Reconnecting...");
+                _ws.Abort();
+
+                ExponentialBackoff backoff = new(RECONNECT_DELAY_MS, MAX_RECONNECT_DELAY_MS);
+                while (true)
+                {
+                    try
+                    {
+                        await ConnectInternal();
+
+                        if (_onReconnected != null)
+                        {
+                            _ = _onReconnected();
+                        }
+
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine("ReconnectingWebSocket: Error reconnecting: {0}", ex.Message);
+                        await backoff.Delay();
+                    }
+                }
+            });
+
+            if (_linkedCts != null)
+            {
+                _linkedCts.Dispose();
+            }
+            _linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_loopsCts.Token, _cancellationToken);
+
+            _ = Task.Factory.StartNew(
+                function: () => ReadLoop(),
+                cancellationToken: _linkedCts.Token,
+                creationOptions: TaskCreationOptions.LongRunning,
+                scheduler: TaskScheduler.Default
+            );
+
+            _ = Task.Factory.StartNew(
+                function: () => WriteLoop(),
+                cancellationToken: _linkedCts.Token,
+                creationOptions: TaskCreationOptions.LongRunning,
+                scheduler: TaskScheduler.Default
+            );
+        }
+
+        private async Task ReadLoop()
+        {
+            Trace.WriteLine("ReconnectingWebSocket: ReadLoop()");
+            var buffer = new byte[RECEIVE_BUFFER_SIZE];
+
+            try
+            {
+                try
+                {
+                    while (_ws.State == WebSocketState.Open)
+                    {
+                        var ms = new MemoryStream();
+
+                        //Console.WriteLine("WS before read");
+
+                        WebSocketReceiveResult result;
+                        do
+                        {
+                            result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _loopsCts.Token);
+
+                            //Console.WriteLine("WS read");
+
+                            if (result.MessageType != WebSocketMessageType.Close)
+                            {
+                                await ms.WriteAsync(buffer, 0, result.Count, _linkedCts.Token);
+                            }
+                            else
+                            {
+                                // connection closed
+                                Trace.WriteLine("ReconnectingWebSocket: Server connection gracefully closed while receiving message");
+                                return;
+                            }
+
+                        } while (!result.EndOfMessage);
+
+                        if (_onMessage != null)
+                        {
+                            _ = _onMessage(ms.ToArray());
+                        }
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("ReconnectingWebSocket: Error receiving message: {0}", ex.Message);
+                    _loopsCts.Cancel();
+                    return;
+                }
+            }
+            finally
+            {
+                Trace.WriteLine("ReconnectingWebSocket: Exiting read loop");
+            }
+        }
+
+        public async Task SendMessage(byte[] message, CancellationToken cancellationToken)
+        {
+            await _sendQueue.Writer.WriteAsync(message, cancellationToken);
+        }
+
+        public async Task WriteLoop()
+        {
+            Trace.WriteLine("ReconnectingWebSocket: WriteLoop()");
+            try
+            {
+                while (true)
+                {
+                    try
+                    {
+                        var message = await _sendQueue.Reader.ReadAsync(_linkedCts.Token);
+
+                        var messagesCount = (int)Math.Ceiling((double)message.Length / SEND_BUFFER_SIZE);
+                        for (var i = 0; i < messagesCount; i++)
+                        {
+                            var offset = (SEND_BUFFER_SIZE * i);
+                            var count = SEND_BUFFER_SIZE;
+                            var lastMessage = ((i + 1) == messagesCount);
+
+                            if ((count * (i + 1)) > message.Length)
+                            {
+                                count = message.Length - offset;
+                            }
+
+                            await _ws.SendAsync(new ArraySegment<byte>(message, offset, count), WebSocketMessageType.Binary, lastMessage, _linkedCts.Token);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError("ReconnectingWebSocket: Error sending message: {0}", ex.Message);
+                        _loopsCts.Cancel();
+                        return;
+                    }
+                }
+            }
+            finally
+            {
+                Trace.WriteLine("ReconnectingWebSocket: Exiting write loop");
+            }
+        }
+
+        public async Task CloseAsync()
+        {
+            Trace.WriteLine("ReconnectingWebSocket: CloseAsync()");
+
+            if (_ws != null)
+            {
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                {
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
+                }
+
+                _ws.Dispose();
+            }
+
+            if (_loopsCts != null)
+            {
+                _loopsCts.Dispose();
+                _reconnectCtr.Dispose();
+            }
+
+            if (_linkedCts != null)
+            {
+                _linkedCts.Dispose();
+            }
+        }
+    }
+}

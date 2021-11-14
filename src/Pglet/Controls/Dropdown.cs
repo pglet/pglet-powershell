@@ -7,6 +7,7 @@ namespace Pglet.Controls
         protected override string ControlName => "dropdown";
 
         IList<DropdownOption> _options = new List<DropdownOption>();
+
         public IList<DropdownOption> Options
         {
             get { return _options; }

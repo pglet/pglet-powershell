@@ -16,7 +16,7 @@ namespace Pglet.Tests.Fx
 
         private static async Task TestApp()
         {
-            await PgletClient.ServeApp(async (page) =>
+            await new PgletClient().ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {
@@ -28,7 +28,7 @@ namespace Pglet.Tests.Fx
                     Console.WriteLine("Hash changed: " + e.Data);
                 };
 
-                Console.WriteLine($"Session started: {page.Connection.PipeId}");
+                //Console.WriteLine($"Session started: {page.Connection.PipeId}");
                 Console.WriteLine($"Hash: {page.Hash}");
 
                 var txt = new TextBox();
@@ -43,7 +43,7 @@ namespace Pglet.Tests.Fx
 
                 Console.WriteLine("Session end");
 
-            }, "index", noWindow: true);
+            }, "page-aaa", noWindow: true);
         }
     }
 }

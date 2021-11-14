@@ -1,248 +1,184 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Pipes;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
+using System.Threading;
+using Pglet.Protocol;
+using System.Collections.Concurrent;
+using Newtonsoft.Json.Linq;
 
 namespace Pglet
 {
     public class Connection
     {
-        private const int CONNECTION_TIMEOUT = 5000;
-        private const int MAX_WRITE_BUFFER = 1024 * 1024;
-        private const string ERROR_RESULT = "error";
+        ReconnectingWebSocket _ws;
+        ConcurrentDictionary<string, TaskCompletionSource<JObject>> _wsCallbacks = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
+        Func<PageEventPayload, Task> _onEvent;
+        Func<PageSessionCreatedPayload, Task> _onSessionCreated;
 
-        string _pipeId;
-        NamedPipeClientStream _commandPipe;
-        NamedPipeClientStream _eventPipe;
-        StreamReader _commandPipeReader;
-        StreamWriter _commandPipeWriter;
-        StreamReader _eventPipeReader;
-
-        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-
-        Event _lastEvent;
-        AutoResetEvent _resetEvent = new AutoResetEvent(false);
-
-        Action<Event> _onEvent;
-
-        public string PipeId
+        public Func<PageEventPayload, Task> OnEvent
         {
-            get { return _pipeId; }
-        }
-
-        public Action<Event> OnEvent
-        {
-            get { return _onEvent; }
             set { _onEvent = value; }
         }
 
-        public Connection(string pipeId)
+        public Func<PageSessionCreatedPayload, Task> OnSessionCreated
         {
-            _pipeId = pipeId;
+            set { _onSessionCreated = value; }
         }
 
-        public async Task OpenAsync(CancellationToken cancellationToken)
+        public Connection(ReconnectingWebSocket ws)
         {
-            _commandPipe = new NamedPipeClientStream(_pipeId);
-            _eventPipe = new NamedPipeClientStream($"{_pipeId}.events");
-
-            await _commandPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
-            await _eventPipe.ConnectAsync(CONNECTION_TIMEOUT, cancellationToken);
-
-            _commandPipeReader = new StreamReader(_commandPipe);
-            _commandPipeWriter = new StreamWriter(_commandPipe, new UTF8Encoding(false, true), MAX_WRITE_BUFFER);
-            _commandPipeWriter.AutoFlush = true;
-            _eventPipeReader = new StreamReader(_eventPipe);
-
-            var t = Task.Run(() => EventLoop());
+            _ws = ws;
+            _ws.OnMessage = OnMessage;
         }
 
-        public string SendBatch(IEnumerable<string> commands)
+        private async Task OnMessage(byte[] message)
         {
-            return SendBatchAsync(commands).GetAwaiter().GetResult();
-        }
+            var j = Encoding.UTF8.GetString(message);
+            var m = JsonUtility.Deserialize<Message>(j);
 
-        public Task<string> SendBatchAsync(IEnumerable<string> commands)
-        {
-            return SendBatchAsync(commands, CancellationToken.None);
-        }
+            //Console.WriteLine($"OnMessage: {m.Payload}");
 
-        public async Task<string> SendBatchAsync(IEnumerable<string> commands, CancellationToken cancellationToken)
-        {
-            await _semaphore.WaitAsync(cancellationToken);
-
-            try
+            if (m.Payload == null)
             {
-                await SendAsyncInternal("begin");
+                throw new Exception("Invalid message received by a WebSocket");
+            }
 
-                foreach (var command in commands)
+            if (!String.IsNullOrEmpty(m.Id))
+            {
+                // it's a callback
+                if (_wsCallbacks.TryRemove(m.Id, out TaskCompletionSource<JObject> tcs))
                 {
-                    await SendAsyncInternal(command);
-                }
-
-                return await SendAsyncInternal("end");
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
-        }
-
-        public string Send(string commandText)
-        {
-            return SendAsync(commandText).GetAwaiter().GetResult();
-        }
-
-        public Task<string> SendAsync(string commandText)
-        {
-            return SendAsync(commandText, CancellationToken.None);
-        }
-
-        public async Task<string> SendAsync(string commandText, CancellationToken cancellationToken)
-        {
-            await _semaphore.WaitAsync(cancellationToken);
-
-            try
-            {
-                return await SendAsyncInternal(commandText);
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
-        }
-
-        private async Task<string> SendAsyncInternal(string commandText)
-        {
-            bool waitResult = true;
-            var match = Regex.Match(commandText, @"(?<commandName>[^\s]+)\s(.*)");
-            if (match.Success)
-            {
-                var commandName = match.Groups["commandName"].Value;
-                if (commandName.ToLowerInvariant().EndsWith("f"))
-                {
-                    waitResult = false;
+                    tcs.SetResult(m.Payload as JObject);
                 }
             }
-            else if (String.Equals(commandText, "close", StringComparison.OrdinalIgnoreCase))
+            else if (m.Action == Actions.PageEventToHost && _onEvent != null)
             {
-                waitResult = false;
+                // page event
+                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
             }
-
-            await _commandPipeWriter.WriteLineAsync(commandText);
-
-            if (waitResult)
+            else if (m.Action == Actions.SessionCreated && _onSessionCreated != null)
             {
-                var result = _commandPipeReader.ReadLine();
-
-                if (result.StartsWith($"{ERROR_RESULT} "))
-                {
-                    throw new Exception(result.Substring(ERROR_RESULT.Length + 1));
-                }
-                else
-                {
-                    var resultMatch = Regex.Match(result, @"(?<lines_count>[\d]+)\s(?<result>.*)");
-                    if (resultMatch.Success)
-                    {
-                        var linesCount = Int32.Parse(resultMatch.Groups["lines_count"].Value);
-                        result = resultMatch.Groups["result"].Value;
-                        for (int i = 0; i < linesCount; i++)
-                        {
-                            var line = _commandPipeReader.ReadLine();
-                            result += $"\n{line}";
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception($"Invalid result: {result}");
-                    }
-                }
-
-                return result;
-            }
-
-            return null;
-        }
-
-        public void EventLoop()
-        {
-            while(true)
-            {
-                var e = WaitEventInternal();
-
-                _onEvent?.Invoke(e);
-
-                bool close = false;
-                if (e.Target == "page" && e.Name == "close")
-                {
-                    close = true;
-                }
-
-                if (e.Target != "page" || e.Name != "change")
-                {
-                    _lastEvent = e;
-                    _resetEvent.Set();
-                }
-
-                if (close)
-                {
-                    Close();
-                    return;
-                }
-            }
-        }
-
-        public Event WaitEvent()
-        {
-            return WaitEvent(CancellationToken.None);
-        }
-
-        public Event WaitEvent(CancellationToken cancellationToken)
-        {
-            _resetEvent.Reset();
-
-            int n = WaitHandle.WaitAny(new[] { _resetEvent, cancellationToken.WaitHandle });
-            if (n == 1)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            return _lastEvent;
-        }
-
-        private Event WaitEventInternal()
-        {
-            return ParseEventLine(_eventPipeReader.ReadLine());
-        }
-
-        private Event ParseEventLine(string line)
-        {
-            var match = Regex.Match(line, @"(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*");
-            if (match.Success)
-            {
-                return new Event
-                {
-                    Target = match.Groups["target"].Value,
-                    Name = match.Groups["name"].Value,
-                    Data = match.Groups["data"].Value
-                };
+                // new session started
+                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
             }
             else
             {
-                throw new Exception($"Invalid event data: {line}");
+                // something else
+                // TODO - throw?
+                Console.WriteLine(m.Payload);
+            }
+        }
+
+        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string hostClientId, string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
+        {
+            var payload = new RegisterHostClientRequestPayload
+            {
+                HostClientID = hostClientId,
+                PageName = String.IsNullOrEmpty(pageName) ? "*" : pageName,
+                IsApp = isApp,
+                AuthToken = authToken,
+                Permissions = permissions
+            };
+
+            var respPayload = await SendMessageWithResult(Actions.RegisterHostClient, payload, cancellationToken);
+            var result = JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
+        }
+
+        public async Task<PageCommandResponsePayload> SendCommand(string pageName, string sessionId, Command command, CancellationToken cancellationToken)
+        {
+            var payload = new PageCommandRequestPayload
+            {
+                PageName = pageName,
+                SessionID = sessionId,
+                Command = command
+            };
+
+            var respPayload = await SendMessageWithResult(Actions.PageCommandFromHost, payload, cancellationToken);
+            var result = JsonUtility.Deserialize<PageCommandResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
+        }
+
+        public async Task<PageCommandsBatchResponsePayload> SendCommands(string pageName, string sessionId, List<Command> commands, CancellationToken cancellationToken)
+        {
+            var payload = new PageCommandsBatchRequestPayload
+            {
+                PageName = pageName,
+                SessionID = sessionId,
+                Commands = commands
+            };
+
+            var respPayload = await SendMessageWithResult(Actions.PageCommandsBatchFromHost, payload, cancellationToken);
+            var result = JsonUtility.Deserialize<PageCommandsBatchResponsePayload>(respPayload);
+            if (!String.IsNullOrEmpty(result.Error))
+            {
+                throw new Exception(result.Error);
+            }
+            return result;
+        }
+
+        private Task<JObject> SendMessage(string actionName, object payload, CancellationToken cancellationToken)
+        {
+            return SendMessageInternal(null, actionName, payload, cancellationToken);
+        }
+
+        private Task<JObject> SendMessageWithResult(string actionName, object payload, CancellationToken cancellationToken)
+        {
+            return SendMessageInternal(Guid.NewGuid().ToString("N"), actionName, payload, cancellationToken);
+        }
+
+        private async Task<JObject> SendMessageInternal(string messageId, string actionName, object payload, CancellationToken cancellationToken)
+        {
+            // send request
+            var msg = new Message
+            {
+                Id = messageId,
+                Action = actionName,
+                Payload = payload
+            };
+
+            var j = JsonUtility.Serialize(msg);
+            var jb = Encoding.UTF8.GetBytes(j);
+            await _ws.SendMessage(jb, cancellationToken);
+
+            if (messageId != null)
+            {
+                // register TSC for response
+                var tcs = new TaskCompletionSource<JObject>();
+                _wsCallbacks.TryAdd(msg.Id, tcs);
+
+                using CancellationTokenRegistration ctr = cancellationToken.Register(() => {
+                    if (_wsCallbacks.TryRemove(msg.Id, out TaskCompletionSource<JObject> tcs))
+                    {
+                        tcs.SetCanceled();
+                    }
+                });
+
+                return await tcs.Task;
+            }
+            else
+            {
+                // shoot and forget
+                return null;
             }
         }
 
         public void Close()
         {
-            _eventPipeReader.Dispose();
-            _commandPipeReader.Dispose();
-            _commandPipe.Dispose();
-            _eventPipe.Dispose();
+            if (_ws != null)
+            {
+                _ws.CloseAsync().Wait();
+            }
         }
     }
 }

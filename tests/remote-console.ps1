@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp -Name "remote-console" -Local -ScriptBlock {
+Connect-PgletApp -Name "remote-console" -ScriptBlock {
     $ErrorActionPreference = 'stop'
 
     $page = $PGLET_PAGE

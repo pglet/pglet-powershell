@@ -14,6 +14,7 @@ namespace Pglet.Controls
         }
 
         IList<Control> _controls = new List<Control>();
+
         public IList<Control> Controls
         {
             get { return _controls; }

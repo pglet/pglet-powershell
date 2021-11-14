@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Pglet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -16,9 +18,10 @@ namespace Pglet
 
         protected abstract string ControlName { get; }
 
-        private Dictionary<string, AttrValue> _attrs = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>(StringComparer.OrdinalIgnoreCase);
-        private List<Control> _previousChildren = new List<Control>(); // hash codes of previous children
+        readonly private Dictionary<string, AttrValue> _attrs = new(StringComparer.OrdinalIgnoreCase);
+        readonly private Dictionary<string, EventHandler> _eventHandlers = new(StringComparer.OrdinalIgnoreCase);
+        readonly protected List<Control> _previousChildren = new(); // hash codes of previous children
+        protected string _id;
         private string _uid;
         private Page _page;
         private object _data;
@@ -31,14 +34,32 @@ namespace Pglet
 
         public string Uid
         {
+            get
+            {
+                return _uid;
+            }
+        }
+
+        internal string UniqueId
+        {
             get { return _uid; }
-            internal set { _uid = value; }
+            set { _uid = value; }
+        }
+
+        public Control()
+        {
         }
 
         public string Id
         {
-            get { return GetAttr("id"); }
-            set { SetAttr("id", value); }
+            get
+            {
+                return _id;
+            }
+            set
+            {
+                _id = value;
+            }
         }
 
         public string Width
@@ -88,7 +109,7 @@ namespace Pglet
                 _data = value;
                 if (value != null)
                 {
-                    SetAttr("data", value.ToString());
+                    SetAttrInternal("data", value.ToString());
                 }
             }
         }
@@ -123,14 +144,14 @@ namespace Pglet
                 throw new Exception("Control must be added to the page first.");
             }
 
-            PreviousChildren.Clear();
+            _previousChildren.Clear();
 
             foreach (var child in GetChildren())
             {
                 RemoveControlRecursively(_page.Index, child);
             }
 
-            await _page.Connection.SendAsync($"clean {Uid}");
+            await _page.SendCommand("clean", _uid);
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -141,11 +162,6 @@ namespace Pglet
         protected virtual IEnumerable<Control> GetChildren()
         {
             return new Control[] {};
-        }
-
-        internal List<Control> PreviousChildren
-        {
-            get { return _previousChildren; }
         }
 
         protected void SetEventHandler(string eventName, EventHandler handler)
@@ -219,6 +235,7 @@ namespace Pglet
         internal int? GetNullableIntAttr(string name)
         {
             return _attrs.ContainsKey(name) && !String.IsNullOrEmpty(_attrs[name].Value) ? Int32.Parse(_attrs[name].Value) : null;
+
         }
 
         protected void SetIntAttr(string name, int value)
@@ -229,6 +246,7 @@ namespace Pglet
         internal int GetIntAttr(string name, int defValue = 0)
         {
             return _attrs.ContainsKey(name) ? Int32.Parse(_attrs[name].Value) : defValue;
+
         }
 
         protected void SetDateAttr(string name, DateTime? value)
@@ -239,6 +257,7 @@ namespace Pglet
         internal DateTime? GetDateAttr(string name)
         {
             return _attrs.ContainsKey(name) ? DateTime.Parse(_attrs[name].Value) : null;
+
         }
 
         protected void SetBoolAttr(string name, bool value)
@@ -249,9 +268,16 @@ namespace Pglet
         internal bool GetBoolAttr(string name, bool defValue = false)
         {
             return _attrs.ContainsKey(name) ? Boolean.Parse(_attrs[name].Value) : defValue;
+
         }
 
-        internal virtual void SetAttr(string name, string value, bool dirty = true)
+        internal void SetAttr(string name, string value, bool dirty = true)
+        {
+            SetAttrInternal(name, value, dirty);
+
+        }
+
+        internal virtual void SetAttrInternal(string name, string value, bool dirty = true)
         {
             string origValue = null;
             if (_attrs.ContainsKey(name))
@@ -278,6 +304,7 @@ namespace Pglet
         protected string GetAttr(string name)
         {
             return _attrs.ContainsKey(name) ? _attrs[name].Value : null;
+
         }
 
         internal void SetAttr<T>(string name, T value, bool dirty = true) where T : notnull
@@ -297,7 +324,7 @@ namespace Pglet
             }
             else if (typeof(T) == typeof(int))
             {
-                return int.TryParse(sval, out int result) ? (T)(object)result: (T)(object)0;
+                return int.TryParse(sval, out int result) ? (T)(object)result : (T)(object)0;
             }
             else if (typeof(T) == typeof(long))
             {
@@ -313,18 +340,19 @@ namespace Pglet
             }
         }
 
-        internal void BuildUpdateCommands(Dictionary<string, Control> index, List<Control> addedControls, List<string> commands)
+        internal void BuildUpdateCommands(Dictionary<string, Control> index, List<Control> addedControls, List<Command> commands)
         {
             // update control settings
-            var updateAttrs = this.GetCommandAttrs(update: true);
+            var updateCmd = this.GetCommandAttrs(update: true);
 
-            if (updateAttrs.Count > 0)
+            if (updateCmd.Attrs.Count > 0)
             {
-                commands.Add($"set {string.Join(" ", updateAttrs)}");
+                updateCmd.Name = "set";
+                commands.Add(updateCmd);
             }
 
             // go through children
-            var previousChildren = this.PreviousChildren;
+            var previousChildren = this._previousChildren;
             var currentChildren = this.GetChildren();
 
             var previousHashes = new Dictionary<int, Control>();
@@ -363,18 +391,21 @@ namespace Pglet
                 {
                     var deletedControl = previousHashes[previousInts[item.StartA + m]];
                     RemoveControlRecursively(index, deletedControl);
-                    deletedIds.Add(deletedControl.Uid);
+                    deletedIds.Add(deletedControl.UniqueId);
                 }
                 if (deletedIds.Count > 0)
                 {
-                    commands.Add($"remove {string.Join(" ", deletedIds)}");
+                    commands.Add(new Command { Name = "remove", Values = deletedIds });
                 }
 
                 // added controls
                 while (n < item.StartB + item.insertedB)
                 {
-                    var cmd = currentHashes[currentInts[n]].GetCommandString(index: index, addedControls: addedControls);
-                    commands.Add($"add to=\"{this.Uid}\" at=\"{n}\"\n{cmd}");
+                    var addCmd = new Command { Name = "add" };
+                    addCmd.Attrs["to"] = this.UniqueId;
+                    addCmd.Attrs["at"] = n.ToString();
+                    addCmd.Commands = currentHashes[currentInts[n]].GetCommands(index: index, addedControls: addedControls);
+                    commands.Add(addCmd);
                     n++;
                 }
             } // for
@@ -386,8 +417,8 @@ namespace Pglet
                 n++;
             }
 
-            PreviousChildren.Clear();
-            PreviousChildren.AddRange(currentChildren);
+            _previousChildren.Clear();
+            _previousChildren.AddRange(currentChildren);
         }
 
         protected void RemoveControlRecursively(Dictionary<string, Control> index, Control control)
@@ -399,10 +430,10 @@ namespace Pglet
             }
 
             // remove control itself
-            index.Remove(control.Uid);
+            index.Remove(control.UniqueId);
         }
 
-        internal string GetCommandString(string indent = "", Dictionary<string, Control> index = null, IList<Control> addedControls = null)
+        private List<Command> GetCommands(int indent = 0, Dictionary<string, Control> index = null, IList<Control> addedControls = null)
         {
             // remove control from index
             if (_uid != null && index != null)
@@ -410,19 +441,13 @@ namespace Pglet
                 index.Remove(_uid);
             }
 
-            var lines = new List<string>();
+            var commands = new List<Command>();
 
             // main command
-            var parts = new List<string>
-            {
-                // control name
-                indent + ControlName
-            };
-
-            // base props
-            var attrParts = GetCommandAttrs(update: false);
-            parts.AddRange(attrParts);
-            lines.Add(string.Join(" ", parts));
+            var cmd = GetCommandAttrs(update: false);
+            cmd.Indent = indent;
+            cmd.Values.Add(ControlName);
+            commands.Add(cmd);
 
             if (addedControls != null)
             {
@@ -434,30 +459,27 @@ namespace Pglet
             {
                 foreach(var control in children)
                 {
-                    var childCmd = control.GetCommandString(indent: indent + "  ", index: index, addedControls: addedControls);
-                    if (childCmd != "")
-                    {
-                        lines.Add(childCmd);
-                    }
+                    var childCmds = control.GetCommands(indent: indent + 2, index: index, addedControls: addedControls);
+                    commands.AddRange(childCmds);
                 }
             }
 
-            PreviousChildren.Clear();
-            PreviousChildren.AddRange(children);
+            _previousChildren.Clear();
+            _previousChildren.AddRange(children);
 
-            return string.Join("\n", lines);
+            return commands;
         }
 
-        protected IList<string> GetCommandAttrs(bool update = false)
+        private Command GetCommandAttrs(bool update = false)
         {
-            var parts = new List<string>();
+            var command = new Command();
 
             if (update && _uid == null)
             {
-                return parts;
+                return command;
             }
 
-            foreach(string attrName in _attrs.Keys.OrderBy(k => k))
+            foreach(string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
             {
                 var dirty = _attrs[attrName].IsDirty;
                 if ((update && !dirty) || attrName == "id")
@@ -465,21 +487,26 @@ namespace Pglet
                     continue;
                 }
 
-                var val = _attrs[attrName].Value.Encode();
-                parts.Add($"{attrName}=\"{val}\"");
+                var val = _attrs[attrName].Value;
+                command.Attrs[attrName] = val;
                 _attrs[attrName].IsDirty = false;
             }
 
-            if (!update && Id != null)
+            if (!update && _id != null)
             {
-                parts.Insert(0, $"id=\"{Id.Encode()}\"");
+                command.Attrs["id"] = _id;
             }
-            else if (update && parts.Count > 0)
+            else if (update && command.Attrs.Count > 0)
             {
-                parts.Insert(0, $"\"{_uid.Encode()}\"");
+                command.Values.Add(_uid);
             }
 
-            return parts;
+            return command;
+        }
+
+        ~Control()
+        {
+            // dispose lock?
         }
     }
 }

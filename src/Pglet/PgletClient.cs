@@ -1,361 +1,157 @@
-﻿using SharpCompress.Common;
-using SharpCompress.Readers;
+﻿using Pglet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
-using System.Net;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
 {
-    public static class PgletClient
+    public class PgletClient : IDisposable
     {
-        public const string PGLET_VERSION = "0.4.6";
+        public const string HOSTED_SERVICE_URL = "https://console.pglet.io";
+        public const string ZERO_SESSION = "0";
 
-        private static string _pgletExe;
-        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        ReconnectingWebSocket _ws;
+        Connection _conn;
+        string _hostClientId;
+        string _pageName;
+        string _pageUrl;
+        ConcurrentDictionary<string, Page> _sessions = new ConcurrentDictionary<string, Page>();
 
-        public static async Task<Page> ConnectPage(string name = null, bool local = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, string permissions = null,
-            Func<Connection, string, Page> createPage = null, CancellationToken? cancellationToken = null)
+        public async Task<Page> ConnectPage(string pageName = null,
+            string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
+            Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var args = ParseArgs("page", name: name, local: local, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker, permissions: permissions);
+            await ConnectInternal(pageName, false, serverUrl, token, permissions, noWindow, ct);
 
-            string result = ExecuteProcess(await GetPgletPath(), args);
+            Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
+            await page.LoadHash();
+            _sessions[ZERO_SESSION] = page;
+            return page;
+        }
 
-            var match = Regex.Match(result, @"(?<pipe_id>[^\s]+)\s(?<page_url>[^\s]+)");
-            if (match.Success)
+        public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null,
+            string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
+            Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
+        {
+            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
+            await ConnectInternal(pageName, true, serverUrl, token, permissions, noWindow, ct);
+
+            pageCreated?.Invoke(_pageUrl);
+
+            // new session handler
+            _conn.OnSessionCreated = async (payload) =>
             {
-                var pipeId = match.Groups["pipe_id"].Value;
-                var pageUrl = match.Groups["page_url"].Value;
-
-                // create and open connection
-                var conn = new Connection(pipeId);
-                await conn.OpenAsync(ct);
-
-                Page page;
-                if (createPage != null)
-                {
-                    page = createPage(conn, pageUrl);
-                }
-                else
-                {
-                    page = new Page(conn, pageUrl);
-                }
+                Console.WriteLine("Session created: " + JsonUtility.Serialize(payload));
+                Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, payload.SessionID) : new Page(_conn, _pageUrl, _pageName, payload.SessionID);
                 await page.LoadHash();
-                return page;
-            }
-            else
-            {
-                throw new Exception($"Invalid pglet results: {result}");
-            }
-        }
+                _sessions[payload.SessionID] = page;
 
-        public static async Task ServeApp(Func<Page, Task> sessionHandler, string name = null, bool local = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = true, int ticker = 0, string permissions = null,
-            Func<Connection, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken ? cancellationToken = null)
-        {
-            var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var args = ParseArgs("app", name: name, local: local, server: server, token: token, noWindow: noWindow, allEvents: allEvents, ticker: ticker, permissions: permissions);
-
-            using (var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
+                var h = sessionHandler(page).ContinueWith(async t =>
                 {
-                    FileName = await GetPgletPath(),
-                    Arguments = args,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = false
-                }
-            })
-            {
-                proc.Start();
-
-                using (BlockingCollection<string> bc = new BlockingCollection<string>())
-                {
-                    string line = null;
-                    string pageUrl = null;
-                    var t = Task.Run(() =>
+                    if (t.IsFaulted)
                     {
-                        while (!proc.StandardOutput.EndOfStream)
-                        {
-                            line = proc.StandardOutput.ReadLine();
-                            if (pageUrl == null)
-                            {
-                                pageUrl = line;
-                                pageCreated?.Invoke(pageUrl);
-                            }
-                            else
-                            {
-                                bc.Add(line);
-                            }
-                        }
-                        bc.Add(null);
-                    });
-
-                    while (true)
-                    {
-                        try
-                        {
-                            line = bc.Take(ct);
-
-                            if (line == null)
-                            {
-                                return;
-                            }
-
-                            // create and open connection
-                            var conn = new Connection(line);
-                            await conn.OpenAsync(ct);
-
-                            Page page;
-                            if (createPage != null)
-                            {
-                                page = createPage(conn, pageUrl);
-                            }
-                            else
-                            {
-                                page = new Page(conn, pageUrl);
-                            }
-                            await page.LoadHash();
-                            var h = sessionHandler(page).ContinueWith(async t =>
-                            {
-                                if (t.IsFaulted)
-                                {
-                                    await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
-                                }
-                            });
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            proc.Kill();
-                            return;
-                        }
+                        await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
                     }
-                }
-            }
-        }
-
-        private static string ParseArgs(string action, string name = null, bool local = false,
-            string server = null, string token = null, bool noWindow = false, bool allEvents = false, int ticker = 0, string permissions = null)
-        {
-            var args = new List<string>
-            {
-                action
+                });
             };
 
-            if (!string.IsNullOrEmpty(name))
-            {
-                args.Add($"\"{name}\"");
-            }
-
-            if (local)
-            {
-                args.Add("--local");
-            }
-
-            if (noWindow)
-            {
-                args.Add("--no-window");
-            }
-
-            if (allEvents)
-            {
-                args.Add("--all-events");
-            }
-
-            if (ticker > 0)
-            {
-                args.Add("--ticker");
-                args.Add(ticker.ToString());
-            }
-
-            if (!string.IsNullOrEmpty(server))
-            {
-                args.Add("--server");
-                args.Add(server);
-            }
-
-            if (!string.IsNullOrEmpty(token))
-            {
-                args.Add("--token");
-                args.Add($"\"{token}\"");
-            }
-
-            if (!string.IsNullOrEmpty(permissions))
-            {
-                args.Add("--permissions");
-                args.Add($"\"{permissions}\"");
-            }
-
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-            {
-                args.Add("--uds");
-            }
-
-            return string.Join(" ", args);
+            var semaphore = new SemaphoreSlim(0);
+            using CancellationTokenRegistration ctr = ct.Register(() => {
+                semaphore.Release();
+            });
+            await semaphore.WaitAsync();
         }
 
-        private static async Task<string> GetPgletPath()
+        private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, bool noWindow, CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync();
+            _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl));
+            await _ws.Connect(cancellationToken);
+            _conn = new Connection(_ws);
+            _conn.OnEvent = OnPageEvent;
 
-            try
+            _ws.OnReconnected = async () =>
             {
-                if (_pgletExe == null)
-                {
-                    _pgletExe = await Install();
-                }
-                return _pgletExe;
-            }
-            finally
+                await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
+            };
+
+            var resp = await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
+            _hostClientId = resp.HostClientID;
+            _pageName = resp.PageName;
+            _pageUrl = GetPageUrl(serverUrl, _pageName).ToString();
+
+            if (!noWindow)
             {
-                _semaphore.Release();
+                OpenBrowser(_pageUrl);
             }
         }
 
-        private static async Task<string> Install()
+        private Task OnPageEvent(PageEventPayload payload)
         {
-            var pgletExe = "pglet.exe";
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+            //Console.WriteLine("Event received: " + JsonUtility.Serialize(payload));
+            if (_sessions.TryGetValue(payload.SessionID, out Page page))
             {
-                pgletExe = "pglet";
-            }
-
-            // check if pglet.exe is already in PATH
-            var paths = Environment.GetEnvironmentVariable("PATH");
-            foreach (var path in paths.Split(Path.PathSeparator))
-            {
-                var fullPath = Path.Combine(path, pgletExe);
-                if (File.Exists(fullPath))
+                page.OnEvent(new Event
                 {
-                    pgletExe = fullPath;
-                    return pgletExe;
+                    Target = payload.EventTarget,
+                    Name = payload.EventName,
+                    Data = payload.EventData
+                });
+
+                if (payload.EventTarget == "page" && payload.EventName == "close")
+                {
+                    //Console.WriteLine("Session is closing: " + payload.SessionID);
+                    _sessions.TryRemove(payload.SessionID, out Page _);
                 }
             }
+            return Task.CompletedTask;
+        }
 
-            var homeDir = RuntimeInfo.IsWindows ? Environment.GetEnvironmentVariable("USERPROFILE") : Environment.GetEnvironmentVariable("HOME");
-            var pgletHomeDir = Path.Combine(homeDir, ".pglet");
-            var pgletBinDir = Path.Combine(pgletHomeDir, "bin");
-            pgletExe = Path.Combine(pgletBinDir, pgletExe);
+        private Uri GetPageUrl(string serverUrl, string pageName)
+        {
+            var pageUri = new UriBuilder(serverUrl ?? HOSTED_SERVICE_URL);
+            pageUri.Path = "/" + pageName;
+            return pageUri.Uri;
+        }
 
-            var ver = PGLET_VERSION;
-            var fileName = $"pglet-{ver}-windows-amd64.zip";
-            if (RuntimeInfo.IsLinux)
+        private Uri GetWebSocketUrl(string serverUrl)
+        {
+            var wssUri = new UriBuilder(serverUrl ?? HOSTED_SERVICE_URL);
+            wssUri.Scheme = wssUri.Scheme == "https" ? "wss" : "ws";
+            wssUri.Path = "/ws";
+            return wssUri.Uri;
+        }
+
+        private void OpenBrowser(string url)
+        {
+            string procVer = "/proc/version";
+            bool wsl = (RuntimeInfo.IsLinux && File.Exists(procVer) && File.ReadAllText(procVer).ToLowerInvariant().Contains("microsoft"));
+            if (RuntimeInfo.IsWindows || wsl)
             {
-                fileName = $"pglet-{ver}-linux-amd64.tar.gz";
+                Process.Start("explorer.exe", url);
             }
             else if (RuntimeInfo.IsMac)
             {
-                fileName = $"pglet-{ver}-darwin-amd64.tar.gz";
-            }
-
-            string installedVer = null;
-            try
-            {
-                installedVer = ExecuteProcess(pgletExe, "--version");
-            }
-            catch { }
-
-            if (installedVer != null && installedVer == ver)
-            {
-                // required version is already installed
-                return pgletExe;
-            }
-
-            Debug.Write($"Installing Pglet v{ver}...");
-            var pgletUri = $"https://github.com/pglet/pglet/releases/download/v{ver}/{fileName}";
-
-            var tempDir = RuntimeInfo.IsWindows ? Environment.GetEnvironmentVariable("TEMP") : "/tmp";
-            var packagePath = Path.Combine(tempDir, fileName);
-            await (new WebClient()).DownloadFileTaskAsync(new Uri(pgletUri), packagePath);
-
-            if (Directory.Exists(pgletBinDir))
-            {
-                Directory.Delete(pgletBinDir, true);
-            }
-
-            Directory.CreateDirectory(pgletBinDir);
-
-            Unpack(packagePath, pgletBinDir);
-            File.Delete(packagePath);
-
-            if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
-            {
-                ExecuteProcess("chmod", $"+x {pgletExe}");
-            }
-
-            Debug.WriteLine("OK");
-
-            return pgletExe;
-        }
-
-        private static void Unpack(string archivePath, string destDirectory)
-        {
-            if (RuntimeInfo.IsWindows)
-            {
-                // unpack zip
-                ZipFile.ExtractToDirectory(archivePath, destDirectory);
-            }
-            else
-            {
-                // unpack tar
-                using (Stream stream = File.OpenRead(archivePath))
-                using (var reader = ReaderFactory.Open(stream))
-                {
-                    while (reader.MoveToNextEntry())
-                    {
-                        if (!reader.Entry.IsDirectory)
-                        {
-                            reader.WriteEntryToDirectory(destDirectory, new ExtractionOptions()
-                            {
-                                ExtractFullPath = true,
-                                Overwrite = true
-                            });
-                        }
-                    }
-                }
+                Process.Start("open", url);
             }
         }
 
-        private static string ExecuteProcess(string fileName, string arguments)
+        public void Close()
         {
-            using (var proc = new Process
+            if (_conn != null)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = false
-                }
-            })
-            {
-                proc.Start();
-
-                string line = null;
-                while (!proc.StandardOutput.EndOfStream)
-                {
-                    line = proc.StandardOutput.ReadLine();
-                }
-
-                proc.WaitForExit();
-
-                if (proc.ExitCode != 0)
-                {
-                    throw new Exception($"{fileName} process exited with code {proc.ExitCode}");
-                }
-
-                return line;
+                _conn.Close();
             }
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

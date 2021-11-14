@@ -7,6 +7,7 @@ namespace Pglet.Controls
         protected override string ControlName => "choicegroup";
 
         IList<ChoiceGroupOption> _options = new List<ChoiceGroupOption>();
+
         public IList<ChoiceGroupOption> Options
         {
             get { return _options; }
