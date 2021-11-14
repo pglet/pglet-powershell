@@ -2,7 +2,7 @@ Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
 try {
-    $page = Connect-PgletPage -Server "http://localhost:5000" -Permissions "" -NoWindow
+    $page = Connect-PgletPage -Permissions "*"
     $page.Clean()
     
     Write-Host $page.Url
