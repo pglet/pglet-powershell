@@ -2,7 +2,7 @@
 environment:
   configuration: Release
   psg_api_key: 
-    secure: e3uoVHqaTTa+BqEphKfjGYLXG4OXTmAktNhbWXAD+ZT6BD94F0dqabjfwbcKk14t
+    secure: +pKWU6lrUYmSwimeMa47F6FsT9+lS76DYwU2MYkAbqWnNTSVQ6rJQgITFuxz3ST5
   nuget_api_key:
     secure: 7qhExxbMr9K4LxzMbhJ2YHynyvZde6y/6duaZuT1Vzyg6CfI9QHDJD2y8DWtGXSA
 
