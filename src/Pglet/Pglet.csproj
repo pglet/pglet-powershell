@@ -16,7 +16,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>Web, UI, SPA, internal apps</PackageTags>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <PackageIcon>pglet-logo-300.png</PackageIcon>
+    <PackageIcon>img\pglet-logo-300.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\img\pglet-logo-300.png" Pack="true" PackagePath="\"/>
+    <None Include="..\img\pglet-logo-300.png" Pack="true" PackagePath="\img"/>
     <None Include="Pglet.targets" Pack="true" PackagePath="\build"/>
   </ItemGroup>
 
