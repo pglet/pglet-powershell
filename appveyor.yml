@@ -3,12 +3,29 @@ image: Ubuntu
 
 environment:
   configuration: Release
+  PGLET_VERSION: 0.4.6
   psg_api_key: 
     secure: +pKWU6lrUYmSwimeMa47F6FsT9+lS76DYwU2MYkAbqWnNTSVQ6rJQgITFuxz3ST5
   nuget_api_key:
     secure: 7qhExxbMr9K4LxzMbhJ2YHynyvZde6y/6duaZuT1Vzyg6CfI9QHDJD2y8DWtGXSA
 
 build_script:
+# downloading binaries
+- sh: |
+    function download_binary() {
+      mkdir -p runtimes/$2
+      curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-$1 -o runtimes/$2
+      chmod +x runtimes/$2/pglet
+    }
+
+    mkdir -p runtimes/win-x64
+    curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-windows-amd64.exe -o runtimes/win-x64/pglet.exe
+
+    download_binary "linux-amd64" "linux-x64"
+    download_binary "linux-arm64" "linux-arm64"
+    download_binary "linux-arm" "linux-arm"
+    download_binary "darwin-amd64" "osx-x64"
+    download_binary "darwin-arm64" "osx-arm64"
 - ps: |
     $ErrorActionPreference = "Stop"
 
@@ -45,6 +62,7 @@ build_script:
     Copy-Item -Path *.psd1 -Destination pglet
     Copy-Item -Path *.psm1 -Destination pglet
     Copy-Item -Path 'bin' -Destination pglet -Recurse
+    Copy-Item -Path 'runtimes' -Destination pglet/bin -Recurse
     Get-ChildItem pglet -Recurse
 
     # publish module
