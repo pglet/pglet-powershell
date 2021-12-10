@@ -1,4 +1,6 @@
 
+image: Ubuntu
+
 environment:
   configuration: Release
   psg_api_key: 

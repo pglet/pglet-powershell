@@ -13,7 +13,7 @@ try {
     $name = Textbox -Label "Your name"
     
     $stack = Stack -Controls (Text -Value "Results")
-    
+
     $nums = @{
         b = 10
     }
