@@ -22,7 +22,7 @@ build_script:
 
     echo "Downloading runtimes/win-x64"
     mkdir -p runtimes/win-x64
-    curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-windows-amd64.exe -o runtimes/win-x64/pglet.exe
+    curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-windows-amd64.exe -o runtimes/win-x64/pglet-server.exe
 
     download_binary "linux-amd64" "linux-x64"
     download_binary "linux-arm64" "linux-arm64"

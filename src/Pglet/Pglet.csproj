@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="Exists('..\..\runtimes')">
-    <None Include="..\..\runtimes\win-x64\pglet.exe" Pack="true" PackagePath="\runtimes\win-x64\native"/>
+    <None Include="..\..\runtimes\win-x64\pglet-server.exe" Pack="true" PackagePath="\runtimes\win-x64"/>
     <!--<None Include="..\..\runtimes\linux-x64\pglet" Pack="true" PackagePath="runtimes\linux-x64"/>
     <None Include="..\..\runtimes\linux-arm64\pglet" Pack="true" PackagePath="runtimes\linux-arm64"/>
     <None Include="..\..\runtimes\linux-arm\pglet" Pack="true" PackagePath="runtimes\linux-arm"/>
