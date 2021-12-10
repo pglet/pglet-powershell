@@ -11,13 +11,16 @@ environment:
 
 build_script:
 # downloading binaries
+- dotnet --version
 - sh: |
     function download_binary() {
+      echo "Downloading $1"
       mkdir -p runtimes/$2
       curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-$1 -o runtimes/$2/pglet
       chmod +x runtimes/$2/pglet
     }
 
+    echo "Downloading runtimes/win-x64"
     mkdir -p runtimes/win-x64
     curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-windows-amd64.exe -o runtimes/win-x64/pglet.exe
 
