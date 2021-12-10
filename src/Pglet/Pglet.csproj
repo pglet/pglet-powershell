@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <None Include="..\img\pglet-logo-300.png" Pack="true" PackagePath="\"/>
+    <None Include="Pglet.targets" Pack="true" PackagePath="\build"/>
   </ItemGroup>
 
   <ItemGroup>
