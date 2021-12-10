@@ -14,7 +14,7 @@ build_script:
 - sh: |
     function download_binary() {
       mkdir -p runtimes/$2
-      curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-$1 -o runtimes/$2
+      curl -L https://github.com/pglet/pglet/releases/download/v${PGLET_VERSION}/pglet-${PGLET_VERSION}-$1 -o runtimes/$2/pglet
       chmod +x runtimes/$2/pglet
     }
 
