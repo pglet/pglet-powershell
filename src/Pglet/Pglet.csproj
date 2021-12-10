@@ -29,7 +29,7 @@
     <None Include="Pglet.targets" Pack="true" PackagePath="\build"/>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="Exists('..\..\runtimes')">
     <None Include="..\..\runtimes\win-x64\test-win-x64.txt" Pack="true" PackagePath="\runtimes\win-x64"/>
     <None Include="..\..\runtimes\linux-x64\test-linux-x64.txt" Pack="true" PackagePath="\runtimes\linux-x64"/>
   </ItemGroup>
