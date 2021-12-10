@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\runtimes\win-x64\test-win-x64.txt" Pack="true" PackagePath="\runtimes\win-x64\native"/>
-    <None Include="..\..\runtimes\linux-x64\test-linux-x64.txt" Pack="true" PackagePath="\runtimes\linux-x64\native"/>
+    <None Include="..\..\runtimes\win-x64\test-win-x64.txt" Pack="true" PackagePath="\runtimes\win-x64"/>
+    <None Include="..\..\runtimes\linux-x64\test-linux-x64.txt" Pack="true" PackagePath="\runtimes\linux-x64"/>
   </ItemGroup>
 
 </Project>
