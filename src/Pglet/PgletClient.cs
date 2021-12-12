@@ -12,7 +12,8 @@ namespace Pglet
 {
     public class PgletClient : IDisposable
     {
-        public const string HOSTED_SERVICE_URL = "https://console.pglet.io";
+        public const string HOSTED_SERVICE_URL = "https://app.pglet.io";
+        public const string DEFAULT_SERVER_PORT = "5000";
         public const string ZERO_SESSION = "0";
 
         ReconnectingWebSocket _ws;
@@ -22,12 +23,12 @@ namespace Pglet
         string _pageUrl;
         ConcurrentDictionary<string, Page> _sessions = new ConcurrentDictionary<string, Page>();
 
-        public async Task<Page> ConnectPage(string pageName = null,
+        public async Task<Page> ConnectPage(string pageName = null, bool web = false,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            await ConnectInternal(pageName, false, serverUrl, token, permissions, noWindow, ct);
+            await ConnectInternal(pageName, false, web, serverUrl, token, permissions, noWindow, ct);
 
             Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
             await page.LoadHash();
@@ -35,12 +36,12 @@ namespace Pglet
             return page;
         }
 
-        public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null,
+        public async Task ServeApp(Func<Page, Task> sessionHandler, string pageName = null, bool web = false,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            await ConnectInternal(pageName, true, serverUrl, token, permissions, noWindow, ct);
+            await ConnectInternal(pageName, true, web, serverUrl, token, permissions, noWindow, ct);
 
             pageCreated?.Invoke(_pageUrl);
 
@@ -68,17 +69,39 @@ namespace Pglet
             await semaphore.WaitAsync();
         }
 
-        private async Task ConnectInternal(string pageName, bool isApp, string serverUrl, string token, string permissions, bool noWindow, CancellationToken cancellationToken)
+        private async Task ConnectInternal(string pageName, bool isApp, bool web, string serverUrl, string token, string permissions, bool noWindow, CancellationToken cancellationToken)
         {
-            _ws = new ReconnectingWebSocket(GetWebSocketUrl(serverUrl));
-            await _ws.Connect(cancellationToken);
-            _conn = new Connection(_ws);
-            _conn.OnEvent = OnPageEvent;
+            if (String.IsNullOrEmpty(serverUrl))
+            {
+                if (web)
+                {
+                    serverUrl = HOSTED_SERVICE_URL;
+                }
+                else
+                {
+                    var serverPort = Environment.GetEnvironmentVariable("PGLET_SERVER_PORT");
+                    serverUrl = "http://localhost:" + (string.IsNullOrEmpty(serverPort) ? DEFAULT_SERVER_PORT : serverPort);
+                }
+            }
 
+            var wsUrl = GetWebSocketUrl(serverUrl);
+            _ws = new ReconnectingWebSocket(wsUrl);
+            _ws.OnFailedConnect = () =>
+            {
+                if (wsUrl.Host == "localhost")
+                {
+                    StartPgletServer();
+                }
+                return Task.CompletedTask;
+            };
             _ws.OnReconnected = async () =>
             {
                 await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
             };
+
+            await _ws.Connect(cancellationToken);
+            _conn = new Connection(_ws);
+            _conn.OnEvent = OnPageEvent;
 
             var resp = await _conn.RegisterHostClient(_hostClientId, pageName, isApp, token, permissions, cancellationToken);
             _hostClientId = resp.HostClientID;
@@ -125,6 +148,11 @@ namespace Pglet
             wssUri.Scheme = wssUri.Scheme == "https" ? "wss" : "ws";
             wssUri.Path = "/ws";
             return wssUri.Uri;
+        }
+
+        private void StartPgletServer()
+        {
+            Trace.WriteLine("Start Pglet SERVER!");
         }
 
         private void OpenBrowser(string url)

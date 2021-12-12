@@ -15,12 +15,15 @@ namespace Pglet
         private const int RECONNECT_DELAY_MS = 1000;
         private const int MAX_RECONNECT_DELAY_MS = 60000;
 
+        private const int LOCAL_CONNECT_TIMEOUT_MS = 200;
+        private const int LOCAL_CONNECT_ATTEMPTS = 50;
 
         private readonly Channel<byte[]> _sendQueue = Channel.CreateBounded<byte[]>(10);
 
         ClientWebSocket _ws;
         Uri _uri;
         Func<byte[], Task> _onMessage;
+        Func<Task> _onFailedConnect;
         Func<Task> _onReconnected;
 
         CancellationToken _cancellationToken;
@@ -31,6 +34,11 @@ namespace Pglet
         public Func<byte[], Task> OnMessage
         {
             set { _onMessage = value; }
+        }
+
+        public Func<Task> OnFailedConnect
+        {
+            set { _onFailedConnect = value; }
         }
 
         public Func<Task> OnReconnected
@@ -53,8 +61,36 @@ namespace Pglet
         private async Task ConnectInternal()
         {
             Trace.WriteLine("ReconnectingWebSocket: ConnectInternal()");
-            _ws = new ClientWebSocket();
-            await _ws.ConnectAsync(_uri, _cancellationToken);
+
+            bool failedConnectCalled = false;
+
+            for (int i = 1; i < LOCAL_CONNECT_ATTEMPTS + 1; i++)
+            {
+                using (CancellationTokenSource timeout = new CancellationTokenSource(LOCAL_CONNECT_TIMEOUT_MS))
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken, timeout.Token))
+                    {
+                        try
+                        {
+                            _ws = new ClientWebSocket();
+                            await _ws.ConnectAsync(_uri, linkedCts.Token);
+                            Trace.WriteLine("Connected!");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.WriteLine($"Connect attempt #{i} failed: {ex.Message}");
+                            _ws.Dispose();
+                            if (_onFailedConnect != null && !failedConnectCalled)
+                            {
+                                _ = _onFailedConnect();
+                                failedConnectCalled = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
             StartReadWriteLoops();
         }
 

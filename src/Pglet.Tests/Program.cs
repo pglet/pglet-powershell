@@ -58,7 +58,7 @@ namespace Pglet.Tests
 
                     Console.WriteLine("Session end");
 
-                }, "index3", serverUrl: "http://localhost:5000", cancellationToken: cancellationToken);
+                }, "index3", web: false, cancellationToken: cancellationToken);
             }
         }
 
