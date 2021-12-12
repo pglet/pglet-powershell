@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -152,7 +153,24 @@ namespace Pglet
 
         private void StartPgletServer()
         {
-            Trace.WriteLine("Start Pglet SERVER!");
+            Trace.WriteLine("Starting Pglet Server in local mode");
+            var platform = "win";
+            if (RuntimeInfo.IsLinux)
+            {
+                platform = "linux";
+            }
+            else if (RuntimeInfo.IsMac)
+            {
+                platform = "osx";
+            }
+            var pgletPath = Path.Combine(GetApplicationDirectory(), "runtimes", $"{platform}-{RuntimeInfo.Architecture}", RuntimeInfo.IsWindows ? "pglet-server.exe" : "pglet");
+            if (!File.Exists(pgletPath))
+            {
+                // override for local development
+                pgletPath = RuntimeInfo.IsWindows ? "pglet.exe" : "pglet";
+            }
+
+            Process.Start(pgletPath, "server --background");
         }
 
         private void OpenBrowser(string url)
@@ -167,6 +185,11 @@ namespace Pglet
             {
                 Process.Start("open", url);
             }
+        }
+
+        private string GetApplicationDirectory()
+        {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
         public void Close()
