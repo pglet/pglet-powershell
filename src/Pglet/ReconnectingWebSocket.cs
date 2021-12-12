@@ -15,6 +15,9 @@ namespace Pglet
         private const int RECONNECT_DELAY_MS = 1000;
         private const int MAX_RECONNECT_DELAY_MS = 60000;
 
+        private const int REMOTE_CONNECT_TIMEOUT_MS = 5000;
+        private const int REMOTE_CONNECT_ATTEMPTS = 1;
+
         private const int LOCAL_CONNECT_TIMEOUT_MS = 200;
         private const int LOCAL_CONNECT_ATTEMPTS = 50;
 
@@ -61,12 +64,12 @@ namespace Pglet
         private async Task ConnectInternal()
         {
             Trace.WriteLine("ReconnectingWebSocket: ConnectInternal()");
+            bool isLocal = _uri.Host == "localhost";
 
             bool failedConnectCalled = false;
-
-            for (int i = 1; i < LOCAL_CONNECT_ATTEMPTS + 1; i++)
+            for (int i = 1; i < (isLocal ? LOCAL_CONNECT_ATTEMPTS : REMOTE_CONNECT_ATTEMPTS) + 1; i++)
             {
-                using (CancellationTokenSource timeout = new CancellationTokenSource(LOCAL_CONNECT_TIMEOUT_MS))
+                using (CancellationTokenSource timeout = new CancellationTokenSource(isLocal ? LOCAL_CONNECT_TIMEOUT_MS : REMOTE_CONNECT_TIMEOUT_MS))
                 {
                     using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken, timeout.Token))
                     {

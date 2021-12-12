@@ -18,6 +18,9 @@ namespace Pglet.PowerShell
         [Parameter(Mandatory = true, HelpMessage = "A handler script block for a new user session.")]
         public ScriptBlock ScriptBlock { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "Stream web app to a hosted Pglet service.")]
+        public SwitchParameter Web { get; set; }
+
         [Parameter(Mandatory = false, HelpMessage = "Do not open browser window.")]
         public SwitchParameter NoWindow { get; set; }
 
@@ -70,7 +73,7 @@ namespace Pglet.PowerShell
                         }
                     });
                 },
-                cancellationToken: _cancellationSource.Token, pageName: Name, noWindow: NoWindow.ToBool(),
+                cancellationToken: _cancellationSource.Token, pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                     serverUrl: Server, token: Token, permissions: Permissions,
                     createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId), pageCreated: pageCreated).Wait();
             }

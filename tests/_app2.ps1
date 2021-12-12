@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp "index2" -ScriptBlock {
+Connect-PgletApp "index2" -Web -ScriptBlock {
 
     $page = $PGLET_PAGE
     $page.OnHashChange = {
