@@ -53,15 +53,21 @@ namespace Pglet
                     tcs.SetResult(m.Payload as JObject);
                 }
             }
-            else if (m.Action == Actions.PageEventToHost && _onEvent != null)
+            else if (m.Action == Actions.PageEventToHost)
             {
-                // page event
-                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                if (_onEvent != null)
+                {
+                    // page event
+                    await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                }
             }
-            else if (m.Action == Actions.SessionCreated && _onSessionCreated != null)
+            else if (m.Action == Actions.SessionCreated)
             {
-                // new session started
-                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                if (_onSessionCreated != null)
+                {
+                    // new session started
+                    await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                }
             }
             else
             {
@@ -125,11 +131,6 @@ namespace Pglet
                 throw new Exception(result.Error);
             }
             return result;
-        }
-
-        private Task<JObject> SendMessage(string actionName, object payload, CancellationToken cancellationToken)
-        {
-            return SendMessageInternal(null, actionName, payload, cancellationToken);
         }
 
         private Task<JObject> SendMessageWithResult(string actionName, object payload, CancellationToken cancellationToken)

@@ -140,26 +140,31 @@ namespace Pglet
         public string UserId
         {
             get { return GetAttr("userId"); }
+            set { SetAttr("userId", value); }
         }
 
         public string UserLogin
         {
             get { return GetAttr("userLogin"); }
+            set { SetAttr("userLogin", value); }
         }
 
         public string UserName
         {
             get { return GetAttr("userName"); }
+            set { SetAttr("userName", value); }
         }
 
         public string UserEmail
         {
             get { return GetAttr("userEmail"); }
+            set { SetAttr("userEmail", value); }
         }
 
         public string UserClientIP
         {
             get { return GetAttr("userClientIP"); }
+            set { SetAttr("userClientIP", value); }
         }
 
         public EventHandler OnClose
@@ -204,9 +209,24 @@ namespace Pglet
             _index[UniqueId] = this;
         }
 
-        internal async Task LoadHash()
+        internal async Task LoadPageDetails()
         {
-            Hash = await SendCommand("get", "page", "hash");
+            var values = (await _conn.SendCommands(_pageName, _sessionId, new List<Command>
+            {
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "hash" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userid" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userlogin" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "username" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "useremail" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userclientip" } }
+            }, CancellationToken.None)).Results;
+
+            Hash = values[0];
+            UserId = values[1];
+            UserLogin = values[2];
+            UserName = values[3];
+            UserEmail = values[4];
+            UserClientIP = values[5];
         }
 
         public void Add(params Control[] controls)
@@ -422,33 +442,24 @@ namespace Pglet
             // call event handlers
             else if (_index.ContainsKey(e.Target))
             {
+                _lastEvent = new ControlEvent
+                {
+                    Target = e.Target,
+                    Name = e.Name,
+                    Data = e.Data,
+                    Control = _index[e.Target],
+                    Page = this
+                };
+
                 var controlHandlers = _index[e.Target].EventHandlers;
                 if (controlHandlers.ContainsKey(e.Name))
                 {
                     var control = _index[e.Target];
-
-                    var ce = new ControlEvent
-                    {
-                        Target = e.Target,
-                        Name = e.Name,
-                        Data = e.Data,
-                        Control = _index[e.Target],
-                        Page = this
-                    };
-                    var t = Task.Run(() => controlHandlers[e.Name](ce));
+                    var t = Task.Run(() => controlHandlers[e.Name](_lastEvent));
                 }
+
+                _resetEvent.Set();
             }
-
-            _lastEvent = new ControlEvent
-            {
-                Target = e.Target,
-                Name = e.Name,
-                Data = e.Data,
-                Control = _index[e.Target],
-                Page = this
-            };
-
-            _resetEvent.Set();
         }
 
         public async Task<string> SendCommand(string name, params string[] values)

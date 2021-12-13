@@ -32,7 +32,7 @@ namespace Pglet
             await ConnectInternal(pageName, false, web, serverUrl, token, permissions, noWindow, ct);
 
             Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, ZERO_SESSION) : new Page(_conn, _pageUrl, _pageName, ZERO_SESSION);
-            await page.LoadHash();
+            await page.LoadPageDetails();
             _sessions[ZERO_SESSION] = page;
             return page;
         }
@@ -51,7 +51,7 @@ namespace Pglet
             {
                 Console.WriteLine("Session created: " + JsonUtility.Serialize(payload));
                 Page page = createPage != null ? createPage(_conn, _pageUrl, _pageName, payload.SessionID) : new Page(_conn, _pageUrl, _pageName, payload.SessionID);
-                await page.LoadHash();
+                await page.LoadPageDetails();
                 _sessions[payload.SessionID] = page;
 
                 var h = sessionHandler(page).ContinueWith(async t =>
