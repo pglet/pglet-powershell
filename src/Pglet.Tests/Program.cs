@@ -9,7 +9,7 @@ namespace Pglet.Tests
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static Task Main(string[] args)
         {
             var consoleTracer = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleTracer);
@@ -27,74 +27,66 @@ namespace Pglet.Tests
             Console.WriteLine("ENTER to exit...");
             Console.ReadLine();
             cts.Cancel();
-            await Task.Delay(2000);
+            return Task.CompletedTask;
         }
 
-        private static async Task TestLines1(CancellationToken cancellationToken)
+        private static Task TestLines1(CancellationToken cancellationToken)
         {
-            using (var pgc = new PgletClient())
+            return PgletClient.ServeApp(async (page) =>
             {
-                await pgc.ServeApp(async (page) =>
-                {
-                    Console.WriteLine("Session start");
+                Console.WriteLine("Session start");
 
-                    var txt = new Text { Value = "Line 1" };
-                    await page.AddAsync(txt);
-                    await Task.Delay(5000);
+                var txt = new Text { Value = "Line 1" };
+                await page.AddAsync(txt);
+                await Task.Delay(5000);
 
-                    var txt1 = new Text { Value = "Line 0" };
-                    await page.InsertAsync(0, txt1);
-                    await Task.Delay(5000);
+                var txt1 = new Text { Value = "Line 0" };
+                await page.InsertAsync(0, txt1);
+                await Task.Delay(5000);
 
-                    page.Controls.Add(new Text { Value = "Line 3" });
-                    page.Controls.RemoveAt(1);
-                    await page.UpdateAsync();
+                page.Controls.Add(new Text { Value = "Line 3" });
+                page.Controls.RemoveAt(1);
+                await page.UpdateAsync();
 
-                    Console.WriteLine("Session end");
+                Console.WriteLine("Session end");
 
-                }, web: false, cancellationToken: cancellationToken);
-            }
+            }, web: false, cancellationToken: cancellationToken);
         }
 
-        private static async Task TestApp1(CancellationToken cancellationToken)
+        private static Task TestApp1(CancellationToken cancellationToken)
         {
-            using (var pgc = new PgletClient())
+            return PgletClient.ServeApp(async (page) =>
             {
-                await pgc.ServeApp(async (page) =>
-                {
-                    Console.WriteLine("Session start");
-                    //var mainStack = new Stack
-                    //{
-                    //    Controls =
-                    //    {
-                    //        new Text { Value = page.SessionId }
-                    //    }
-                    //};
+                Console.WriteLine("Session start");
+                //var mainStack = new Stack
+                //{
+                //    Controls =
+                //    {
+                //        new Text { Value = page.SessionId }
+                //    }
+                //};
 
-                    //await page.AddAsync(mainStack);
+                //await page.AddAsync(mainStack);
 
-                    //for(int i = 0; i < 10; i++)
-                    //{
-                    //    await page.AddAsync(new Text { Value = i.ToString() });
-                    //}
+                //for(int i = 0; i < 10; i++)
+                //{
+                //    await page.AddAsync(new Text { Value = i.ToString() });
+                //}
 
-                    var txtName = new TextBox();
-                    var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
-                    await page.AddAsync(txtName, submitBtn);
+                var txtName = new TextBox();
+                var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
+                await page.AddAsync(txtName, submitBtn);
 
-                    Console.WriteLine("Session end");
+                Console.WriteLine("Session end");
 
-                }, "index3", web: false, cancellationToken: cancellationToken);
-            }
+            }, "index3", web: false, cancellationToken: cancellationToken);
         }
 
         private static async Task TestPage1()
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-
-            var page = await pgc.ConnectPage("page-2", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
+            var page = await PgletClient.ConnectPage("page-2", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
             var mainStack = new Stack
@@ -121,9 +113,7 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-
-            var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
+            var page = await PgletClient.ConnectPage("page-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
             var txtName = new TextBox();
@@ -167,13 +157,12 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-            pgc.ServeApp(async (page) =>
+            await PgletClient.ServeApp(async (page) =>
             {
                 var txtName = new TextBox();
                 var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
                 await page.AddAsync(txtName, submitBtn);
-            }, "app-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token).Wait();
+            }, "app-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
 
             //Console.ReadLine();
             await Task.Delay(200000);
@@ -201,7 +190,7 @@ namespace Pglet.Tests
 
         private static async Task TestGrid()
         {
-            Page page = await new PgletClient().ConnectPage("grid-1", serverUrl: "http://localhost:5000", noWindow: true);
+            Page page = await PgletClient.ConnectPage("grid-1", serverUrl: "http://localhost:5000", noWindow: true);
             await page.CleanAsync();
 
             var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
@@ -297,7 +286,7 @@ namespace Pglet.Tests
 
         private static async Task TestControls()
         {
-            Page page = await new PgletClient().ConnectPage("controls-1", serverUrl: "http://localhost:5000", noWindow: true);
+            Page page = await PgletClient.ConnectPage("controls-1", serverUrl: "http://localhost:5000", noWindow: true);
             await page.CleanAsync();
 
             page.Title = "Example 1";
@@ -452,9 +441,9 @@ namespace Pglet.Tests
             await stack.UpdateAsync();
         }
 
-        private static async Task TestApp()
+        private static Task TestApp()
         {
-            await new PgletClient().ServeApp(async (page) =>
+            return PgletClient.ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {

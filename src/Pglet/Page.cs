@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Pglet
 {
-    public class Page : Control
+    public class Page : Control, IDisposable
     {
         readonly Connection _conn;
         readonly string _pageUrl;
@@ -465,6 +465,11 @@ namespace Pglet
         public async Task<string> SendCommand(string name, params string[] values)
         {
             return (await _conn.SendCommand(_pageName, _sessionId, new Protocol.Command { Name = name, Values = values.ToList() }, CancellationToken.None)).Result;
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

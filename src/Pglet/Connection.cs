@@ -3,6 +3,8 @@ using Pglet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +13,8 @@ namespace Pglet
 {
     public class Connection
     {
+        private static Dictionary<Connection, bool> _allConnections = new();
+
         ReconnectingWebSocket _ws;
         ConcurrentDictionary<string, TaskCompletionSource<JObject>> _wsCallbacks = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
         Func<PageEventPayload, Task> _onEvent;
@@ -26,10 +30,16 @@ namespace Pglet
             set { _onSessionCreated = value; }
         }
 
+        public string HostClientId { get; set; }
+        public string PageName { get; set; }
+        public string PageUrl { get; set; }
+        public ConcurrentDictionary<string, Page> Sessions { get; set; } = new();
+
         public Connection(ReconnectingWebSocket ws)
         {
             _ws = ws;
             _ws.OnMessage = OnMessage;
+            _allConnections[this] = true;
         }
 
         private async Task OnMessage(byte[] message)
@@ -72,15 +82,15 @@ namespace Pglet
             {
                 // something else
                 // TODO - throw?
-                Console.WriteLine(m.Payload);
+                Trace.TraceWarning(m.Payload.ToString());
             }
         }
 
-        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string hostClientId, string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
+        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
         {
             var payload = new RegisterHostClientRequestPayload
             {
-                HostClientID = hostClientId,
+                HostClientID = this.HostClientId,
                 PageName = String.IsNullOrEmpty(pageName) ? "*" : pageName,
                 IsApp = isApp,
                 AuthToken = authToken,
@@ -93,6 +103,7 @@ namespace Pglet
             {
                 throw new Exception(result.Error);
             }
+            this.HostClientId = result.HostClientID;
             return result;
         }
 
@@ -174,11 +185,24 @@ namespace Pglet
             }
         }
 
+        public static void CloseAllConnections()
+        {
+            Trace.TraceInformation($"Closing {_allConnections.Count} active connection(s)");
+
+            foreach (var conn in _allConnections.Keys.ToArray())
+            {
+                conn.Close();
+            }
+        }
+
         public void Close()
         {
+            _allConnections.Remove(this);
+
             if (_ws != null)
             {
                 _ws.CloseAsync().Wait();
+                _ws = null;
             }
         }
     }

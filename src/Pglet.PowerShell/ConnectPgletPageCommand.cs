@@ -27,7 +27,7 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var page = new PgletClient().ConnectPage(pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+            var page = PgletClient.ConnectPage(pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                 serverUrl: Server, token: Token, permissions: Permissions,
                 createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId)).GetAwaiter().GetResult();
 

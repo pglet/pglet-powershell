@@ -13,7 +13,7 @@ namespace Pglet.Tests.Fx
 
         private static async Task TestApp()
         {
-            await new PgletClient().ServeApp(async (page) =>
+            await PgletClient.ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {

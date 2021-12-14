@@ -41,41 +41,38 @@ namespace Pglet.PowerShell
                 Host.UI.WriteLine(pageUrl);
             }
 
-            using (PgletClient pgc = new PgletClient())
+            PgletClient.ServeApp((page) =>
             {
-                pgc.ServeApp((page) =>
+                return Task.Run(() =>
                 {
-                    return Task.Run(() =>
+                    using (var runspace = RunspaceFactory.CreateRunspace())
                     {
-                        using (var runspace = RunspaceFactory.CreateRunspace())
+                        using (var ps = System.Management.Automation.PowerShell.Create())
                         {
-                            using (var ps = System.Management.Automation.PowerShell.Create())
-                            {
-                                using CancellationTokenRegistration ctr = _cancellationSource.Token.Register(() => ps.Stop());
+                            using CancellationTokenRegistration ctr = _cancellationSource.Token.Register(() => ps.Stop());
 
-                                try
-                                {
-                                    ps.Runspace = runspace;
-                                    runspace.Open();
-                                    runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.AllScope));
-                                    ps.AddScript($"Import-Module '{pgletModulePath}'");
-                                    ps.AddScript(ScriptBlock.ToString());
-                                    ps.AddScript("\nSwitch-PgletEvents");
-                                    ps.Invoke();
-                                }
-                                catch (RuntimeException ex)
-                                {
-                                    Host.UI.WriteErrorLine(ex.ErrorRecord.ToString() + "\n" + ex.ErrorRecord.InvocationInfo.PositionMessage);
-                                    throw;
-                                }
+                            try
+                            {
+                                ps.Runspace = runspace;
+                                runspace.Open();
+                                runspace.SessionStateProxy.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.AllScope));
+                                ps.AddScript($"Import-Module '{pgletModulePath}'");
+                                ps.AddScript(ScriptBlock.ToString());
+                                ps.AddScript("\nSwitch-PgletEvents");
+                                ps.Invoke();
+                            }
+                            catch (RuntimeException ex)
+                            {
+                                Host.UI.WriteErrorLine(ex.ErrorRecord.ToString() + "\n" + ex.ErrorRecord.InvocationInfo.PositionMessage);
+                                throw;
                             }
                         }
-                    });
-                },
-                cancellationToken: _cancellationSource.Token, pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
-                    serverUrl: Server, token: Token, permissions: Permissions,
-                    createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId), pageCreated: pageCreated).Wait();
-            }
+                    }
+                });
+            },
+            cancellationToken: _cancellationSource.Token, pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
+                serverUrl: Server, token: Token, permissions: Permissions,
+                createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId), pageCreated: pageCreated).Wait();
         }
 
         protected override void StopProcessing()
