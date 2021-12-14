@@ -329,7 +329,7 @@ namespace Pglet
             await UpdateAsync();
 
             // wait for events
-            while(!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var e = WaitEvent(cancellationToken);
                 if (e.Control == this && e.Name.Equals("signin", StringComparison.OrdinalIgnoreCase))
@@ -366,7 +366,7 @@ namespace Pglet
 
         public Task RemoveAsync(params Control[] controls)
         {
-            foreach(var control in controls)
+            foreach (var control in controls)
             {
                 _controls.Remove(control);
             }

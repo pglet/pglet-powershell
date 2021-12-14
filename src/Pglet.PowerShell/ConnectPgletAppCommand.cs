@@ -1,5 +1,4 @@
 ﻿using Pglet.PowerShell.Controls;
-using System;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;

@@ -22,10 +22,10 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Bold { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Italic { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Pre { get; set; }
 

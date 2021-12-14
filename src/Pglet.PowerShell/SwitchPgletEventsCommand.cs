@@ -28,7 +28,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            while(!_cancellationSource.IsCancellationRequested)
+            while (!_cancellationSource.IsCancellationRequested)
             {
                 var e = page.WaitEvent(_cancellationSource.Token);
 

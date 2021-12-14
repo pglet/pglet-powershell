@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using Pglet.Protocol;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
 using System.Threading;
-using Pglet.Protocol;
-using System.Collections.Concurrent;
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace Pglet
 {
@@ -158,7 +157,8 @@ namespace Pglet
                 var tcs = new TaskCompletionSource<JObject>();
                 _wsCallbacks.TryAdd(msg.Id, tcs);
 
-                using CancellationTokenRegistration ctr = cancellationToken.Register(() => {
+                using CancellationTokenRegistration ctr = cancellationToken.Register(() =>
+                {
                     if (_wsCallbacks.TryRemove(msg.Id, out TaskCompletionSource<JObject> tcs))
                     {
                         tcs.SetCanceled();

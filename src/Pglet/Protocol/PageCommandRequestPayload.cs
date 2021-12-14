@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Pglet.Protocol
+﻿namespace Pglet.Protocol
 {
     public class PageCommandRequestPayload
     {

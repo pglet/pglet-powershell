@@ -1,11 +1,9 @@
 ﻿using Pglet.Protocol;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,7 +25,8 @@ namespace Pglet
         static PgletClient()
         {
             // subscribe to application exit/unload events
-            Console.CancelKeyPress += delegate {
+            Console.CancelKeyPress += delegate
+            {
                 OnApplicationExit();
             };
 
@@ -77,7 +76,8 @@ namespace Pglet
             };
 
             var semaphore = new SemaphoreSlim(0);
-            using CancellationTokenRegistration ctr = ct.Register(() => {
+            using CancellationTokenRegistration ctr = ct.Register(() =>
+            {
                 semaphore.Release();
             });
             await semaphore.WaitAsync();

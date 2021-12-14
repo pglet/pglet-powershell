@@ -418,7 +418,7 @@ namespace Pglet.Tests
                 {
                     new Text { Value = "Body text" }
                 },
-                FooterControls = 
+                FooterControls =
                 {
                     new Button { Text = "OK" },
                     new Button { Text = "Cancel" }
@@ -438,7 +438,7 @@ namespace Pglet.Tests
             // 2nd update
             await page.UpdateAsync();
 
-            
+
             // BarChart
             stack.Controls.Add(new BarChart
             {

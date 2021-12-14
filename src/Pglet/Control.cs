@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet
@@ -161,7 +160,7 @@ namespace Pglet
 
         protected virtual IEnumerable<Control> GetChildren()
         {
-            return new Control[] {};
+            return new Control[] { };
         }
 
         protected void SetEventHandler(string eventName, EventHandler handler)
@@ -315,7 +314,7 @@ namespace Pglet
             }
         }
 
-        protected T GetAttr<T>(string name) where T :  notnull
+        protected T GetAttr<T>(string name) where T : notnull
         {
             var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
             if (sval == null)
@@ -457,7 +456,7 @@ namespace Pglet
             var children = GetChildren();
             if (children != null)
             {
-                foreach(var control in children)
+                foreach (var control in children)
                 {
                     var childCmds = control.GetCommands(indent: indent + 2, index: index, addedControls: addedControls);
                     commands.AddRange(childCmds);
@@ -479,7 +478,7 @@ namespace Pglet
                 return command;
             }
 
-            foreach(string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
+            foreach (string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
             {
                 var dirty = _attrs[attrName].IsDirty;
                 if ((update && !dirty) || attrName == "id")

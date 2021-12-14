@@ -1,5 +1,4 @@
-﻿using Pglet.PowerShell.Controls;
-using System.Management.Automation;
+﻿using System.Management.Automation;
 
 namespace Pglet.PowerShell
 {

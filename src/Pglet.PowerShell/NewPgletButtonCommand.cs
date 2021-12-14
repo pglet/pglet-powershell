@@ -12,16 +12,16 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Primary { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Compound { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Action { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Toolbar { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Split { get; set; }
 
