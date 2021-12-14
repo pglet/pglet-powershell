@@ -19,7 +19,7 @@ namespace Pglet.Tests
             //_ = TestPage2();
             //await TestApp2();
             //TestDiffs();
-            _ = TestApp1(cts.Token);
+            _ = TestLines1(cts.Token);
             //_ = TestControls();
             //_ = TestGrid();
             //await TestPage();
@@ -28,6 +28,32 @@ namespace Pglet.Tests
             Console.ReadLine();
             cts.Cancel();
             await Task.Delay(2000);
+        }
+
+        private static async Task TestLines1(CancellationToken cancellationToken)
+        {
+            using (var pgc = new PgletClient())
+            {
+                await pgc.ServeApp(async (page) =>
+                {
+                    Console.WriteLine("Session start");
+
+                    var txt = new Text { Value = "Line 1" };
+                    await page.AddAsync(txt);
+                    await Task.Delay(5000);
+
+                    var txt1 = new Text { Value = "Line 0" };
+                    await page.InsertAsync(0, txt1);
+                    await Task.Delay(5000);
+
+                    page.Controls.Add(new Text { Value = "Line 3" });
+                    page.Controls.RemoveAt(1);
+                    await page.UpdateAsync();
+
+                    Console.WriteLine("Session end");
+
+                }, web: false, cancellationToken: cancellationToken);
+            }
         }
 
         private static async Task TestApp1(CancellationToken cancellationToken)

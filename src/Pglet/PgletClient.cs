@@ -24,6 +24,19 @@ namespace Pglet
         string _pageUrl;
         ConcurrentDictionary<string, Page> _sessions = new ConcurrentDictionary<string, Page>();
 
+        static PgletClient()
+        {
+            // subscribe to application exit/unload events
+            Console.CancelKeyPress += delegate {
+                OnApplicationExit();
+            };
+
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+            {
+                OnApplicationExit();
+            };
+        }
+
         public async Task<Page> ConnectPage(string pageName = null, bool web = false,
             string serverUrl = null, string token = null, bool noWindow = false, string permissions = null,
             Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
@@ -203,6 +216,11 @@ namespace Pglet
         public void Dispose()
         {
             Close();
+        }
+
+        private static void OnApplicationExit()
+        {
+            Console.WriteLine("Exiting...");
         }
     }
 }
