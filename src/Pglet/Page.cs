@@ -398,6 +398,8 @@ namespace Pglet
                 RemoveControlRecursively(_index, child);
             }
 
+            _controls.Clear();
+
             await SendCommand("clean", UniqueId);
         }
 
