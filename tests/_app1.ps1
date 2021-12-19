@@ -1,7 +1,7 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp "index" -NoWindow -ScriptBlock {
+Connect-PgletApp "ps-app-test" -ScriptBlock {
     try {
         $btn = Button -Text "Click me!" -OnClick {
             Write-Trace "Oh, I've been clicked!"
