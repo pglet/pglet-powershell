@@ -1,8 +1,5 @@
-$listener = new-object "system.diagnostics.consoletracelistener"
-[System.Diagnostics.Trace]::Listeners.Add($listener) | Out-Null 
-
 Remove-Module pglet -ErrorAction SilentlyContinue
-Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
+Import-Module pglet
 
 Connect-PgletApp "ps-app-test" -ScriptBlock {
     try {

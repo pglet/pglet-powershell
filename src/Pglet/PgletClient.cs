@@ -6,11 +6,30 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Pglet
 {
     public class PgletClient
     {
+        [DllImport("libc", SetLastError = true)]
+        private static extern int chmod(string pathname, int mode);
+
+        // user permissions
+        const int S_IRUSR = 0x100;
+        const int S_IWUSR = 0x80;
+        const int S_IXUSR = 0x40;
+
+        // group permission
+        const int S_IRGRP = 0x20;
+        const int S_IWGRP = 0x10;
+        const int S_IXGRP = 0x8;
+
+        // other permissions
+        const int S_IROTH = 0x4;
+        const int S_IWOTH = 0x2;
+        const int S_IXOTH = 0x1;
+
         public const string HOSTED_SERVICE_URL = "https://app.pglet.io";
         public const string DEFAULT_SERVER_PORT = "5000";
         public const string ZERO_SESSION = "0";
@@ -173,10 +192,17 @@ namespace Pglet
                 platform = "osx";
             }
             var pgletPath = Path.Combine(GetApplicationDirectory(), "runtimes", $"{platform}-{RuntimeInfo.Architecture}", RuntimeInfo.IsWindows ? "pglet-server.exe" : "pglet");
+            
             if (!File.Exists(pgletPath))
             {
                 // override for local development
                 pgletPath = RuntimeInfo.IsWindows ? "pglet.exe" : "pglet";
+            }
+            else if (RuntimeInfo.IsLinux || RuntimeInfo.IsMac)
+            {
+                // set chmod
+                const int _0755 = S_IRUSR | S_IXUSR | S_IWUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+                chmod(pgletPath, (int)_0755);
             }
 
             Process.Start(pgletPath, "server --background");

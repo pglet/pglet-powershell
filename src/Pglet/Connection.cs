@@ -88,6 +88,7 @@ namespace Pglet
 
         public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
         {
+            Trace.TraceInformation("Connection: RegisterHostClient");
             var payload = new RegisterHostClientRequestPayload
             {
                 HostClientID = this.HostClientId,
@@ -98,6 +99,8 @@ namespace Pglet
             };
 
             var respPayload = await SendMessageWithResult(Actions.RegisterHostClient, payload, cancellationToken);
+            Trace.TraceInformation("Connection: RegisterHostClient response: {0}", respPayload);
+            
             var result = JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
             if (!String.IsNullOrEmpty(result.Error))
             {

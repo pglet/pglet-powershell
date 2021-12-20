@@ -19,7 +19,7 @@ namespace Pglet
         private const int REMOTE_CONNECT_ATTEMPTS = 1;
 
         private const int LOCAL_CONNECT_TIMEOUT_MS = 200;
-        private const int LOCAL_CONNECT_ATTEMPTS = 50;
+        private const int LOCAL_CONNECT_ATTEMPTS = 500;
 
         private readonly Channel<byte[]> _sendQueue = Channel.CreateBounded<byte[]>(10);
 
