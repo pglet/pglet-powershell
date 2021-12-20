@@ -119,6 +119,18 @@ namespace Pglet
             set { SetAttr("hash", value); }
         }
 
+        public new int Width
+        {
+            get { return GetIntAttr("width"); }
+            set { SetIntAttr("width", value); }
+        }
+
+        public new int Height
+        {
+            get { return GetIntAttr("height"); }
+            set { SetIntAttr("height", value); }
+        }
+
         public string Signin
         {
             get { return GetAttr("signin"); }
@@ -197,6 +209,12 @@ namespace Pglet
             set { SetEventHandler("hashChange", value); }
         }
 
+        public EventHandler OnResize
+        {
+            get { return GetEventHandler("resize"); }
+            set { SetEventHandler("resize", value); }
+        }
+
         protected override string ControlName => "page";
 
         public Page(Connection conn, string pageUrl, string pageName, string sessionId) : base()
@@ -214,6 +232,8 @@ namespace Pglet
             var values = (await _conn.SendCommands(_pageName, _sessionId, new List<Command>
             {
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "hash" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "width" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "height" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "userid" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "userlogin" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "username" } },
@@ -222,11 +242,13 @@ namespace Pglet
             }, CancellationToken.None)).Results;
 
             Hash = values[0];
-            UserId = values[1];
-            UserLogin = values[2];
-            UserName = values[3];
-            UserEmail = values[4];
-            UserClientIP = values[5];
+            Width = Int32.Parse(values[1]);
+            Height = Int32.Parse(values[2]);
+            UserId = values[3];
+            UserLogin = values[4];
+            UserName = values[5];
+            UserEmail = values[6];
+            UserClientIP = values[7];
         }
 
         public void Add(params Control[] controls)

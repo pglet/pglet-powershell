@@ -72,6 +72,18 @@ namespace Pglet.PowerShell.Controls
             }
         }
 
+        public new ScriptBlock OnResize
+        {
+            get
+            {
+                return GetEventHandlerScript("resize");
+            }
+            set
+            {
+                _psEvents["resize"] = value;
+            }
+        }
+
         public ScriptBlock GetEventHandlerScript(ControlEvent e)
         {
             return GetEventHandlerScript(e.Name);
