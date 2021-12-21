@@ -55,7 +55,7 @@ namespace Pglet
             Func<Connection, string, string, string, Page> createPage = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var conn = await ConnectInternal(pageName, false, web, serverUrl, token, permissions, noWindow, ct);
+            var conn = await ConnectInternal(pageName, false, web, serverUrl, token, permissions, noWindow, null, createPage, ct);
 
             Page page = createPage != null ? createPage(conn, conn.PageUrl, conn.PageName, ZERO_SESSION) : new Page(conn, conn.PageUrl, conn.PageName, ZERO_SESSION);
             await page.LoadPageDetails();
@@ -68,26 +68,9 @@ namespace Pglet
             Func<Connection, string, string, string, Page> createPage = null, Action<string> pageCreated = null, CancellationToken? cancellationToken = null)
         {
             var ct = cancellationToken.HasValue ? cancellationToken.Value : CancellationToken.None;
-            var conn = await ConnectInternal(pageName, true, web, serverUrl, token, permissions, noWindow, ct);
+            var conn = await ConnectInternal(pageName, true, web, serverUrl, token, permissions, noWindow, sessionHandler, createPage, ct);
 
             pageCreated?.Invoke(conn.PageUrl);
-
-            // new session handler
-            conn.OnSessionCreated = async (payload) =>
-            {
-                Trace.TraceInformation("Session created: " + JsonUtility.Serialize(payload));
-                Page page = createPage != null ? createPage(conn, conn.PageUrl, conn.PageName, payload.SessionID) : new Page(conn, conn.PageUrl, conn.PageName, payload.SessionID);
-                await page.LoadPageDetails();
-                conn.Sessions[payload.SessionID] = page;
-
-                var h = sessionHandler(page).ContinueWith(async t =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
-                    }
-                });
-            };
 
             var semaphore = new SemaphoreSlim(0);
             using CancellationTokenRegistration ctr = ct.Register(() =>
@@ -98,7 +81,10 @@ namespace Pglet
             conn.Close();
         }
 
-        private static async Task<Connection> ConnectInternal(string pageName, bool isApp, bool web, string serverUrl, string token, string permissions, bool noWindow, CancellationToken cancellationToken)
+        private static async Task<Connection> ConnectInternal(string pageName, bool isApp,
+            bool web, string serverUrl, string token, string permissions, bool noWindow,
+            Func<Page, Task> sessionHandler, Func<Connection, string, string, string, Page> createPage,
+            CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(serverUrl))
             {
@@ -136,6 +122,25 @@ namespace Pglet
                 }
                 return Task.CompletedTask;
             };
+
+            if (sessionHandler != null)
+            {
+                conn.OnSessionCreated = async (payload) =>
+                {
+                    Trace.TraceInformation("Session created: " + JsonUtility.Serialize(payload));
+                    Page page = createPage != null ? createPage(conn, conn.PageUrl, conn.PageName, payload.SessionID) : new Page(conn, conn.PageUrl, conn.PageName, payload.SessionID);
+                    await page.LoadPageDetails();
+                    conn.Sessions[payload.SessionID] = page;
+
+                    var h = sessionHandler(page).ContinueWith(async t =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            await page.ErrorAsync("There was an error while processing your request: " + (t.Exception as AggregateException).InnerException.Message);
+                        }
+                    });
+                };
+            }
 
             ws.OnFailedConnect = () =>
             {
