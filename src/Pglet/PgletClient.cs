@@ -210,7 +210,17 @@ namespace Pglet
                 chmod(pgletPath, (int)_0755);
             }
 
-            Process.Start(pgletPath, "server --background");
+            Trace.TraceInformation("Pglet executable path: {0}", pgletPath);
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = pgletPath,
+                Arguments = "server --background",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+
+            Process.Start(psi);
         }
 
         private static void OpenBrowser(string url)
