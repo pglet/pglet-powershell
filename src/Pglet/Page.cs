@@ -242,8 +242,14 @@ namespace Pglet
             }, CancellationToken.None)).Results;
 
             Hash = values[0];
-            Width = Int32.Parse(values[1]);
-            Height = Int32.Parse(values[2]);
+            if (values[1] != "")
+            {
+                Width = Int32.Parse(values[1]);
+            }
+            if (values[2] != "")
+            {
+                Height = Int32.Parse(values[2]);
+            }
             UserId = values[3];
             UserLogin = values[4];
             UserName = values[5];
