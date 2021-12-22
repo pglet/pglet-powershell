@@ -3,7 +3,7 @@ image: Ubuntu
 
 environment:
   configuration: Release
-  PGLET_VERSION: 0.5.1
+  PGLET_VERSION: 0.5.2
   psg_api_key: 
     secure: +pKWU6lrUYmSwimeMa47F6FsT9+lS76DYwU2MYkAbqWnNTSVQ6rJQgITFuxz3ST5
   nuget_api_key:
