@@ -13,7 +13,7 @@ Connect-PgletApp "ps-app-test" -ScriptBlock {
         Write-Trace $PGLET_PAGE
         $page = $PGLET_PAGE
         $page.OnResize = {
-            Write-Trace "New page size: $($page.width), $($page.height)"
+            Write-Trace "New page size: $($page.winWidth), $($page.winHeight)"
         }
         $greeting = Text -Value "Hello, $($PGLET_PAGE.sessionId)"
         $page.add(@($greeting, $btn))

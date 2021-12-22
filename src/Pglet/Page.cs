@@ -119,16 +119,14 @@ namespace Pglet
             set { SetAttr("hash", value); }
         }
 
-        public new int Width
+        public int WinWidth
         {
-            get { return GetIntAttr("width"); }
-            set { SetIntAttr("width", value); }
+            get { return GetIntAttr("win_width"); }
         }
 
-        public new int Height
+        public int WinHeight
         {
-            get { return GetIntAttr("height"); }
-            set { SetIntAttr("height", value); }
+            get { return GetIntAttr("win_height"); }
         }
 
         public string Signin
@@ -232,8 +230,8 @@ namespace Pglet
             var values = (await _conn.SendCommands(_pageName, _sessionId, new List<Command>
             {
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "hash" } },
-                new Protocol.Command { Name = "get", Values = new List<string> { "page", "width" } },
-                new Protocol.Command { Name = "get", Values = new List<string> { "page", "height" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "win_width" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "win_height" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "userid" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "userlogin" } },
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "username" } },
@@ -241,20 +239,14 @@ namespace Pglet
                 new Protocol.Command { Name = "get", Values = new List<string> { "page", "userclientip" } }
             }, CancellationToken.None)).Results;
 
-            Hash = values[0];
-            if (values[1] != "")
-            {
-                Width = Int32.Parse(values[1]);
-            }
-            if (values[2] != "")
-            {
-                Height = Int32.Parse(values[2]);
-            }
-            UserId = values[3];
-            UserLogin = values[4];
-            UserName = values[5];
-            UserEmail = values[6];
-            UserClientIP = values[7];
+            SetAttr("hash", values[0], dirty: false);
+            SetAttr("win_width", values[1], dirty: false);
+            SetAttr("win_height", values[2], dirty: false);
+            SetAttr("userid", values[3], dirty: false);
+            SetAttr("userid", values[4], dirty: false);
+            SetAttr("username", values[5], dirty: false);
+            SetAttr("useremail", values[6], dirty: false);
+            SetAttr("userclientip", values[7], dirty: false);
         }
 
         public void Add(params Control[] controls)
