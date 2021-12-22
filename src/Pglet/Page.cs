@@ -243,7 +243,7 @@ namespace Pglet
             SetAttr("win_width", values[1], dirty: false);
             SetAttr("win_height", values[2], dirty: false);
             SetAttr("userid", values[3], dirty: false);
-            SetAttr("userid", values[4], dirty: false);
+            SetAttr("userlogin", values[4], dirty: false);
             SetAttr("username", values[5], dirty: false);
             SetAttr("useremail", values[6], dirty: false);
             SetAttr("userclientip", values[7], dirty: false);
