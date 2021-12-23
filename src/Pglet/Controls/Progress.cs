@@ -10,6 +10,12 @@
             set { SetNullableIntAttr("value", value); }
         }
 
+        public int? BarHeight
+        {
+            get { return GetNullableIntAttr("barheight"); }
+            set { SetNullableIntAttr("barheight", value); }
+        }
+
         public string Label
         {
             get { return GetAttr("label"); }
