@@ -81,8 +81,8 @@ Connect-PgletApp -Name "pglet-buttons" -ScriptBlock {
 
         Text "Split buttons" -Size Large
         Button -Split -Text "Standard" -MenuItems @(
-          MenuItem -Text "Email message" -Icon "Mail"
-          MenuItem -Text "Calendar event" -Icon "Calendar"
+          MenuItem -Text "Email message" -Icon "Mail" -OnClick { Write-Trace "Email message clicked!" }
+          MenuItem -Text "Calendar event" -Icon "Calendar" -OnClick { Write-Trace "Calendar clicked!" }
         )
         Button -Split -Primary -Text "Primary" -MenuItems @(
           MenuItem -Text "Email message" -Icon "Mail"
