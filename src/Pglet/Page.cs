@@ -2,6 +2,7 @@
 using Pglet.Controls;
 using Pglet.Protocol;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,9 +18,7 @@ namespace Pglet
         readonly string _sessionId;
         readonly List<Control> _controls = new List<Control>();
         readonly Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
-
-        ControlEvent _lastEvent;
-        AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        readonly ConcurrentDictionary<TaskCompletionSource<ControlEvent>, CancellationTokenRegistration> _pageEventListeners = new();
 
         public Connection Connection
         {
@@ -318,22 +317,31 @@ namespace Pglet
             }
         }
 
-        public ControlEvent WaitEvent()
-        {
-            return WaitEvent(CancellationToken.None);
-        }
-
         public ControlEvent WaitEvent(CancellationToken cancellationToken)
         {
-            _resetEvent.Reset();
+            return WaitEventAsync(cancellationToken).GetAwaiter().GetResult();
+        }
 
-            int n = WaitHandle.WaitAny(new[] { _resetEvent, cancellationToken.WaitHandle });
-            if (n == 1)
+        public Task<ControlEvent> WaitEventAsync(CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<ControlEvent>();
+
+            tcs.Task.ContinueWith(t =>
             {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
+                if(_pageEventListeners.TryRemove(tcs, out CancellationTokenRegistration ctr))
+                {
+                    ctr.Dispose();
+                }
+            });
 
-            return _lastEvent;
+            var ctr = cancellationToken.Register(() =>
+            {
+                tcs.SetCanceled();
+            });
+
+            _pageEventListeners.TryAdd(tcs, ctr);
+
+            return tcs.Task;
         }
 
         public bool ShowSignin(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
@@ -351,7 +359,7 @@ namespace Pglet
             // wait for events
             while (!cancellationToken.IsCancellationRequested)
             {
-                var e = WaitEvent(cancellationToken);
+                var e = await WaitEventAsync(cancellationToken);
                 if (e.Control == this && e.Name.Equals("signin", StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
@@ -464,7 +472,7 @@ namespace Pglet
             // call event handlers
             else if (_index.ContainsKey(e.Target))
             {
-                _lastEvent = new ControlEvent
+                var ce = new ControlEvent
                 {
                     Target = e.Target,
                     Name = e.Name,
@@ -477,10 +485,14 @@ namespace Pglet
                 if (controlHandlers.ContainsKey(e.Name))
                 {
                     var control = _index[e.Target];
-                    var t = Task.Run(() => controlHandlers[e.Name](_lastEvent));
+                    var t = Task.Run(() => controlHandlers[e.Name](ce));
                 }
 
-                _resetEvent.Set();
+                // notify event listeners
+                foreach(var tcs in _pageEventListeners.Keys.ToArray())
+                {
+                    tcs.TrySetResult(ce);
+                }
             }
         }
 
