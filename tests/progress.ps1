@@ -13,7 +13,7 @@ Connect-PgletApp -Name "pglet-progress" -ScriptBlock {
   
   $page.add($controls)
 
-  $prog1 = Progress -Label "Copying file1.txt to file2.txt" -Width "30%"
+  $prog1 = Progress -Label "Copying file1.txt to file2.txt" -Width "30%" -BarHeight 4
   $page.add($prog1)
 
   for($i = 0; $i -lt 101; $i=$i+10) {
