@@ -92,6 +92,14 @@ namespace Pglet.PowerShell
                 ctl.Split = Split.ToBool();
             }
 
+            if (MenuItems != null)
+            {
+                foreach (var menuItem in MenuItems)
+                {
+                    ctl.MenuItems.Add(menuItem);
+                }
+            }
+
             SetControlProps(ctl);
 
             WriteObject(ctl);
