@@ -3,7 +3,7 @@ Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pgl
 
 Connect-PgletApp -Name "pglet-textbox" -ScriptBlock {
 
-  $controls = @(
+  $controls = Stack -Gap 20 -Controls @(
     TextBox -Multiline -AutoAdjustHeight -Label "Multiline textbox with auto-adjust height"
     TextBox -Underlined -Label "Underlined textbox:"
     TextBox -Borderless -Label "Borderless textbox"
@@ -11,6 +11,19 @@ Connect-PgletApp -Name "pglet-textbox" -ScriptBlock {
     TextBox -Suffix 'px' -Label "Textbox with sufix"
     TextBox -Prefix 'https://' -Suffix '.com' -Label "Textbox with prefix and suffix"
   )
+
+  $displayedText = Text
+  $enteredText = TextBox -Label "With onChange event" -OnChange {
+    $displayedText.value = $enteredText.value
+    $stack.update()
+  }
+
+  $stack = Stack -Controls @(
+    $enteredText
+    $displayedText
+  )
+
+  $controls.controls.add($stack)
 
   $pglet_page.add($controls)
 }

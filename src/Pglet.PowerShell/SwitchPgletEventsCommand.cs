@@ -44,12 +44,25 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var script = $"$e = $args[0]\n{handlerScript}";
-                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
-
-                foreach (var obj in results)
+                try
                 {
-                    WriteObject(obj);
+                    var script = $"$e = $args[0]\n{handlerScript}";
+                    var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
+
+                    foreach (var obj in results)
+                    {
+                        WriteObject(obj);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    var msg = $"Event handler error: {ex.Message}";
+                    var re = ex as System.Management.Automation.RuntimeException;
+                    if (re != null)
+                    {
+                        msg = re.ErrorRecord.ToString() + re.ErrorRecord.InvocationInfo.PositionMessage;
+                    }
+                    Console.WriteLine(msg);
                 }
 
                 if (e.Target == "page" && e.Name == "close")
