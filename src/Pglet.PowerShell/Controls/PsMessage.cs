@@ -8,30 +8,25 @@ namespace Pglet.PowerShell.Controls
     public class PsMessage : Message, IPsEventControl
     {
         public PSCmdlet Cmdlet { get; set; }
-        public Dictionary<string, object> PSVariables { get; set;}
         
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
         public new ScriptBlock OnDismiss
         {
             get
             {
-                return GetEventHandlerScript("dismiss");
+                return PsEventControlHelper.GetEventHandlerScript(this, "dismiss");
             }
             set
             {
-                _psEvents["dismiss"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "dismiss", value);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
-            return GetEventHandlerScript(e.Name);
-        }
-
-        private ScriptBlock GetEventHandlerScript(string eventName)
-        {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

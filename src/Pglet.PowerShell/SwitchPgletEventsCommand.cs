@@ -38,16 +38,20 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var handlerScript = eventCtl.GetEventHandlerScript(e);
-                if (handlerScript == null)
+                var handlerScript = eventCtl.GetEventHandler(e);
+                if (handlerScript.Item1 == null)
                 {
                     continue;
                 }
 
                 try
                 {
-                    var script = $"$e = $args[0]\n{handlerScript}";
-                    var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
+                    handlerScript.Item2["e"] = e;
+                    var script = "foreach($key in $args[0].keys) {\n" +
+                        "Set-Variable -Name $key -Value $args[0][$key]\n" +
+                        "}\n" + handlerScript.Item1;
+
+                    var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, handlerScript.Item2);
 
                     foreach (var obj in results)
                     {
