@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
+using Pglet.PowerShell.Controls;
 
 namespace Pglet.PowerShell
 {
@@ -30,6 +32,12 @@ namespace Pglet.PowerShell
 
         protected void SetControlProps(Control control)
         {
+            var eventCtrl = control as IPsEventControl;
+            if (eventCtrl != null)
+            {
+                eventCtrl.Cmdlet = this;
+            }
+
             control.Id = Id;
             control.Width = Width;
             control.Height = Height;

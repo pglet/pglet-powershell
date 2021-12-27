@@ -25,14 +25,13 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsCheckbox
-            {
-                Label = Label,
-                ValueField = ValueField,
-                OnChange = OnChange
-            };
+            var control = new PsCheckbox();
 
             SetControlProps(control);
+            
+            control.Label = Label;
+            control.ValueField = ValueField;
+            control.OnChange = OnChange;
 
             if (Value.HasValue)
             {

@@ -51,16 +51,17 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsButton
-            {
-                Text = Text,
-                SecondaryText = SecondaryText,
-                Url = Url,
-                Title = Title,
-                Icon = Icon,
-                IconColor = IconColor,
-                OnClick = OnClick
-            };
+            var ctl = new PsButton();
+
+            SetControlProps(ctl);
+
+            ctl.Text = Text;
+            ctl.SecondaryText = SecondaryText;
+            ctl.Url = Url;
+            ctl.Title = Title;
+            ctl.Icon = Icon;
+            ctl.IconColor = IconColor;
+            ctl.OnClick = OnClick;
 
             if (NewWindow.IsPresent)
             {
@@ -99,8 +100,6 @@ namespace Pglet.PowerShell
                     ctl.MenuItems.Add(menuItem);
                 }
             }
-
-            SetControlProps(ctl);
 
             WriteObject(ctl);
         }

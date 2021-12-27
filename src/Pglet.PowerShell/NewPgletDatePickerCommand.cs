@@ -56,15 +56,14 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsDatePicker
-            {
-                Label = Label,
-                Value = Value,
-                Placeholder = Placeholder,
-                OnChange = OnChange
-            };
+            var control = new PsDatePicker();
 
             SetControlProps(control);
+
+            control.Label = Label;
+            control.Value = Value;
+            control.Placeholder = Placeholder;
+            control.OnChange = OnChange;
 
             if (AllowTextInput.IsPresent)
             {

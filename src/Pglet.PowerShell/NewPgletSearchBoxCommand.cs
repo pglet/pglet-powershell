@@ -33,25 +33,24 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsSearchBox
-            {
-                Value = Value,
-                Placeholder = Placeholder,
-                Icon = Icon,
-                IconColor = IconColor,
-                OnSearch = OnSearch,
-                OnClear = OnClear,
-                OnChange = OnChange
-            };
+            var control = new PsSearchBox();
+
+            SetControlProps(control);
+
+            control.Value = Value;
+            control.Placeholder = Placeholder;
+            control.Icon = Icon;
+            control.IconColor = IconColor;
+            control.OnSearch = OnSearch;
+            control.OnClear = OnClear;
+            control.OnChange = OnChange;
 
             if (Underlined.IsPresent)
             {
-                ctl.Underlined = Underlined.ToBool();
+                control.Underlined = Underlined.ToBool();
             }
 
-            SetControlProps(ctl);
-
-            WriteObject(ctl);
+            WriteObject(control);
         }
     }
 }

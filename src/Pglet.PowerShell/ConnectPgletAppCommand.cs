@@ -72,7 +72,8 @@ namespace Pglet.PowerShell
             },
             cancellationToken: _cancellationSource.Token, pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                 serverUrl: Server, token: Token, permissions: Permissions,
-                createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId), pageCreated: pageCreated).Wait();
+                createPage: (conn, pageUrl, pageName, sessionId) =>
+                    new PsPage(conn, pageUrl, pageName, sessionId, this), pageCreated: pageCreated).Wait();
         }
 
         protected override void StopProcessing()

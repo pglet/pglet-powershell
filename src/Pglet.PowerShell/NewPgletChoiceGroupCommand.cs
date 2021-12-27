@@ -22,14 +22,13 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsChoiceGroup
-            {
-                Label = Label,
-                Value = Value,
-                OnChange = OnChange
-            };
+            var ctl = new PsChoiceGroup();
 
             SetControlProps(ctl);
+
+            ctl.Label = Label;
+            ctl.Value = Value;
+            ctl.OnChange = OnChange;
 
             if (Options != null)
             {

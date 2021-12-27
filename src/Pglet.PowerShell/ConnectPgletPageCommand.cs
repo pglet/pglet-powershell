@@ -29,7 +29,8 @@ namespace Pglet.PowerShell
         {
             var page = PgletClient.ConnectPage(pageName: Name, web: Web.ToBool(), noWindow: NoWindow.ToBool(),
                 serverUrl: Server, token: Token, permissions: Permissions,
-                createPage: (conn, pageUrl, pageName, sessionId) => new PsPage(conn, pageUrl, pageName, sessionId)).GetAwaiter().GetResult();
+                createPage: (conn, pageUrl, pageName, sessionId) =>
+                    new PsPage(conn, pageUrl, pageName, sessionId, this)).GetAwaiter().GetResult();
 
             SessionState.PSVariable.Set(new PSVariable(Constants.PGLET_PAGE, page, ScopedItemOptions.Private));
             WriteObject(page);

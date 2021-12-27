@@ -33,15 +33,14 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsSpinButton
-            {
-                Label = Label,
-                ValueField = ValueField,
-                Icon = Icon,
-                OnChange = OnChange
-            };
+            var control = new PsSpinButton();
 
             SetControlProps(control);
+            
+            control.Label = Label;
+            control.ValueField = ValueField;
+            control.Icon = Icon;
+            control.OnChange = OnChange;
 
             if (Value.HasValue)
             {

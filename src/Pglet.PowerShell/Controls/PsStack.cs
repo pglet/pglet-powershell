@@ -6,6 +6,9 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsStack : Pglet.Controls.Stack, IPsEventControl
     {
+        public PSCmdlet Cmdlet { get; set; }
+        public Dictionary<string, object> PSVariables { get; set;}
+        
         readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
 
         public new ScriptBlock OnSubmit

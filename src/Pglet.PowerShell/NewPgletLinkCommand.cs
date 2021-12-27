@@ -43,14 +43,15 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsLink
-            {
-                Value = Value,
-                Url = Url,
-                Title = Title,
-                Size = Size,
-                OnClick = OnClick
-            };
+            var ctl = new PsLink();
+
+            SetControlProps(ctl);
+
+            ctl.Value = Value;
+            ctl.Url = Url;
+            ctl.Title = Title;
+            ctl.Size = Size;
+            ctl.OnClick = OnClick;
 
             if (NewWindow.IsPresent)
             {
@@ -76,8 +77,6 @@ namespace Pglet.PowerShell
             {
                 ctl.Align = Align.Value;
             }
-
-            SetControlProps(ctl);
 
             if (Controls != null)
             {

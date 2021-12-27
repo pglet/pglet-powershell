@@ -31,13 +31,12 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsMessage
-            {
-                OnDismiss = OnDismiss,
-                Value = Value
-            };
+            var ctl = new PsMessage();
 
             SetControlProps(ctl);
+
+            ctl.OnDismiss = OnDismiss;
+            ctl.Value = Value;
 
             if (Multiline.IsPresent)
             {

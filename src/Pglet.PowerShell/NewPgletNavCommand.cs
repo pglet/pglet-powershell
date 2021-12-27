@@ -25,25 +25,24 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsNav
-            {
-                Value = Value,
-                OnChange = OnChange,
-                OnExpand = OnExpand,
-                OnCollapse = OnCollapse
-            };
+            var control = new PsNav();
 
-            SetControlProps(ctl);
+            SetControlProps(control);
+
+            control.Value = Value;
+            control.OnChange = OnChange;
+            control.OnExpand = OnExpand;
+            control.OnCollapse = OnCollapse;
 
             if (Items != null)
             {
                 foreach (var item in Items)
                 {
-                    ctl.Items.Add(item);
+                    control.Items.Add(item);
                 }
             }
 
-            WriteObject(ctl);
+            WriteObject(control);
         }
     }
 }

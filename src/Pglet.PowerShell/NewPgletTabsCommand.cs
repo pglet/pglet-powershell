@@ -22,28 +22,27 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsTabs
-            {
-                Value = Value,
-                OnChange = OnChange
-            };
+            var control = new PsTabs();
 
-            SetControlProps(ctl);
+            SetControlProps(control);
+
+            control.Value = Value;
+            control.OnChange = OnChange;
 
             if (Solid.IsPresent)
             {
-                ctl.Solid = Solid.ToBool();
+                control.Solid = Solid.ToBool();
             }
 
             if (TabItems != null)
             {
                 foreach (var tab in TabItems)
                 {
-                    ctl.TabItems.Add(tab);
+                    control.TabItems.Add(tab);
                 }
             }
 
-            WriteObject(ctl);
+            WriteObject(control);
         }
     }
 }

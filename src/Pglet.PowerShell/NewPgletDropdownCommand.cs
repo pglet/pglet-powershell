@@ -28,16 +28,15 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsDropdown
-            {
-                Label = Label,
-                Value = Value,
-                Placeholder = Placeholder,
-                ErrorMessage = ErrorMessage,
-                OnChange = OnChange
-            };
+            var ctl = new PsDropdown();
 
             SetControlProps(ctl);
+            
+            ctl.Label = Label;
+            ctl.Value = Value;
+            ctl.Placeholder = Placeholder;
+            ctl.ErrorMessage = ErrorMessage;
+            ctl.OnChange = OnChange;
 
             if (Options != null)
             {

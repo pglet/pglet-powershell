@@ -6,10 +6,14 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsPage : Page, IPsEventControl
     {
+        public PSCmdlet Cmdlet { get; set; }
+        public Dictionary<string, object> PSVariables { get; set;}
+        
         readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
 
-        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId) : base(conn, pageUrl, pageName, sessionId)
+        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId, PSCmdlet cmdlet) : base(conn, pageUrl, pageName, sessionId)
         {
+            this.Cmdlet = cmdlet;
         }
 
         public new ScriptBlock OnClose
