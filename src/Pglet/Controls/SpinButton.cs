@@ -10,6 +10,12 @@
             set { SetAttr("label", value); }
         }
 
+        public SpinButtonLabelPosition LabelPosition
+        {
+            get { return GetEnumAttr<SpinButtonLabelPosition>("labelPosition"); }
+            set { SetEnumAttr("labelPosition", value); }
+        }        
+
         public float Value
         {
             get { return GetAttr<float>("value"); }

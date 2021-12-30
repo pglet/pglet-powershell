@@ -102,12 +102,12 @@ namespace Pglet
             var wsUrl = GetWebSocketUrl(serverUrl);
             var ws = new ReconnectingWebSocket(wsUrl);
             var conn = new Connection(ws);
-            conn.OnEvent = (payload) =>
+            conn.OnEvent = async (payload) =>
             {
                 //Console.WriteLine("Event received: " + JsonUtility.Serialize(payload));
                 if (conn.Sessions.TryGetValue(payload.SessionID, out Page page))
                 {
-                    page.OnEvent(new Event
+                    await page.OnEvent(new Event
                     {
                         Target = payload.EventTarget,
                         Name = payload.EventName,
@@ -120,7 +120,6 @@ namespace Pglet
                         conn.Sessions.TryRemove(payload.SessionID, out Page _);
                     }
                 }
-                return Task.CompletedTask;
             };
 
             if (sessionHandler != null)

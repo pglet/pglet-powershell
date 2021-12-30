@@ -62,7 +62,7 @@ Connect-PgletApp "ps-grid-edit-example" -ScriptBlock {
   # Dialog to add new item
   $firstName = TextBox -Label "First name"
   $lastName = TextBox -Label "Last name"
-  $age = SpinButton -Label "Age" -Value 20
+  $age = SpinButton -Label "Age" -Value 20 -LabelPosition Top
   $vaccinated = CheckBox -Label "Vaccinated" -BoxSide End
 
   $dialog = Dialog -Type Close -Title "Add new item" -Controls @(

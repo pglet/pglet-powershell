@@ -1,4 +1,5 @@
-﻿using Pglet.PowerShell.Controls;
+﻿using Pglet.Controls;
+using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -9,6 +10,9 @@ namespace Pglet.PowerShell
     {
         [Parameter(Mandatory = false, Position = 0)]
         public string Label { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SpinButtonLabelPosition? LabelPosition { get; set; }        
 
         [Parameter(Mandatory = false)]
         public float? Value { get; set; }
@@ -41,6 +45,11 @@ namespace Pglet.PowerShell
             control.ValueField = ValueField;
             control.Icon = Icon;
             control.OnChange = OnChange;
+
+            if (LabelPosition.HasValue)
+            {
+                control.LabelPosition = LabelPosition.Value;
+            }
 
             if (Value.HasValue)
             {
