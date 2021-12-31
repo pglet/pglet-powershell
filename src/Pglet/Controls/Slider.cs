@@ -3,7 +3,7 @@
     public class Slider : Control
     {
         protected override string ControlName => "slider";
-        
+
         public string Label
         {
             get { return GetAttr("label"); }

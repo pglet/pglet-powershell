@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -46,18 +45,17 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsGridColumn
-            {
-                OnClick = OnClick,
-                Name = Name,
-                Icon = Icon,
-                FieldName = FieldName,
-                Sortable = Sortable,
-                SortField = SortField,
-                Sorted = Sorted
-            };
+            var ctl = new PsGridColumn();
 
             SetControlProps(ctl);
+
+            ctl.OnClick = OnClick;
+            ctl.Name = Name;
+            ctl.Icon = Icon;
+            ctl.FieldName = FieldName;
+            ctl.Sortable = Sortable;
+            ctl.SortField = SortField;
+            ctl.Sorted = Sorted;
 
             if (MinWidth.HasValue)
             {

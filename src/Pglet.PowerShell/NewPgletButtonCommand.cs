@@ -12,16 +12,16 @@ namespace Pglet.PowerShell
 
         [Parameter(Mandatory = false)]
         public SwitchParameter Primary { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Compound { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Action { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Toolbar { get; set; }
-        
+
         [Parameter(Mandatory = false)]
         public SwitchParameter Split { get; set; }
 
@@ -51,16 +51,17 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsButton
-            {
-                Text = Text,
-                SecondaryText = SecondaryText,
-                Url = Url,
-                Title = Title,
-                Icon = Icon,
-                IconColor = IconColor,
-                OnClick = OnClick
-            };
+            var ctl = new PsButton();
+
+            SetControlProps(ctl);
+
+            ctl.Text = Text;
+            ctl.SecondaryText = SecondaryText;
+            ctl.Url = Url;
+            ctl.Title = Title;
+            ctl.Icon = Icon;
+            ctl.IconColor = IconColor;
+            ctl.OnClick = OnClick;
 
             if (NewWindow.IsPresent)
             {
@@ -92,7 +93,13 @@ namespace Pglet.PowerShell
                 ctl.Split = Split.ToBool();
             }
 
-            SetControlProps(ctl);
+            if (MenuItems != null)
+            {
+                foreach (var menuItem in MenuItems)
+                {
+                    ctl.MenuItems.Add(menuItem);
+                }
+            }
 
             WriteObject(ctl);
         }

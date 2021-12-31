@@ -7,17 +7,20 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsSearchBox : SearchBox, IPsEventControl
     {
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
+        public PSCmdlet Cmdlet { get; set; }
+        
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
         public new ScriptBlock OnSearch
         {
             get
             {
-                return GetEventHandlerScript("search");
+                return PsEventControlHelper.GetEventHandlerScript(this, "search");
             }
             set
             {
-                _psEvents["search"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "search", value);
             }
         }
 
@@ -25,11 +28,11 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("clear");
+                return PsEventControlHelper.GetEventHandlerScript(this, "clear");
             }
             set
             {
-                _psEvents["clear"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "clear", value);
             }
         }
 
@@ -37,23 +40,18 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("change");
+                return PsEventControlHelper.GetEventHandlerScript(this, "change");
             }
             set
             {
-                _psEvents["change"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "change", value);
                 SetBoolAttr("onchange", value != null);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
-            return GetEventHandlerScript(e.Name);
-        }
-
-        private ScriptBlock GetEventHandlerScript(string eventName)
-        {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

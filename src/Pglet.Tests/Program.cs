@@ -9,7 +9,7 @@ namespace Pglet.Tests
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static Task Main(string[] args)
         {
             var consoleTracer = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleTracer);
@@ -17,58 +17,76 @@ namespace Pglet.Tests
             CancellationTokenSource cts = new CancellationTokenSource();
             //TestJson();
             //_ = TestPage2();
-            //await TestApp2();
+            //_ = TestApp2();
             //TestDiffs();
-            _ = TestApp1(cts.Token);
+            //_ = TestLines1(cts.Token);
             //_ = TestControls();
-            //_ = TestGrid();
+            _ = TestGrid();
             //await TestPage();
 
             Console.WriteLine("ENTER to exit...");
             Console.ReadLine();
             cts.Cancel();
-            await Task.Delay(2000);
+            return Task.CompletedTask;
         }
 
-        private static async Task TestApp1(CancellationToken cancellationToken)
+        private static Task TestLines1(CancellationToken cancellationToken)
         {
-            using (var pgc = new PgletClient())
+            return PgletClient.ServeApp(async (page) =>
             {
-                await pgc.ServeApp(async (page) =>
-                {
-                    Console.WriteLine("Session start");
-                    //var mainStack = new Stack
-                    //{
-                    //    Controls =
-                    //    {
-                    //        new Text { Value = page.SessionId }
-                    //    }
-                    //};
+                Console.WriteLine("Session start");
 
-                    //await page.AddAsync(mainStack);
+                var txt = new Text { Value = "Line 1" };
+                await page.AddAsync(txt);
+                await Task.Delay(5000);
 
-                    //for(int i = 0; i < 10; i++)
-                    //{
-                    //    await page.AddAsync(new Text { Value = i.ToString() });
-                    //}
+                var txt1 = new Text { Value = "Line 0" };
+                await page.InsertAsync(0, txt1);
+                await Task.Delay(5000);
 
-                    var txtName = new TextBox();
-                    var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
-                    await page.AddAsync(txtName, submitBtn);
+                page.Controls.Add(new Text { Value = "Line 3" });
+                page.Controls.RemoveAt(1);
+                await page.UpdateAsync();
 
-                    Console.WriteLine("Session end");
+                Console.WriteLine("Session end");
 
-                }, "index3", serverUrl: "http://localhost:5000", cancellationToken: cancellationToken);
-            }
+            }, web: false, cancellationToken: cancellationToken);
+        }
+
+        private static Task TestApp1(CancellationToken cancellationToken)
+        {
+            return PgletClient.ServeApp(async (page) =>
+            {
+                Console.WriteLine("Session start");
+                //var mainStack = new Stack
+                //{
+                //    Controls =
+                //    {
+                //        new Text { Value = page.SessionId }
+                //    }
+                //};
+
+                //await page.AddAsync(mainStack);
+
+                //for(int i = 0; i < 10; i++)
+                //{
+                //    await page.AddAsync(new Text { Value = i.ToString() });
+                //}
+
+                var txtName = new TextBox();
+                var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
+                await page.AddAsync(txtName, submitBtn);
+
+                Console.WriteLine("Session end");
+
+            }, "index3", web: false, cancellationToken: cancellationToken);
         }
 
         private static async Task TestPage1()
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-
-            var page = await pgc.ConnectPage("page-2", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
+            var page = await PgletClient.ConnectPage("page-2", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
             var mainStack = new Stack
@@ -95,9 +113,7 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-
-            var page = await pgc.ConnectPage("page-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
+            var page = await PgletClient.ConnectPage("page-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
             await page.CleanAsync();
 
             var txtName = new TextBox();
@@ -141,13 +157,12 @@ namespace Pglet.Tests
         {
             var cts = new CancellationTokenSource();
 
-            PgletClient pgc = new PgletClient();
-            pgc.ServeApp(async (page) =>
+            await PgletClient.ServeApp(async (page) =>
             {
                 var txtName = new TextBox();
                 var submitBtn = new Button { Text = "Click me!", Primary = true, OnClick = (e) => { Console.WriteLine($"click: {txtName.Value}"); } };
                 await page.AddAsync(txtName, submitBtn);
-            }, "app-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token).Wait();
+            }, "app-1", serverUrl: "http://localhost:5000", cancellationToken: cts.Token);
 
             //Console.ReadLine();
             await Task.Delay(200000);
@@ -175,103 +190,92 @@ namespace Pglet.Tests
 
         private static async Task TestGrid()
         {
-            Page page = await new PgletClient().ConnectPage("grid-1", serverUrl: "http://localhost:5000", noWindow: true);
-            await page.CleanAsync();
-
-            var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
-            var p2 = new Person { FirstName = "Samantha", LastName = "Fox", Age = 43, Employee = false };
-            var p3 = new Person { FirstName = "Alice", LastName = "Brown", Age = 25, Employee = true };
-
-            var grid = new Grid
+            await PgletClient.ServeApp(async (page) =>
             {
-                PreserveSelection = true,
-                SelectionMode = GridSelectionMode.Multiple,
-                OnSelect = (e) =>
+                var p1 = new Person { FirstName = "John", LastName = "Smith", Age = 30, Employee = true };
+                var p2 = new Person { FirstName = "Samantha", LastName = "Fox", Age = 43, Employee = false };
+                var p3 = new Person { FirstName = "Alice", LastName = "Brown", Age = 25, Employee = true };
+
+                var grid = new Grid
                 {
-                    Console.WriteLine(e.Data);
-                    foreach (var item in (e.Control as Grid).SelectedItems)
+                    PreserveSelection = true,
+                    SelectionMode = GridSelectionMode.Multiple,
+                    OnSelect = (e) =>
                     {
-                        Console.WriteLine(item);
-                    }
-                },
-                Columns =
-                {
-                    new GridColumn
-                    {
-                        Name = "Employee",
-                        FieldName = "Employee",
-                        MaxWidth = 100,
-                        TemplateControls =
+                        Console.WriteLine(e.Data);
+                        foreach (var item in (e.Control as Grid).SelectedItems)
                         {
-                            new Checkbox { ValueField = "Employee" }
+                            Console.WriteLine(item);
                         }
                     },
-                    new GridColumn
+                    Columns =
                     {
-                        Name = "First name",
-                        FieldName = "FirstName",
-                        TemplateControls =
+                        new GridColumn
                         {
-                            new TextBox { Value = "{FirstName}" }
-                        }
+                            Name = "Employee",
+                            FieldName = "Employee",
+                            MaxWidth = 100,
+                            TemplateControls =
+                            {
+                                new Checkbox { ValueField = "Employee" }
+                            }
+                        },
+                        new GridColumn
+                        {
+                            Name = "First name",
+                            FieldName = "FirstName",
+                            TemplateControls =
+                            {
+                                new TextBox { Value = "{FirstName}" }
+                            }
+                        },
+                        new GridColumn { Name = "Last name", FieldName = "LastName" },
+                        new GridColumn { Name = "Age", FieldName = "Age" }
                     },
-                    new GridColumn { Name = "Last name", FieldName = "LastName" },
-                    new GridColumn { Name = "Age", FieldName = "Age" }
-                },
-                Items =
-                {
-                    p1, p2, p3
-                }
-            };
-
-            int n = 1;
-            var btnAddRecord = new Button
-            {
-                Text = "Add record",
-                OnClick = async (e) =>
-                {
-                    grid.Items.RemoveAt(0);
-                    grid.Items.Add(new Person
+                    Items =
                     {
-                        FirstName = $"First {n}",
-                        LastName = $"Last {n}",
-                        Age = n
-                    });
-                    await grid.UpdateAsync();
-                    n++;
-                }
-            };
-
-            var btnShowRecords = new Button
-            {
-                Text = "Show records",
-                OnClick = (e) =>
-                {
-                    (grid.Items[0] as Person).Age = 22;
-                    foreach (var p in grid.Items)
-                    {
-                        Console.WriteLine(p);
+                        p1, p2, p3
                     }
-                }
-            };
+                };
 
-            await page.AddAsync(grid, btnAddRecord, btnShowRecords);
+                int n = 1;
+                var btnAddRecord = new Button
+                {
+                    Text = "Add record",
+                    OnClick = async (e) =>
+                    {
+                        grid.Items.RemoveAt(0);
+                        grid.Items.Add(new Person
+                        {
+                            FirstName = $"First {n}",
+                            LastName = $"Last {n}",
+                            Age = n
+                        });
+                        await grid.UpdateAsync();
+                        n++;
+                    }
+                };
 
-            //await Task.Delay(5000);
-            //testBtn.OnClick = null;
+                var btnShowRecords = new Button
+                {
+                    Text = "Show records",
+                    OnClick = (e) =>
+                    {
+                        (grid.Items[0] as Person).Age = 22;
+                        foreach (var p in grid.Items)
+                        {
+                            Console.WriteLine(p);
+                        }
+                    }
+                };
 
-            //page.ThemePrimaryColor = "#3ee66d";
-            //page.ThemeTextColor = "#edd2b7";
-            //page.ThemeBackgroundColor = "#262626";
-            //await page.UpdateAsync();
-
-            // 3rd update
-            //await page.Clean();
+                await page.AddAsync(grid, btnAddRecord, btnShowRecords);
+            }, "grid-1");
         }
 
         private static async Task TestControls()
         {
-            Page page = await new PgletClient().ConnectPage("controls-1", serverUrl: "http://localhost:5000", noWindow: true);
+            Page page = await PgletClient.ConnectPage("controls-1", serverUrl: "http://localhost:5000", noWindow: true);
             await page.CleanAsync();
 
             page.Title = "Example 1";
@@ -392,7 +396,7 @@ namespace Pglet.Tests
                 {
                     new Text { Value = "Body text" }
                 },
-                FooterControls = 
+                FooterControls =
                 {
                     new Button { Text = "OK" },
                     new Button { Text = "Cancel" }
@@ -412,7 +416,7 @@ namespace Pglet.Tests
             // 2nd update
             await page.UpdateAsync();
 
-            
+
             // BarChart
             stack.Controls.Add(new BarChart
             {
@@ -426,9 +430,9 @@ namespace Pglet.Tests
             await stack.UpdateAsync();
         }
 
-        private static async Task TestApp()
+        private static Task TestApp()
         {
-            await new PgletClient().ServeApp(async (page) =>
+            return PgletClient.ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {

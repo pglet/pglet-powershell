@@ -35,5 +35,13 @@ namespace Pglet
                 return RuntimeInformation.FrameworkDescription.Contains(".NET Core");
             }
         }
+
+        public static string Architecture
+        {
+            get
+            {
+                return RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+            }
+        }
     }
 }

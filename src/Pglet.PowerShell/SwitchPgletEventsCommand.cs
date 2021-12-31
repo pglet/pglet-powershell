@@ -28,7 +28,7 @@ namespace Pglet.PowerShell
                 throw new Exception("There are no active Pglet connections.");
             }
 
-            while(!_cancellationSource.IsCancellationRequested)
+            while (!_cancellationSource.IsCancellationRequested)
             {
                 var e = page.WaitEvent(_cancellationSource.Token);
 
@@ -38,18 +38,35 @@ namespace Pglet.PowerShell
                     continue;
                 }
 
-                var handlerScript = eventCtl.GetEventHandlerScript(e);
-                if (handlerScript == null)
+                var handlerScript = eventCtl.GetEventHandler(e);
+                if (handlerScript.Item1 == null)
                 {
                     continue;
                 }
 
-                var script = $"$e = $args[0]\n{handlerScript}";
-                var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, e);
-
-                foreach (var obj in results)
+                try
                 {
-                    WriteObject(obj);
+                    handlerScript.Item2["e"] = e;
+                    var script = "foreach($key in $args[0].keys) {\n" +
+                        "Set-Variable -Name $key -Value $args[0][$key]\n" +
+                        "}\n" + handlerScript.Item1;
+
+                    var results = this.InvokeCommand.InvokeScript(script, true, PipelineResultTypes.None, null, handlerScript.Item2);
+
+                    foreach (var obj in results)
+                    {
+                        WriteObject(obj);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    var msg = $"Event handler error: {ex.Message}";
+                    var re = ex as System.Management.Automation.RuntimeException;
+                    if (re != null)
+                    {
+                        msg = re.ErrorRecord.ToString() + re.ErrorRecord.InvocationInfo.PositionMessage;
+                    }
+                    Console.WriteLine(msg);
                 }
 
                 if (e.Target == "page" && e.Name == "close")

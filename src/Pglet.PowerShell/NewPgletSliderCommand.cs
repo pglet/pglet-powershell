@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -40,15 +39,14 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsSlider
-            {
-                Label = Label,
-                ValueField = ValueField,
-                ValueFormat = ValueFormat,
-                OnChange = OnChange
-            };
+            var control = new PsSlider();
 
             SetControlProps(control);
+
+            control.Label = Label;
+            control.ValueField = ValueField;
+            control.ValueFormat = ValueFormat;
+            control.OnChange = OnChange;
 
             if (ShowValue.IsPresent)
             {

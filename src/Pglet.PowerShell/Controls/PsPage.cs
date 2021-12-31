@@ -6,21 +6,25 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsPage : Page, IPsEventControl
     {
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
-        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId) : base(conn, pageUrl, pageName, sessionId)
+        public PSCmdlet Cmdlet { get; set; }
+        
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
+        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId, PSCmdlet cmdlet) : base(conn, pageUrl, pageName, sessionId)
         {
+            this.Cmdlet = cmdlet;
         }
 
         public new ScriptBlock OnClose
         {
             get
             {
-                return GetEventHandlerScript("close");
+                return PsEventControlHelper.GetEventHandlerScript(this, "close");
             }
             set
             {
-                _psEvents["close"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "close", value);
             }
         }
 
@@ -28,11 +32,11 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("signin");
+                return PsEventControlHelper.GetEventHandlerScript(this, "signin");
             }
             set
             {
-                _psEvents["signin"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "signin", value);
             }
         }
 
@@ -40,11 +44,11 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("dismissSignin");
+                return PsEventControlHelper.GetEventHandlerScript(this, "dismissSignin");
             }
             set
             {
-                _psEvents["dismissSignin"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "dismissSignin", value);
             }
         }
 
@@ -52,11 +56,11 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("signout");
+                return PsEventControlHelper.GetEventHandlerScript(this, "signout");
             }
             set
             {
-                _psEvents["signout"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "signout", value);
             }
         }
 
@@ -64,22 +68,29 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("hashChange");
+                return PsEventControlHelper.GetEventHandlerScript(this, "hashChange");
             }
             set
             {
-                _psEvents["hashChange"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "hashChange", value);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public new ScriptBlock OnResize
         {
-            return GetEventHandlerScript(e.Name);
+            get
+            {
+                return PsEventControlHelper.GetEventHandlerScript(this, "resize");
+            }
+            set
+            {
+                PsEventControlHelper.SetEventHandlerScript(this, "resize", value);
+            }
         }
 
-        private ScriptBlock GetEventHandlerScript(string eventName)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

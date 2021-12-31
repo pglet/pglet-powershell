@@ -1,18 +1,26 @@
+$listener = new-object "system.diagnostics.consoletracelistener"
+[System.Diagnostics.Trace]::Listeners.Add($listener) | Out-Null 
+
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Button -Id "button1" -OnClick {
-    Write-Host "This is button!"
-}
-
-Connect-PgletApp "index" -NoWindow -ScriptBlock {
+Connect-PgletApp "ps-app-test" -ScriptBlock {
     try {
+        $btn = Button -Text "Click me!" -OnClick {
+            Write-Trace "Oh, I've been clicked!"
+        }
+
         Write-Trace $PGLET_PAGE
-        Invoke-Pglet "add text value='Hi, $($PGLET_PAGE.connection.pipeId)!'"
-        Start-Sleep -s 30
+        $page = $PGLET_PAGE
+        $page.OnResize = {
+            Write-Trace "New page size: $($page.winWidth), $($page.winHeight)"
+        }
+        $greeting = Text -Value "Hello, $($PGLET_PAGE.sessionId)"
+        $page.add(@($greeting, $btn))
+        #Start-Sleep -s 10
         Write-Trace "Bye!"
     }
     finally {
-        Write-Trace "Terminate, $($PGLET_PAGE.connection.pipeId)!"
+        Write-Trace "Terminate, $($PGLET_PAGE.sessionId)!"
     }
 }

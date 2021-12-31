@@ -2,6 +2,7 @@
 using Pglet.Controls;
 using Pglet.Protocol;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Pglet
 {
-    public class Page : Control
+    public class Page : Control, IDisposable
     {
         readonly Connection _conn;
         readonly string _pageUrl;
@@ -17,9 +18,7 @@ namespace Pglet
         readonly string _sessionId;
         readonly List<Control> _controls = new List<Control>();
         readonly Dictionary<string, Control> _index = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
-
-        ControlEvent _lastEvent;
-        AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        readonly ConcurrentDictionary<TaskCompletionSource<ControlEvent>, CancellationTokenRegistration> _pageEventListeners = new();
 
         public Connection Connection
         {
@@ -119,6 +118,16 @@ namespace Pglet
             set { SetAttr("hash", value); }
         }
 
+        public int WinWidth
+        {
+            get { return GetIntAttr("win_width"); }
+        }
+
+        public int WinHeight
+        {
+            get { return GetIntAttr("win_height"); }
+        }
+
         public string Signin
         {
             get { return GetAttr("signin"); }
@@ -140,26 +149,31 @@ namespace Pglet
         public string UserId
         {
             get { return GetAttr("userId"); }
+            set { SetAttr("userId", value); }
         }
 
         public string UserLogin
         {
             get { return GetAttr("userLogin"); }
+            set { SetAttr("userLogin", value); }
         }
 
         public string UserName
         {
             get { return GetAttr("userName"); }
+            set { SetAttr("userName", value); }
         }
 
         public string UserEmail
         {
             get { return GetAttr("userEmail"); }
+            set { SetAttr("userEmail", value); }
         }
 
         public string UserClientIP
         {
             get { return GetAttr("userClientIP"); }
+            set { SetAttr("userClientIP", value); }
         }
 
         public EventHandler OnClose
@@ -192,6 +206,12 @@ namespace Pglet
             set { SetEventHandler("hashChange", value); }
         }
 
+        public EventHandler OnResize
+        {
+            get { return GetEventHandler("resize"); }
+            set { SetEventHandler("resize", value); }
+        }
+
         protected override string ControlName => "page";
 
         public Page(Connection conn, string pageUrl, string pageName, string sessionId) : base()
@@ -204,9 +224,28 @@ namespace Pglet
             _index[UniqueId] = this;
         }
 
-        internal async Task LoadHash()
+        internal async Task LoadPageDetails()
         {
-            Hash = await SendCommand("get", "page", "hash");
+            var values = (await _conn.SendCommands(_pageName, _sessionId, new List<Command>
+            {
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "hash" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "win_width" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "win_height" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userid" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userlogin" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "username" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "useremail" } },
+                new Protocol.Command { Name = "get", Values = new List<string> { "page", "userclientip" } }
+            }, CancellationToken.None)).Results;
+
+            SetAttr("hash", values[0], dirty: false);
+            SetAttr("win_width", values[1], dirty: false);
+            SetAttr("win_height", values[2], dirty: false);
+            SetAttr("userid", values[3], dirty: false);
+            SetAttr("userlogin", values[4], dirty: false);
+            SetAttr("username", values[5], dirty: false);
+            SetAttr("useremail", values[6], dirty: false);
+            SetAttr("userclientip", values[7], dirty: false);
         }
 
         public void Add(params Control[] controls)
@@ -214,39 +253,97 @@ namespace Pglet
             AddAsync(controls).GetAwaiter().GetResult();
         }
 
-        public Task AddAsync(params Control[] controls)
+        public void Add(CancellationToken cancellationToken, params Control[] controls)
         {
-            _controls.AddRange(controls);
-            return UpdateAsync();
+            AddAsync(cancellationToken, controls).GetAwaiter().GetResult();
         }
 
+        public async Task AddAsync(params Control[] controls)
+        {
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await AddAsync(cts.Token, controls);
+            }
+        }
+
+        public async Task AddAsync(CancellationToken cancellationToken, params Control[] controls)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                _controls.AddRange(controls);
+                await UpdateAsync(cancellationToken, this);
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+        
         public void Insert(int at, params Control[] controls)
         {
             InsertAsync(at, controls).GetAwaiter().GetResult();
         }
 
-        public Task InsertAsync(int at, params Control[] controls)
+        public void Insert(CancellationToken cancellationToken, int at, params Control[] controls)
         {
-            _controls.InsertRange(at, controls);
-            return UpdateAsync();
+            InsertAsync(cancellationToken, at, controls).GetAwaiter().GetResult();
+        }
+
+        public async Task InsertAsync(int at, params Control[] controls)
+        {
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await InsertAsync(cts.Token, at, controls);
+            }
+        }
+
+        public async Task InsertAsync(CancellationToken cancellationToken, int at, params Control[] controls)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                _controls.InsertRange(at, controls);
+                await UpdateAsync(cancellationToken, this);
+            }
+            finally
+            {
+                _lock.Release();
+            }            
         }
 
         public new void Update()
         {
             UpdateAsync().GetAwaiter().GetResult();
-        }
+        }        
 
-        public new Task UpdateAsync()
+        public new void Update(CancellationToken cancellationToken)
         {
-            return UpdateAsync(this);
+            UpdateAsync(cancellationToken).GetAwaiter().GetResult();
         }
 
-        public void Update(params Control[] controls)
+        public new async Task UpdateAsync()
         {
-            UpdateAsync(controls).GetAwaiter().GetResult();
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await UpdateAsync(cts.Token);
+            }
+        }        
+
+        public new async Task UpdateAsync(CancellationToken cancellationToken)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                await UpdateAsync(cancellationToken, this);
+            }
+            finally
+            {
+                _lock.Release();
+            }             
         }
 
-        public async Task UpdateAsync(params Control[] controls)
+        public async Task UpdateAsync(CancellationToken cancellationToken, params Control[] controls)
         {
             var addedControls = new List<Control>();
             var commands = new List<Command>();
@@ -262,7 +359,7 @@ namespace Pglet
             }
 
             // execute commands
-            var ids = (await _conn.SendCommands(_pageName, _sessionId, commands, CancellationToken.None)).Results;
+            var ids = (await _conn.SendCommands(_pageName, _sessionId, commands, cancellationToken)).Results;
 
             // update new controls
             int n = 0;
@@ -278,22 +375,31 @@ namespace Pglet
             }
         }
 
-        public ControlEvent WaitEvent()
-        {
-            return WaitEvent(CancellationToken.None);
-        }
-
         public ControlEvent WaitEvent(CancellationToken cancellationToken)
         {
-            _resetEvent.Reset();
+            return WaitEventAsync(cancellationToken).GetAwaiter().GetResult();
+        }
 
-            int n = WaitHandle.WaitAny(new[] { _resetEvent, cancellationToken.WaitHandle });
-            if (n == 1)
+        public Task<ControlEvent> WaitEventAsync(CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<ControlEvent>();
+
+            tcs.Task.ContinueWith(t =>
             {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
+                if(_pageEventListeners.TryRemove(tcs, out CancellationTokenRegistration ctr))
+                {
+                    ctr.Dispose();
+                }
+            });
 
-            return _lastEvent;
+            var ctr = cancellationToken.Register(() =>
+            {
+                tcs.SetCanceled();
+            });
+
+            _pageEventListeners.TryAdd(tcs, ctr);
+
+            return tcs.Task;
         }
 
         public bool ShowSignin(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
@@ -303,15 +409,23 @@ namespace Pglet
 
         public async Task<bool> ShowSigninAsync(string authProviders, bool withGroups, bool allowDismiss, CancellationToken cancellationToken)
         {
-            this.Signin = authProviders;
-            this.SigninGroups = withGroups;
-            this.SigninAllowDismiss = allowDismiss;
-            await UpdateAsync();
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                this.Signin = authProviders;
+                this.SigninGroups = withGroups;
+                this.SigninAllowDismiss = allowDismiss;
+                await UpdateAsync(cancellationToken, this);
+            }
+            finally
+            {
+                _lock.Release();
+            }
 
             // wait for events
-            while(!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var e = WaitEvent(cancellationToken);
+                var e = await WaitEventAsync(cancellationToken);
                 if (e.Control == this && e.Name.Equals("signin", StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
@@ -329,66 +443,157 @@ namespace Pglet
             SignoutAsync().GetAwaiter().GetResult();
         }
 
+        public void Signout(CancellationToken cancellationToken)
+        {
+            SignoutAsync(cancellationToken).GetAwaiter().GetResult();
+        }        
+
         public async Task SignoutAsync()
         {
-            await SendCommand("signout");
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await SignoutAsync(cts.Token);
+            }
+        }        
+
+        public async Task SignoutAsync(CancellationToken cancellationToken)
+        {
+            await SendCommand(cancellationToken, "signout");
         }
 
         public bool CanAccess(string usersAndGroups)
         {
             return CanAccessAsync(usersAndGroups).GetAwaiter().GetResult();
+        }        
+
+        public bool CanAccess(CancellationToken cancellationToken, string usersAndGroups)
+        {
+            return CanAccessAsync(cancellationToken, usersAndGroups).GetAwaiter().GetResult();
         }
 
         public async Task<bool> CanAccessAsync(string permissions)
         {
-            return (await SendCommand("canAccess", permissions)).Equals("true", StringComparison.OrdinalIgnoreCase);
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                return await CanAccessAsync(cts.Token, permissions);
+            }
         }
 
-        public Task RemoveAsync(params Control[] controls)
+        public async Task<bool> CanAccessAsync(CancellationToken cancellationToken, string permissions)
         {
-            foreach(var control in controls)
-            {
-                _controls.Remove(control);
-            }
-            return UpdateAsync();
+            return (await SendCommand(cancellationToken, "canAccess", permissions)).Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         public void Remove(params Control[] controls)
         {
             RemoveAsync(controls).GetAwaiter().GetResult();
+        }        
+
+        public void Remove(CancellationToken cancellationToken, params Control[] controls)
+        {
+            RemoveAsync(cancellationToken, controls).GetAwaiter().GetResult();
         }
 
-        public Task RemoveAtAsync(int index)
+        public async Task RemoveAsync(params Control[] controls)
         {
-            _controls.RemoveAt(index);
-            return UpdateAsync();
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await RemoveAsync(cts.Token, controls);
+            }
+        }
+
+        public async Task RemoveAsync(CancellationToken cancellationToken, params Control[] controls)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                foreach (var control in controls)
+                {
+                    _controls.Remove(control);
+                }
+                await UpdateAsync(cancellationToken, this);
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         public void RemoveAt(int index)
         {
             RemoveAtAsync(index).GetAwaiter().GetResult();
+        }        
+
+        public void RemoveAt(CancellationToken cancellationToken, int index)
+        {
+            RemoveAtAsync(cancellationToken, index).GetAwaiter().GetResult();
+        }        
+
+        public async Task RemoveAtAsync(int index)
+        {
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await RemoveAtAsync(cts.Token, index);
+            }
         }
 
-        public override async Task CleanAsync()
+        public async Task RemoveAtAsync(CancellationToken cancellationToken, int index)
         {
-            _previousChildren.Clear();
-
-            foreach (var child in GetChildren())
+            await _lock.WaitAsync(cancellationToken);
+            try
             {
-                RemoveControlRecursively(_index, child);
+                _controls.RemoveAt(index);
+                await UpdateAsync(cancellationToken, this);
             }
+            finally
+            {
+                _lock.Release();
+            }
+        }
 
-            await SendCommand("clean", UniqueId);
+        public override async Task CleanAsync(CancellationToken cancellationToken)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                _previousChildren.Clear();
+
+                foreach (var child in GetChildren())
+                {
+                    RemoveControlRecursively(_index, child);
+                }
+
+                _controls.Clear();
+
+                await SendCommand(cancellationToken, "clean", UniqueId);
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         public void Error(string message)
         {
             ErrorAsync(message).GetAwaiter().GetResult();
+        }        
+
+        public void Error(CancellationToken cancellationToken, string message)
+        {
+            ErrorAsync(cancellationToken, message).GetAwaiter().GetResult();
         }
 
         public async Task ErrorAsync(string message)
         {
-            await SendCommand("error", message);
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await ErrorAsync(cts.Token, message);
+            }
+        }
+
+        public async Task ErrorAsync(CancellationToken cancellationToken, string message)
+        {
+            await SendCommand(cancellationToken, "error", message);
         }
 
         public void Close()
@@ -399,61 +604,69 @@ namespace Pglet
             }
         }
 
-        public void OnEvent(Event e)
+        public async Task OnEvent(Event e)
         {
             //Console.WriteLine($"Event: {e.Target} - {e.Name} - {e.Data}");
 
             // update control properties
             if (e.Target == "page" && e.Name == "change")
             {
-                var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
-                foreach (var props in allProps)
+                await _lock.WaitAsync();
+                try
                 {
-                    var id = props["i"];
-                    if (_index.ContainsKey(id))
+                    var allProps = JsonConvert.DeserializeObject<Dictionary<string, string>[]>(e.Data);
+                    foreach (var props in allProps)
                     {
-                        foreach (var key in props.Keys.Where(k => k != "i"))
+                        var id = props["i"];
+                        if (_index.ContainsKey(id))
                         {
-                            _index[id].SetAttrInternal(key, props[key], dirty: false);
+                            foreach (var key in props.Keys.Where(k => k != "i"))
+                            {
+                                _index[id].SetAttrInternal(key, props[key], dirty: false);
+                            }
                         }
                     }
+                }
+                finally
+                {
+                    _lock.Release();
                 }
             }
             // call event handlers
             else if (_index.ContainsKey(e.Target))
             {
+                var ce = new ControlEvent
+                {
+                    Target = e.Target,
+                    Name = e.Name,
+                    Data = e.Data,
+                    Control = _index[e.Target],
+                    Page = this
+                };
+
                 var controlHandlers = _index[e.Target].EventHandlers;
                 if (controlHandlers.ContainsKey(e.Name))
                 {
                     var control = _index[e.Target];
-
-                    var ce = new ControlEvent
-                    {
-                        Target = e.Target,
-                        Name = e.Name,
-                        Data = e.Data,
-                        Control = _index[e.Target],
-                        Page = this
-                    };
                     var t = Task.Run(() => controlHandlers[e.Name](ce));
                 }
+
+                // notify event listeners
+                foreach(var tcs in _pageEventListeners.Keys.ToArray())
+                {
+                    tcs.TrySetResult(ce);
+                }
             }
-
-            _lastEvent = new ControlEvent
-            {
-                Target = e.Target,
-                Name = e.Name,
-                Data = e.Data,
-                Control = _index[e.Target],
-                Page = this
-            };
-
-            _resetEvent.Set();
         }
 
-        public async Task<string> SendCommand(string name, params string[] values)
+        public async Task<string> SendCommand(CancellationToken cancellationToken, string name, params string[] values)
         {
-            return (await _conn.SendCommand(_pageName, _sessionId, new Protocol.Command { Name = name, Values = values.ToList() }, CancellationToken.None)).Result;
+            return (await _conn.SendCommand(_pageName, _sessionId, new Protocol.Command { Name = name, Values = values.ToList() }, cancellationToken)).Result;
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

@@ -21,6 +21,7 @@ New-Alias -Name GridColumn -Value New-PgletGridColumn
 New-Alias -Name Grid -Value New-PgletGrid
 New-Alias -Name Html -Value New-PgletHtml
 New-Alias -Name Icon -Value New-PgletIcon
+New-Alias -Name IFrame -Value New-PgletIFrame
 New-Alias -Name Image -Value New-PgletImage
 New-Alias -Name LineChart -Value New-PgletLineChart
 New-Alias -Name LineChartData -Value New-PgletLineChartData

@@ -37,56 +37,55 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsPanel
-            {
-                OnDismiss = OnDismiss,
-                Title = Title
-            };
+            var control = new PsPanel();
 
-            SetControlProps(ctl);
+            SetControlProps(control);
+
+            control.OnDismiss = OnDismiss;
+            control.Title = Title;
 
             if (Type.HasValue)
             {
-                ctl.Type = Type.Value;
+                control.Type = Type.Value;
             }
 
             if (Open.IsPresent)
             {
-                ctl.Open = Open.ToBool();
+                control.Open = Open.ToBool();
             }
 
             if (AutoDismiss.IsPresent)
             {
-                ctl.AutoDismiss = AutoDismiss.ToBool();
+                control.AutoDismiss = AutoDismiss.ToBool();
             }
 
             if (LightDismiss.IsPresent)
             {
-                ctl.LightDismiss = LightDismiss.ToBool();
+                control.LightDismiss = LightDismiss.ToBool();
             }
 
             if (Blocking.IsPresent)
             {
-                ctl.Blocking = Blocking.ToBool();
+                control.Blocking = Blocking.ToBool();
             }
 
             if (Controls != null)
             {
-                foreach (var control in Controls)
+                foreach (var childControl in Controls)
                 {
-                    ctl.Controls.Add(control);
+                    control.Controls.Add(childControl);
                 }
             }
 
             if (FooterControls != null)
             {
-                foreach (var control in FooterControls)
+                foreach (var childControl in FooterControls)
                 {
-                    ctl.FooterControls.Add(control);
+                    control.FooterControls.Add(childControl);
                 }
             }
 
-            WriteObject(ctl);
+            WriteObject(control);
         }
     }
 }

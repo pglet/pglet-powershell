@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
 
 namespace Pglet.Controls
 {
@@ -43,11 +43,11 @@ namespace Pglet.Controls
             var otype = _obj.GetType();
 
             var dict = new Dictionary<string, object>();
-            
+
             if (otype.Name == "Hashtable")
             {
                 var hashtable = _obj as Hashtable;
-                foreach(var propName in hashtable.Keys)
+                foreach (var propName in hashtable.Keys)
                 {
                     var sprop = propName.ToString();
                     if (fetchPropNames == null || fetchPropNames.Contains(sprop))

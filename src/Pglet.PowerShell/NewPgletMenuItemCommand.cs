@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -43,15 +42,16 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsMenuItem
-            {
-                Text = Text,
-                SecondaryText = SecondaryText,
-                Url = Url,
-                Icon = Icon,
-                IconColor = IconColor,
-                OnClick = OnClick
-            };
+            var ctl = new PsMenuItem();
+
+            SetControlProps(ctl);
+            
+            ctl.Text = Text;
+            ctl.SecondaryText = SecondaryText;
+            ctl.Url = Url;
+            ctl.Icon = Icon;
+            ctl.IconColor = IconColor;
+            ctl.OnClick = OnClick;
 
             if (NewWindow.IsPresent)
             {
@@ -80,8 +80,6 @@ namespace Pglet.PowerShell
                     ctl.SubMenuItems.Add(subMenuItem);
                 }
             }
-
-            SetControlProps(ctl);
 
             WriteObject(ctl);
         }

@@ -1,9 +1,9 @@
 Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
-Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
+Connect-PgletApp -ScriptBlock {
     $page = $PGLET_PAGE
-    $page.theme = 'dark'
+    #$page.theme = 'dark'
 
     $page.onDismissSignin = {
         Write-Trace "Signin cancelled"
@@ -20,6 +20,8 @@ Connect-PgletApp "signin-test" -Local -NoWindow -ScriptBlock {
                 Write-Trace "Signed in!"
                 updateCurrentUser
                 $page.update()
+            } else {
+                Write-Trace "Signin closed/dismissed!"
             }
         } catch {
             Write-Trace "$_"

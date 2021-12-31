@@ -40,15 +40,14 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsGrid
-            {
-                ShimmerLines = ShimmerLines,
-                KeyFieldName = KeyFieldName,
-                OnSelect = OnSelect,
-                OnItemInvoke = OnItemInvoke
-            };
+            var ctl = new PsGrid();
 
             SetControlProps(ctl);
+
+            ctl.ShimmerLines = ShimmerLines;
+            ctl.KeyFieldName = KeyFieldName;
+            ctl.OnSelect = OnSelect;
+            ctl.OnItemInvoke = OnItemInvoke;
 
             if (SelectionMode.HasValue)
             {

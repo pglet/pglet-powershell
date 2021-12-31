@@ -43,15 +43,14 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsDialog
-            {
-                OnDismiss = OnDismiss,
-                Title = Title,
-                SubText = SubText,
-                MaxWidth = MaxWidth
-            };
+            var ctl = new PsDialog();
 
             SetControlProps(ctl);
+
+            ctl.OnDismiss = OnDismiss;
+            ctl.Title = Title;
+            ctl.SubText = SubText;
+            ctl.MaxWidth = MaxWidth;
 
             if (Open.IsPresent)
             {

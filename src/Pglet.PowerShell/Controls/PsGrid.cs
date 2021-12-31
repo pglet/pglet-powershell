@@ -7,17 +7,20 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsGrid : Grid, IPsEventControl
     {
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
+        public PSCmdlet Cmdlet { get; set; }
+        
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
         public new ScriptBlock OnSelect
         {
             get
             {
-                return GetEventHandlerScript("select");
+                return PsEventControlHelper.GetEventHandlerScript(this, "select");
             }
             set
             {
-                _psEvents["select"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "select", value);
             }
         }
 
@@ -25,23 +28,18 @@ namespace Pglet.PowerShell.Controls
         {
             get
             {
-                return GetEventHandlerScript("itemInvoke");
+                return PsEventControlHelper.GetEventHandlerScript(this, "itemInvoke");
             }
             set
             {
-                _psEvents["itemInvoke"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "itemInvoke", value);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
             OnSelectInternal(e);
-            return GetEventHandlerScript(e.Name);
-        }
-
-        private ScriptBlock GetEventHandlerScript(string eventName)
-        {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -31,16 +30,15 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsToggle
-            {
-                Label = Label,
-                ValueField = ValueField,
-                OnText = OnText,
-                OffText = OffText,
-                OnChange = OnChange
-            };
-
+            var control = new PsToggle();
+            
             SetControlProps(control);
+
+            control.Label = Label;
+            control.ValueField = ValueField;
+            control.OnText = OnText;
+            control.OffText = OffText;
+            control.OnChange = OnChange;
 
             if (Value.HasValue)
             {

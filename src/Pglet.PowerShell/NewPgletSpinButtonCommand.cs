@@ -12,6 +12,9 @@ namespace Pglet.PowerShell
         public string Label { get; set; }
 
         [Parameter(Mandatory = false)]
+        public SpinButtonLabelPosition? LabelPosition { get; set; }        
+
+        [Parameter(Mandatory = false)]
         public float? Value { get; set; }
 
         [Parameter(Mandatory = false)]
@@ -34,15 +37,19 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsSpinButton
-            {
-                Label = Label,
-                ValueField = ValueField,
-                Icon = Icon,
-                OnChange = OnChange
-            };
+            var control = new PsSpinButton();
 
             SetControlProps(control);
+            
+            control.Label = Label;
+            control.ValueField = ValueField;
+            control.Icon = Icon;
+            control.OnChange = OnChange;
+
+            if (LabelPosition.HasValue)
+            {
+                control.LabelPosition = LabelPosition.Value;
+            }
 
             if (Value.HasValue)
             {

@@ -10,6 +10,8 @@ namespace Pglet
 {
     public abstract class Control
     {
+        public const int DEFAULT_COMMAND_TIMEOUT_MS = 5000;
+
         public class AttrValue
         {
             public string Value { get; set; }
@@ -21,6 +23,7 @@ namespace Pglet
         readonly private Dictionary<string, AttrValue> _attrs = new(StringComparer.OrdinalIgnoreCase);
         readonly private Dictionary<string, EventHandler> _eventHandlers = new(StringComparer.OrdinalIgnoreCase);
         readonly protected List<Control> _previousChildren = new(); // hash codes of previous children
+        readonly protected SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         protected string _id;
         private string _uid;
         private Page _page;
@@ -116,20 +119,30 @@ namespace Pglet
 
         public void Update()
         {
-            if (_page != null)
-            {
-                _page.Update(this);
-            }
+            UpdateAsync().GetAwaiter().GetResult();
+        }
+
+        public void Update(CancellationToken cancellationToken)
+        {
+            UpdateAsync(cancellationToken).GetAwaiter().GetResult();
         }
 
         public async Task UpdateAsync()
+        {
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
+            {
+                await UpdateAsync(cts.Token);
+            }
+        }
+
+        public async Task UpdateAsync(CancellationToken cancellationToken)
         {
             if (_page == null)
             {
                 throw new Exception("Control must be added to the page first.");
             }
 
-            await _page.UpdateAsync(this);
+            await _page.UpdateAsync(cancellationToken, this);
         }
 
         public void Clean()
@@ -137,21 +150,42 @@ namespace Pglet
             CleanAsync().GetAwaiter().GetResult();
         }
 
-        public virtual async Task CleanAsync()
+        public void Clean(CancellationToken cancellationToken)
         {
-            if (_page == null)
+            CleanAsync(cancellationToken).GetAwaiter().GetResult();
+        }        
+
+        public async Task CleanAsync()
+        {
+            using (var cts = new CancellationTokenSource(DEFAULT_COMMAND_TIMEOUT_MS))
             {
-                throw new Exception("Control must be added to the page first.");
+                await CleanAsync(cts.Token);
             }
+        }
 
-            _previousChildren.Clear();
-
-            foreach (var child in GetChildren())
+        public virtual async Task CleanAsync(CancellationToken cancellationToken)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
             {
-                RemoveControlRecursively(_page.Index, child);
-            }
+                if (_page == null)
+                {
+                    throw new Exception("Control must be added to the page first.");
+                }
 
-            await _page.SendCommand("clean", _uid);
+                _previousChildren.Clear();
+
+                foreach (var child in GetChildren())
+                {
+                    RemoveControlRecursively(_page.Index, child);
+                }
+
+                await _page.SendCommand(cancellationToken, "clean", _uid);
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         internal Dictionary<string, EventHandler> EventHandlers
@@ -161,7 +195,7 @@ namespace Pglet
 
         protected virtual IEnumerable<Control> GetChildren()
         {
-            return new Control[] {};
+            return new Control[] { };
         }
 
         protected void SetEventHandler(string eventName, EventHandler handler)
@@ -315,7 +349,7 @@ namespace Pglet
             }
         }
 
-        protected T GetAttr<T>(string name) where T :  notnull
+        protected T GetAttr<T>(string name) where T : notnull
         {
             var sval = _attrs.ContainsKey(name) ? _attrs[name].Value : null;
             if (sval == null)
@@ -457,7 +491,7 @@ namespace Pglet
             var children = GetChildren();
             if (children != null)
             {
-                foreach(var control in children)
+                foreach (var control in children)
                 {
                     var childCmds = control.GetCommands(indent: indent + 2, index: index, addedControls: addedControls);
                     commands.AddRange(childCmds);
@@ -479,7 +513,7 @@ namespace Pglet
                 return command;
             }
 
-            foreach(string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
+            foreach (string attrName in _attrs.Keys.OrderBy(k => k).Select(a => a.ToLowerInvariant()))
             {
                 var dirty = _attrs[attrName].IsDirty;
                 if ((update && !dirty) || attrName == "id")

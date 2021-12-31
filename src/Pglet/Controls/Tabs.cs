@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pglet.Controls
@@ -37,9 +38,9 @@ namespace Pglet.Controls
             return _tabs;
         }
 
-        public override async Task CleanAsync()
+        public override async Task CleanAsync(CancellationToken cancellationToken)
         {
-            await base.CleanAsync();
+            await base.CleanAsync(cancellationToken);
             _tabs.Clear();
         }
     }

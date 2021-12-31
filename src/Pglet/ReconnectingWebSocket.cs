@@ -15,12 +15,18 @@ namespace Pglet
         private const int RECONNECT_DELAY_MS = 1000;
         private const int MAX_RECONNECT_DELAY_MS = 60000;
 
+        private const int REMOTE_CONNECT_TIMEOUT_MS = 5000;
+        private const int REMOTE_CONNECT_ATTEMPTS = 1;
+
+        private const int LOCAL_CONNECT_TIMEOUT_MS = 200;
+        private const int LOCAL_CONNECT_ATTEMPTS = 500;
 
         private readonly Channel<byte[]> _sendQueue = Channel.CreateBounded<byte[]>(10);
 
         ClientWebSocket _ws;
         Uri _uri;
         Func<byte[], Task> _onMessage;
+        Func<Task> _onFailedConnect;
         Func<Task> _onReconnected;
 
         CancellationToken _cancellationToken;
@@ -31,6 +37,11 @@ namespace Pglet
         public Func<byte[], Task> OnMessage
         {
             set { _onMessage = value; }
+        }
+
+        public Func<Task> OnFailedConnect
+        {
+            set { _onFailedConnect = value; }
         }
 
         public Func<Task> OnReconnected
@@ -45,22 +56,50 @@ namespace Pglet
 
         public Task Connect(CancellationToken cancellationToken)
         {
-            Trace.WriteLine("ReconnectingWebSocket: Connect()");
+            Trace.TraceInformation("ReconnectingWebSocket: Connect()");
             _cancellationToken = cancellationToken;
             return ConnectInternal();
         }
 
         private async Task ConnectInternal()
         {
-            Trace.WriteLine("ReconnectingWebSocket: ConnectInternal()");
-            _ws = new ClientWebSocket();
-            await _ws.ConnectAsync(_uri, _cancellationToken);
+            Trace.TraceInformation("ReconnectingWebSocket: ConnectInternal()");
+            bool isLocal = _uri.Host == "localhost";
+
+            bool failedConnectCalled = false;
+            for (int i = 1; i < (isLocal ? LOCAL_CONNECT_ATTEMPTS : REMOTE_CONNECT_ATTEMPTS) + 1; i++)
+            {
+                using (CancellationTokenSource timeout = new CancellationTokenSource(isLocal ? LOCAL_CONNECT_TIMEOUT_MS : REMOTE_CONNECT_TIMEOUT_MS))
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken, timeout.Token))
+                    {
+                        try
+                        {
+                            _ws = new ClientWebSocket();
+                            await _ws.ConnectAsync(_uri, linkedCts.Token);
+                            Trace.TraceInformation("Connected!");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.TraceInformation($"Connect attempt #{i} failed: {ex.Message}");
+                            _ws.Dispose();
+                            if (_onFailedConnect != null && !failedConnectCalled)
+                            {
+                                _ = _onFailedConnect();
+                                failedConnectCalled = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             StartReadWriteLoops();
         }
 
         private void StartReadWriteLoops()
         {
-            Trace.WriteLine("ReconnectingWebSocket: StartReadWriteLoops()");
+            Trace.TraceInformation("ReconnectingWebSocket: StartReadWriteLoops()");
 
             if (_loopsCts != null)
             {
@@ -70,7 +109,7 @@ namespace Pglet
             _loopsCts = new CancellationTokenSource();
             _reconnectCtr = _loopsCts.Token.Register(async () =>
             {
-                Trace.WriteLine("ReconnectingWebSocket: Reconnecting...");
+                Trace.TraceInformation("ReconnectingWebSocket: Reconnecting...");
                 _ws.Abort();
 
                 ExponentialBackoff backoff = new(RECONNECT_DELAY_MS, MAX_RECONNECT_DELAY_MS);
@@ -89,7 +128,7 @@ namespace Pglet
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine("ReconnectingWebSocket: Error reconnecting: {0}", ex.Message);
+                        Trace.TraceInformation("ReconnectingWebSocket: Error reconnecting: {0}", ex.Message);
                         await backoff.Delay();
                     }
                 }
@@ -118,7 +157,7 @@ namespace Pglet
 
         private async Task ReadLoop()
         {
-            Trace.WriteLine("ReconnectingWebSocket: ReadLoop()");
+            Trace.TraceInformation("ReconnectingWebSocket: ReadLoop()");
             var buffer = new byte[RECEIVE_BUFFER_SIZE];
 
             try
@@ -145,7 +184,7 @@ namespace Pglet
                             else
                             {
                                 // connection closed
-                                Trace.WriteLine("ReconnectingWebSocket: Server connection gracefully closed while receiving message");
+                                Trace.TraceInformation("ReconnectingWebSocket: Server connection gracefully closed while receiving message");
                                 return;
                             }
 
@@ -170,7 +209,7 @@ namespace Pglet
             }
             finally
             {
-                Trace.WriteLine("ReconnectingWebSocket: Exiting read loop");
+                Trace.TraceInformation("ReconnectingWebSocket: Exiting read loop");
             }
         }
 
@@ -181,7 +220,7 @@ namespace Pglet
 
         public async Task WriteLoop()
         {
-            Trace.WriteLine("ReconnectingWebSocket: WriteLoop()");
+            Trace.TraceInformation("ReconnectingWebSocket: WriteLoop()");
             try
             {
                 while (true)
@@ -219,13 +258,13 @@ namespace Pglet
             }
             finally
             {
-                Trace.WriteLine("ReconnectingWebSocket: Exiting write loop");
+                Trace.TraceInformation("ReconnectingWebSocket: Exiting write loop");
             }
         }
 
         public async Task CloseAsync()
         {
-            Trace.WriteLine("ReconnectingWebSocket: CloseAsync()");
+            Trace.TraceInformation("ReconnectingWebSocket: CloseAsync()");
 
             if (_ws != null)
             {

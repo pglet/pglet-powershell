@@ -73,73 +73,72 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsStack
-            {
-                MinWidth = MinWidth,
-                MaxWidth = MaxWidth,
-                MinHeight = MinHeight,
-                MaxHeight = MaxHeight,
-                BgColor = BgColor,
-                Border = Border,
-                BorderRadius = BorderRadius,
-                BorderLeft = BorderLeft,
-                BorderRight = BorderRight,
-                BorderTop = BorderTop,
-                BorderBottom = BorderBottom,
-                OnSubmit = OnSubmit
-            };
+            var control = new PsStack();
 
-            SetControlProps(ctl);
+            SetControlProps(control);
+
+            control.MinWidth = MinWidth;
+            control.MaxWidth = MaxWidth;
+            control.MinHeight = MinHeight;
+            control.MaxHeight = MaxHeight;
+            control.BgColor = BgColor;
+            control.Border = Border;
+            control.BorderRadius = BorderRadius;
+            control.BorderLeft = BorderLeft;
+            control.BorderRight = BorderRight;
+            control.BorderTop = BorderTop;
+            control.BorderBottom = BorderBottom;
+            control.OnSubmit = OnSubmit;
 
             if (HorizontalAlign.HasValue)
             {
-                ctl.HorizontalAlign = HorizontalAlign.Value;
+                control.HorizontalAlign = HorizontalAlign.Value;
             }
 
             if (VerticalAlign.HasValue)
             {
-                ctl.VerticalAlign = VerticalAlign.Value;
+                control.VerticalAlign = VerticalAlign.Value;
             }
 
             if (Gap.HasValue)
             {
-                ctl.Gap = Gap.Value;
+                control.Gap = Gap.Value;
             }
 
             if (Horizontal.IsPresent)
             {
-                ctl.Horizontal = Horizontal.ToBool();
+                control.Horizontal = Horizontal.ToBool();
             }
 
             if (VerticalFill.IsPresent)
             {
-                ctl.VerticalFill = VerticalFill.ToBool();
+                control.VerticalFill = VerticalFill.ToBool();
             }
 
             if (Wrap.IsPresent)
             {
-                ctl.Wrap = Wrap.ToBool();
+                control.Wrap = Wrap.ToBool();
             }
 
             if (ScrollX.IsPresent)
             {
-                ctl.ScrollX = ScrollX.ToBool();
+                control.ScrollX = ScrollX.ToBool();
             }
 
             if (ScrollY.IsPresent)
             {
-                ctl.ScrollY = ScrollY.ToBool();
+                control.ScrollY = ScrollY.ToBool();
             }
 
             if (Controls != null)
             {
-                foreach (var control in Controls)
+                foreach (var childControl in Controls)
                 {
-                    ctl.Controls.Add(control);
+                    control.Controls.Add(childControl);
                 }
             }
 
-            WriteObject(ctl);
+            WriteObject(control);
         }
     }
 }

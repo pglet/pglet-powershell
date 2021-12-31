@@ -1,9 +1,13 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Collections.Generic;
+using System.Management.Automation;
 
 namespace Pglet.PowerShell.Controls
 {
     public interface IPsEventControl
     {
-        ScriptBlock GetEventHandlerScript(ControlEvent e);
+        PSCmdlet Cmdlet { get; set; }
+        Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; }
+        (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e);
     }
 }

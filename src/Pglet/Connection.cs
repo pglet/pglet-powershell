@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using Newtonsoft.Json.Linq;
 using Pglet.Protocol;
+using System;
 using System.Collections.Concurrent;
-using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pglet
 {
     public class Connection
     {
+        private static Dictionary<Connection, bool> _allConnections = new();
+
         ReconnectingWebSocket _ws;
         ConcurrentDictionary<string, TaskCompletionSource<JObject>> _wsCallbacks = new ConcurrentDictionary<string, TaskCompletionSource<JObject>>();
         Func<PageEventPayload, Task> _onEvent;
@@ -27,10 +30,16 @@ namespace Pglet
             set { _onSessionCreated = value; }
         }
 
+        public string HostClientId { get; set; }
+        public string PageName { get; set; }
+        public string PageUrl { get; set; }
+        public ConcurrentDictionary<string, Page> Sessions { get; set; } = new();
+
         public Connection(ReconnectingWebSocket ws)
         {
             _ws = ws;
             _ws.OnMessage = OnMessage;
+            _allConnections[this] = true;
         }
 
         private async Task OnMessage(byte[] message)
@@ -53,29 +62,36 @@ namespace Pglet
                     tcs.SetResult(m.Payload as JObject);
                 }
             }
-            else if (m.Action == Actions.PageEventToHost && _onEvent != null)
+            else if (m.Action == Actions.PageEventToHost)
             {
-                // page event
-                await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                if (_onEvent != null)
+                {
+                    // page event
+                    await _onEvent(JsonUtility.Deserialize<PageEventPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                }
             }
-            else if (m.Action == Actions.SessionCreated && _onSessionCreated != null)
+            else if (m.Action == Actions.SessionCreated)
             {
-                // new session started
-                await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                if (_onSessionCreated != null)
+                {
+                    // new session started
+                    await _onSessionCreated(JsonUtility.Deserialize<PageSessionCreatedPayload>(m.Payload as JObject)).ConfigureAwait(false);
+                }
             }
             else
             {
                 // something else
                 // TODO - throw?
-                Console.WriteLine(m.Payload);
+                Trace.TraceWarning(m.Payload.ToString());
             }
         }
 
-        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string hostClientId, string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
+        public async Task<RegisterHostClientResponsePayload> RegisterHostClient(string pageName, bool isApp, string authToken, string permissions, CancellationToken cancellationToken)
         {
+            Trace.TraceInformation("Connection: RegisterHostClient");
             var payload = new RegisterHostClientRequestPayload
             {
-                HostClientID = hostClientId,
+                HostClientID = this.HostClientId,
                 PageName = String.IsNullOrEmpty(pageName) ? "*" : pageName,
                 IsApp = isApp,
                 AuthToken = authToken,
@@ -83,11 +99,14 @@ namespace Pglet
             };
 
             var respPayload = await SendMessageWithResult(Actions.RegisterHostClient, payload, cancellationToken);
+            Trace.TraceInformation("Connection: RegisterHostClient response: {0}", respPayload);
+            
             var result = JsonUtility.Deserialize<RegisterHostClientResponsePayload>(respPayload);
             if (!String.IsNullOrEmpty(result.Error))
             {
                 throw new Exception(result.Error);
             }
+            this.HostClientId = result.HostClientID;
             return result;
         }
 
@@ -127,11 +146,6 @@ namespace Pglet
             return result;
         }
 
-        private Task<JObject> SendMessage(string actionName, object payload, CancellationToken cancellationToken)
-        {
-            return SendMessageInternal(null, actionName, payload, cancellationToken);
-        }
-
         private Task<JObject> SendMessageWithResult(string actionName, object payload, CancellationToken cancellationToken)
         {
             return SendMessageInternal(Guid.NewGuid().ToString("N"), actionName, payload, cancellationToken);
@@ -157,7 +171,8 @@ namespace Pglet
                 var tcs = new TaskCompletionSource<JObject>();
                 _wsCallbacks.TryAdd(msg.Id, tcs);
 
-                using CancellationTokenRegistration ctr = cancellationToken.Register(() => {
+                using CancellationTokenRegistration ctr = cancellationToken.Register(() =>
+                {
                     if (_wsCallbacks.TryRemove(msg.Id, out TaskCompletionSource<JObject> tcs))
                     {
                         tcs.SetCanceled();
@@ -173,11 +188,24 @@ namespace Pglet
             }
         }
 
+        public static void CloseAllConnections()
+        {
+            Trace.TraceInformation($"Closing {_allConnections.Count} active connection(s)");
+
+            foreach (var conn in _allConnections.Keys.ToArray())
+            {
+                conn.Close();
+            }
+        }
+
         public void Close()
         {
+            _allConnections.Remove(this);
+
             if (_ws != null)
             {
                 _ws.CloseAsync().Wait();
+                _ws = null;
             }
         }
     }

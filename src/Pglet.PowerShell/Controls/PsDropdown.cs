@@ -7,28 +7,26 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsDropdown : Dropdown, IPsEventControl
     {
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
+        public PSCmdlet Cmdlet { get; set; }
+        
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
         public new ScriptBlock OnChange
         {
             get
             {
-                return GetEventHandlerScript("change");
+                return PsEventControlHelper.GetEventHandlerScript(this, "change");
             }
             set
             {
-                _psEvents["change"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "change", value);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
-            return GetEventHandlerScript(e.Name);
-        }
-
-        private ScriptBlock GetEventHandlerScript(string eventName)
-        {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
-using System.Collections.Generic;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -34,7 +32,7 @@ namespace Pglet.PowerShell
 
             if (Points != null)
             {
-                foreach(var point in Points)
+                foreach (var point in Points)
                 {
                     chart.Points.Add(point);
                 }

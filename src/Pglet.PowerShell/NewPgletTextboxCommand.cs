@@ -64,21 +64,20 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var control = new PsTextBox
-            {
-                Label = Label,
-                Value = Value,
-                Placeholder = Placeholder,
-                ErrorMessage = ErrorMessage,
-                Description = Description,
-                Prefix = Prefix,
-                Suffix = Suffix,
-                Icon = Icon,
-                IconColor = IconColor,
-                OnChange = OnChange
-            };
-
+            var control = new PsTextBox();
+            
             SetControlProps(control);
+
+            control.Label = Label;
+            control.Value = Value;
+            control.Placeholder = Placeholder;
+            control.ErrorMessage = ErrorMessage;
+            control.Description = Description;
+            control.Prefix = Prefix;
+            control.Suffix = Suffix;
+            control.Icon = Icon;
+            control.IconColor = IconColor;
+            control.OnChange = OnChange;
 
             if (Align.HasValue)
             {

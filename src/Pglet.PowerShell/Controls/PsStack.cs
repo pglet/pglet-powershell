@@ -6,29 +6,27 @@ namespace Pglet.PowerShell.Controls
 {
     public class PsStack : Pglet.Controls.Stack, IPsEventControl
     {
-        readonly Dictionary<string, ScriptBlock> _psEvents = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
-
+        public PSCmdlet Cmdlet { get; set; }
+        
+        public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
+            new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
+            
         public new ScriptBlock OnSubmit
         {
             get
             {
-                return GetEventHandlerScript("submit");
+                return PsEventControlHelper.GetEventHandlerScript(this, "submit");
             }
             set
             {
-                _psEvents["submit"] = value;
+                PsEventControlHelper.SetEventHandlerScript(this, "submit", value);
                 SetBoolAttr("onsubmit", value != null);
             }
         }
 
-        public ScriptBlock GetEventHandlerScript(ControlEvent e)
+        public (ScriptBlock, Dictionary<string, object>) GetEventHandler(ControlEvent e)
         {
-            return GetEventHandlerScript(e.Name);
-        }
-
-        private ScriptBlock GetEventHandlerScript(string eventName)
-        {
-            return _psEvents.ContainsKey(eventName) ? _psEvents[eventName] : null;
+            return PsEventControlHelper.GetEventHandler(this, e.Name);
         }
     }
 }

@@ -14,6 +14,9 @@ namespace Pglet.PowerShell
         public int? Value { get; set; }
 
         [Parameter(Mandatory = false)]
+        public int? BarHeight { get; set; }
+
+        [Parameter(Mandatory = false)]
         public string Description { get; set; }
 
         protected override void ProcessRecord()
@@ -22,7 +25,8 @@ namespace Pglet.PowerShell
             {
                 Label = Label,
                 Description = Description,
-                Value = Value
+                Value = Value,
+                BarHeight = BarHeight
             };
 
             SetControlProps(control);

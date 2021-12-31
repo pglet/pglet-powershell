@@ -2,7 +2,7 @@ Remove-Module pglet -ErrorAction SilentlyContinue
 Import-Module ([IO.Path]::Combine((get-item $PSScriptRoot).parent.FullName, 'pglet.psd1'))
 
 try {
-    $page = Connect-PgletPage -Permissions "*"
+    $page = Connect-PgletPage -Permissions ""
     $page.Clean()
     
     Write-Host $page.Url
@@ -13,7 +13,7 @@ try {
     $name = Textbox -Label "Your name"
     
     $stack = Stack -Controls (Text -Value "Results")
-    
+
     $nums = @{
         b = 10
     }
@@ -51,7 +51,7 @@ try {
     
     $page.Add($txt1, $name, $btn1, $btn2, $stack)
     
-    #Switch-PgletEvents
+    Switch-PgletEvents
 } finally {
     Write-Host "Close pglet page!"
     Close-PgletPage

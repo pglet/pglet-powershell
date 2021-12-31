@@ -40,13 +40,12 @@ namespace Pglet.PowerShell
 
         protected override void ProcessRecord()
         {
-            var ctl = new PsCallout
-            {
-                OnDismiss = OnDismiss,
-                Target = Target
-            };
+            var ctl = new PsCallout();
 
             SetControlProps(ctl);
+
+            ctl.OnDismiss = OnDismiss;
+            ctl.Target = Target;
 
             if (Position.HasValue)
             {

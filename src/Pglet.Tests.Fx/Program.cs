@@ -1,8 +1,5 @@
 ﻿using Pglet.Controls;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Pglet.Tests.Fx
@@ -16,7 +13,7 @@ namespace Pglet.Tests.Fx
 
         private static async Task TestApp()
         {
-            await new PgletClient().ServeApp(async (page) =>
+            await PgletClient.ServeApp(async (page) =>
             {
                 page.OnClose = (e) =>
                 {
@@ -32,10 +29,14 @@ namespace Pglet.Tests.Fx
                 Console.WriteLine($"Hash: {page.Hash}");
 
                 var txt = new TextBox();
-                await page.AddAsync(txt, new Button { Text = "Test!", OnClick = (e) =>
+                await page.AddAsync(txt, new Button
                 {
-                    Console.WriteLine(txt.Value);
-                }});
+                    Text = "Test!",
+                    OnClick = (e) =>
+{
+    Console.WriteLine(txt.Value);
+}
+                });
 
                 await Task.Delay(5000);
 
