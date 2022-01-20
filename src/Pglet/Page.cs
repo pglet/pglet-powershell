@@ -88,6 +88,12 @@ namespace Pglet
             set { SetIntAttr("gap", value); }
         }
 
+        public string BgColor
+        {
+            get { return GetAttr("bgcolor"); }
+            set { SetAttr("bgcolor", value); }
+        }        
+
         public string Theme
         {
             get { return GetAttr("theme"); }

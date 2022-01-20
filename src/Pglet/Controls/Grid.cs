@@ -27,6 +27,27 @@ namespace Pglet.Controls
         public IList<object> SelectedItems
         {
             get { return _selectedItems; }
+            set
+            {
+                _selectedItems = value;
+                if (_selectedItems != null)
+                {
+                    List<int> indices = new();
+                    foreach(var selectedItem in _selectedItems)
+                    {
+                        var idx = 0;
+                        foreach(var item in this._items.Items)
+                        {
+                            if (item == selectedItem)
+                            {
+                                indices.Add(idx);
+                            }
+                            idx++;
+                        }
+                    }
+                    SetAttr("selectedindices", string.Join(" ", indices.Select(i => i.ToString())));
+                }
+            }
         }
 
         public GridSelectionMode SelectionMode
