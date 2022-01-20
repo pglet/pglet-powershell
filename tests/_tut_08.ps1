@@ -6,8 +6,8 @@ $page = Connect-PgletPage -Name "page-4" -NoWindow
 try {
     $page.Clean()
 
-    $yes_btn = Button -Id "yes" -Text "Yes" -Primary
-    $no_btn = Button -Id "no" -Text "No"
+    $yes_btn = Button -Text "Yes" -Primary
+    $no_btn = Button -Text "No"
     $confirm_dialog = Stack -Horizontal -Controls @($yes_btn, $no_btn)
 
     # display confirm buttons
