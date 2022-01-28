@@ -31,7 +31,7 @@ namespace Pglet
         const int S_IXOTH = 0x1;
 
         public const string HOSTED_SERVICE_URL = "https://app.pglet.io";
-        public const string DEFAULT_SERVER_PORT = "5000";
+        public const string DEFAULT_SERVER_PORT = "8550";
         public const string ZERO_SESSION = "0";
 
         private PgletClient() { }
