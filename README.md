@@ -19,8 +19,8 @@ Create a new `hello.ps1` with the following content:
 
 ```posh
 Import-Module pglet
-Connect-PgletPage
-Invoke-Pglet "add text value='Hello, world!'"
+$page = Connect-PgletPage
+$page.Add((Text -Value "Hello, world!"))
 ```
 
 Run `hello.ps1` in your PowerShell session and in a new browser window you'll get:
@@ -34,8 +34,9 @@ Here is a local page served by an instance of Pglet server started in the backgr
 Add `-Web` parameter to `Connect-PgletPage` call:
 
 ```posh
-Connect-PgletPage -Web
-Invoke-Pglet "add text value='Hello, world!'"
+Import-Module pglet
+$page = Connect-PgletPage -Web
+$page.Add((Text -Value "Hello, world!"))
 ```
 
 This time page will be created on [Pglet hosted service](https://pglet.io/docs/pglet-service).
