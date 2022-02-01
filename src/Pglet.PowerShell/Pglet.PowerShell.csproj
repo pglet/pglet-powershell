@@ -24,13 +24,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Pglet" Version="0.5.8" />
     <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Pglet\Pglet.csproj" />
   </ItemGroup>
 
 </Project>

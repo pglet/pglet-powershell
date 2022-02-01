@@ -1,8 +1,6 @@
 # Pglet client for PowerShell
 
-[Pglet](https://pglet.io) (*"piglet"*) is a rich user interface (UI) framework for scripts written in PowerShell or any other language. 
-Pglet renders web UI, so you can easily [build web apps](https://pglet.io/docs/quickstart) with PowerShell.
-Knowledge of HTML/CSS/JavaScript is not required as you build UI with [controls](https://pglet.io/docs/reference/controls). Pglet controls are built with [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
+[Pglet](https://pglet.io) is a rich User Interface (UI) framework to quickly build interactive web apps in PowerShell without prior knowledge of web technologies like HTTP, HTML, CSS or JavaSscript. You build UI with [controls](https://pglet.io/docs/reference/controls) which use [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
 
 ## Requirements
 

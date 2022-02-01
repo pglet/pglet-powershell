@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -28,7 +27,7 @@ namespace Pglet.PowerShell
             var control = new PsCheckbox();
 
             SetControlProps(control);
-            
+
             control.Label = Label;
             control.ValueField = ValueField;
             control.OnChange = OnChange;
