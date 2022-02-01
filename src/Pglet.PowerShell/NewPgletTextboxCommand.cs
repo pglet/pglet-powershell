@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -65,7 +64,7 @@ namespace Pglet.PowerShell
         protected override void ProcessRecord()
         {
             var control = new PsTextBox();
-            
+
             SetControlProps(control);
 
             control.Label = Label;

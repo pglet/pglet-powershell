@@ -7,11 +7,11 @@ namespace Pglet.PowerShell.Controls
     public class PsPage : Page, IPsEventControl
     {
         public PSCmdlet Cmdlet { get; set; }
-        
+
         public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
             new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
-            
-        public PsPage(Connection conn, string pageUrl, string pageName, string sessionId, PSCmdlet cmdlet) : base(conn, pageUrl, pageName, sessionId)
+
+        public PsPage(Protocol.Connection conn, string pageUrl, string pageName, string sessionId, PSCmdlet cmdlet) : base(conn, pageUrl, pageName, sessionId)
         {
             this.Cmdlet = cmdlet;
         }

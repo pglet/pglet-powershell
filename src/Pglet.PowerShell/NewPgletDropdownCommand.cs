@@ -1,5 +1,4 @@
-﻿using Pglet.Controls;
-using Pglet.PowerShell.Controls;
+﻿using Pglet.PowerShell.Controls;
 using System.Management.Automation;
 
 namespace Pglet.PowerShell
@@ -31,7 +30,7 @@ namespace Pglet.PowerShell
             var ctl = new PsDropdown();
 
             SetControlProps(ctl);
-            
+
             ctl.Label = Label;
             ctl.Value = Value;
             ctl.Placeholder = Placeholder;

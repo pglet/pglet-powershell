@@ -4,13 +4,13 @@ using System.Management.Automation;
 
 namespace Pglet.PowerShell.Controls
 {
-    public class PsStack : Pglet.Controls.Stack, IPsEventControl
+    public class PsStack : Pglet.Stack, IPsEventControl
     {
         public PSCmdlet Cmdlet { get; set; }
-        
+
         public Dictionary<string, (ScriptBlock, Dictionary<string, object>)> PsEventHandlers { get; } =
             new Dictionary<string, (ScriptBlock, Dictionary<string, object>)>(StringComparer.OrdinalIgnoreCase);
-            
+
         public new ScriptBlock OnSubmit
         {
             get
