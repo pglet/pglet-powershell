@@ -43,7 +43,6 @@ build_script:
     Copy-Item -Path *.psd1 -Destination pglet
     Copy-Item -Path *.psm1 -Destination pglet
     Copy-Item -Path 'bin' -Destination pglet -Recurse
-    Copy-Item -Path 'runtimes' -Destination pglet/bin -Recurse
     Get-ChildItem pglet -Recurse
 
     # publish module
